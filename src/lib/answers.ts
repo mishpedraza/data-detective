@@ -97,8 +97,9 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
         ? `${uc1(T.who)} did not become poorer${econ === 'grew' ? ', but the growth did not reach them' : ''}.`
         : gap > 2 ? `${uc1(T.who)} became better off, but by less than the economy grew.` : `${uc1(T.who)} became better off.`
   const other = order.find((id) => id !== m)!
-  const po = pct(other, geo, w)
-  const avg = pct('real_wage', geo, w)
+  const spans = (id: string) => w.every((y) => series(id, geo).some((x) => x.year === y))
+  const po = spans(other) ? pct(other, geo, w) : null
+  const avg = spans('real_wage') ? pct('real_wage', geo, w) : null
   const yr = (v: number) => `${signed(v)} a year`
   const detail = [`Per year: GDP per person ${yr(gy)}, ${T.label(geo).replace(/^real /, '')} ${yr(py)}.`]
   if (m !== order[0]) detail.push(`${uc1(TYPICAL[order[0]].label(geo))} has fewer than two observations in these years, so the answer uses ${T.label(geo)}.`)
@@ -120,7 +121,7 @@ const WAGE: Record<string, { noun: string; label: string }> = {
 
 function productivityWages(geo: string, from: number, to: number, short: boolean, _a?: string, b?: string): Built | Short | null {
   const wid = b && b in WAGE ? b : 'real_wage'
-  const W = WAGE[wid]
+  const W = { ...WAGE[wid], label: wid === 'median_earnings_real' ? TYPICAL.median_earnings_real.label(geo) : WAGE[wid].label }
   const w = window(['productivity', wid], geo, from, to)
   if (!w) return null
   const q = pct('productivity', geo, w)
