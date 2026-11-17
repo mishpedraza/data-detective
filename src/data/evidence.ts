@@ -582,7 +582,8 @@ const GROWTH_WAGES: TopicEvidence = {
 
 const IMM_GROWTH: TopicEvidence = {
   findings: [
-    { lead: 'Immigrants added to Spain’s growth in output per person in upswings and subtracted from it in the 2008–2013 slump, mainly through jobs.', text: 'In a Banco de España accounting exercise, foreign residents added 0.2–0.5 points a year in 2014–2019 and 0.4–0.7 in 2022–2024, but took away about 0.9 a year in 2008–2013, mostly as their employment fell.', refs: ['cuadrado2025'], years: [2006, 2024] },
+    { lead: 'Immigrants subtracted from Spain’s growth in output per person in the 2008–2013 slump and added to it in the recovery, mainly through jobs.', text: 'In a Banco de España accounting exercise, foreign residents took away about 0.9 points a year in 2008–2013, mostly as their employment fell, and added 0.2–0.5 points a year in 2014–2019.', refs: ['cuadrado2025'], years: [2006, 2019] },
+    { lead: 'Since 2022, immigrants have added 0.4–0.7 points a year to Spain’s growth in output per person.', text: 'A Banco de España accounting exercise links this mainly to employment, to the progress of immigrants who arrived in the early 2000s and to the higher education of recent arrivals.', refs: ['cuadrado2025'], years: [2022, 2024] },
   ],
   international: [],
   spain: [{ id: 'cuadrado2025', relevance: 'direct', note: 'Spain, 2006–2024; accounting decomposition.' }],
