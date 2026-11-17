@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
+import { ImmigrationResearchComparison } from '../components/ImmigrationResearchComparison'
 import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
 import { RangeBrush } from '../components/RangeBrush'
@@ -98,6 +99,104 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
     setHoverYear(y)
   }
 
+  const showImmigrationResearch = rel.id === 'immigration-crime'
+  const indicatorControls = (
+    <details className="investigation-controls">
+      <summary className="tell-more">Change indicators or country</summary>
+      <div className="sentence">
+        Compare{' '}
+        <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
+        with{' '}
+        <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
+        in Spain. Compare with{' '}
+        <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'no other country'} />.
+      </div>
+    </details>
+  )
+
+  const charts = (
+    <>
+        <div className="toolbar">
+          <div className="segmented" role="tablist" aria-label="View">
+            <button role="tab" aria-selected={view === 'time'} className={view === 'time' ? 'on' : ''} onClick={() => setView('time')}>Over time</button>
+            <button role="tab" aria-selected={view === 'scatter'} className={view === 'scatter' ? 'on' : ''} onClick={() => setView('scatter')}>Correlation</button>
+          </div>
+          {view === 'scatter' ? (
+            <div className="segmented small" role="tablist" aria-label="Compare">
+              <button role="tab" aria-selected={mode === 'levels'} className={mode === 'levels' ? 'on' : ''} onClick={() => setMode('levels')}>Levels</button>
+              <button role="tab" aria-selected={mode === 'changes'} className={mode === 'changes' ? 'on' : ''} onClick={() => setMode('changes')}>Year-to-year changes</button>
+            </div>
+          ) : (
+            <button className="play" onClick={() => { if (!playing) setHoverYear(from); setPlaying((p) => !p) }} aria-pressed={playing}>
+              {playing ? (
+                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><rect x="2" y="1.5" width="3" height="9" fill="currentColor" /><rect x="7" y="1.5" width="3" height="9" fill="currentColor" /></svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><path d="M2.5 1.5 10 6l-7.5 4.5z" fill="currentColor" /></svg>
+              )}
+              {playing ? 'Pause' : 'Play the years'}
+            </button>
+          )}
+          <div className="brush-wrap">
+            <RangeBrush min={MIN} max={MAX} from={from} to={to} onChange={(f, t) => setRange([f, t])} sparkA={sparkA} sparkB={sparkB} />
+          </div>
+        </div>
+        {view === 'scatter' && <p className="chart-notes">Each dot is a year. This view shows how closely the measures move together. Choose Year-to-year changes to compare annual rises and falls. Correlation alone cannot establish cause.</p>}
+
+        <AnimatePresence mode="wait">
+          {view === 'time' ? (
+            <motion.div key="time" className="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <div className="year-strip" aria-live="polite">
+                {hoverYear == null ? (
+                  <span>{cmpBlocked ? `${COUNTRIES[compare].name.replace(/^the/, 'The')} is not shown. ${cmpBlocked}` : cmpNote || 'Hover, tap or drag across either chart to compare the same year in both.'}</span>
+                ) : (
+                  <>
+                    <span className="year-strip-year">{hoverYear}</span>
+                    {[A, B].map((ind, i) => {
+                      const v = valueAt(ind.id, hoverYear)
+                      return (
+                        <span key={ind.id} className={`year-strip-item tone-${i ? 'b' : 'a'}`}>
+                          {lowerFirst(ind.short)} {v == null ? <em>Data unavailable</em> : <strong>{formatValue(v, ind.format)}</strong>}
+                        </span>
+                      )
+                    })}
+                    <button className="year-strip-clear" onClick={() => { setPlaying(false); setHoverYear(null) }}>Clear</button>
+                  </>
+                )}
+              </div>
+              <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels showEvents={ctx} />
+              <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" showEvents={ctx} />
+              {covA && covB && (
+                <p className="chart-notes">
+                  Data availability: <span className="tone-a-text">{lowerFirst(A.short)}</span> {covA[0]}–{covA[1]}; <span className="tone-b-text">{lowerFirst(B.short)}</span> {covB[0]}–{covB[1]}. Hatched areas mark missing data. Each chart has its own scale.
+                </p>
+              )}
+              {events.length > 0 && (
+                <>
+                  <button className="tell-more ctx-toggle" onClick={() => setCtx((v) => !v)} aria-expanded={ctx}>
+                    {ctx ? '− Hide historical context' : `+ Historical context (${events.length})`}
+                  </button>
+                  {ctx && (
+                    <ul className="event-legend">
+                      {events.map((e) => (
+                        <li key={e.id}>
+                          <strong>{e.start === e.end ? e.start : `${e.start}–${String(e.end).slice(2)}`}</strong> {e.detail}
+                        </li>
+                      ))}
+                      <li className="event-caveat">Shown as background; an event in the same years is not evidence that it caused a change.</li>
+                    </ul>
+                  )}
+                </>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="scatter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+              <ScatterChart a={a} b={b} from={from} to={to} mode={mode} hoverYear={hoverYear} onHover={setHoverYear} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+    </>
+  )
+
   return (
     <div className="investigate">
       <InvestigationIntro
@@ -106,99 +205,18 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
         headline={reviewed?.headline ?? answer?.headline ?? 'There are too few overlapping years to compare these measures.'}
         note={reviewed?.scope ?? answer?.dek}
       >
-        <details className="investigation-controls">
-          <summary className="tell-more">Change indicators or country</summary>
-          <div className="sentence">
-            Compare{' '}
-            <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
-            with{' '}
-            <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
-            in Spain. Compare with{' '}
-            <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'no other country'} />.
-          </div>
-        </details>
+        {!showImmigrationResearch && indicatorControls}
       </InvestigationIntro>
+      {showImmigrationResearch ? <ImmigrationResearchComparison /> : charts}
 
-      <div className="toolbar">
-        <div className="segmented" role="tablist" aria-label="View">
-          <button role="tab" aria-selected={view === 'time'} className={view === 'time' ? 'on' : ''} onClick={() => setView('time')}>Over time</button>
-          <button role="tab" aria-selected={view === 'scatter'} className={view === 'scatter' ? 'on' : ''} onClick={() => setView('scatter')}>Correlation</button>
-        </div>
-        {view === 'scatter' ? (
-          <div className="segmented small" role="tablist" aria-label="Compare">
-            <button role="tab" aria-selected={mode === 'levels'} className={mode === 'levels' ? 'on' : ''} onClick={() => setMode('levels')}>Levels</button>
-            <button role="tab" aria-selected={mode === 'changes'} className={mode === 'changes' ? 'on' : ''} onClick={() => setMode('changes')}>Year-to-year changes</button>
-          </div>
-        ) : (
-          <button className="play" onClick={() => { if (!playing) setHoverYear(from); setPlaying((p) => !p) }} aria-pressed={playing}>
-            {playing ? (
-              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><rect x="2" y="1.5" width="3" height="9" fill="currentColor" /><rect x="7" y="1.5" width="3" height="9" fill="currentColor" /></svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden><path d="M2.5 1.5 10 6l-7.5 4.5z" fill="currentColor" /></svg>
-            )}
-            {playing ? 'Pause' : 'Play the years'}
-          </button>
-        )}
-        <div className="brush-wrap">
-          <RangeBrush min={MIN} max={MAX} from={from} to={to} onChange={(f, t) => setRange([f, t])} sparkA={sparkA} sparkB={sparkB} />
-        </div>
-      </div>
-      {view === 'scatter' && <p className="chart-notes">Each dot is a year. This view shows how closely the measures move together. Choose Year-to-year changes to compare annual rises and falls. Correlation alone cannot establish cause.</p>}
-
-      <AnimatePresence mode="wait">
-        {view === 'time' ? (
-          <motion.div key="time" className="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <div className="year-strip" aria-live="polite">
-              {hoverYear == null ? (
-                <span>{cmpBlocked ? `${COUNTRIES[compare].name.replace(/^the/, 'The')} is not shown. ${cmpBlocked}` : cmpNote || 'Hover, tap or drag across either chart to compare the same year in both.'}</span>
-              ) : (
-                <>
-                  <span className="year-strip-year">{hoverYear}</span>
-                  {[A, B].map((ind, i) => {
-                    const v = valueAt(ind.id, hoverYear)
-                    return (
-                      <span key={ind.id} className={`year-strip-item tone-${i ? 'b' : 'a'}`}>
-                        {lowerFirst(ind.short)} {v == null ? <em>Data unavailable</em> : <strong>{formatValue(v, ind.format)}</strong>}
-                      </span>
-                    )
-                  })}
-                  <button className="year-strip-clear" onClick={() => { setPlaying(false); setHoverYear(null) }}>Clear</button>
-                </>
-              )}
-            </div>
-            <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels showEvents={ctx} />
-            <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" showEvents={ctx} />
-            {covA && covB && (
-              <p className="chart-notes">
-                Data availability: <span className="tone-a-text">{lowerFirst(A.short)}</span> {covA[0]}–{covA[1]}; <span className="tone-b-text">{lowerFirst(B.short)}</span> {covB[0]}–{covB[1]}. Hatched areas mark missing data. Each chart has its own scale.
-              </p>
-            )}
-            {events.length > 0 && (
-              <>
-                <button className="tell-more ctx-toggle" onClick={() => setCtx((v) => !v)} aria-expanded={ctx}>
-                  {ctx ? '− Hide historical context' : `+ Historical context (${events.length})`}
-                </button>
-                {ctx && (
-                  <ul className="event-legend">
-                    {events.map((e) => (
-                      <li key={e.id}>
-                        <strong>{e.start === e.end ? e.start : `${e.start}–${String(e.end).slice(2)}`}</strong> {e.detail}
-                      </li>
-                    ))}
-                    <li className="event-caveat">Shown as background; an event in the same years is not evidence that it caused a change.</li>
-                  </ul>
-                )}
-              </>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div key="scatter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <ScatterChart a={a} b={b} from={from} to={to} mode={mode} hoverYear={hoverYear} onHover={setHoverYear} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} reviewed={reviewed} />
+      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} reviewed={reviewed} secondaryExploration={showImmigrationResearch && (
+        <section className="immigration-descriptive" aria-labelledby="immigration-descriptive-title">
+          <h2 id="immigration-descriptive-title">Explore the trends in Spain</h2>
+          <p className="tell-text">These charts describe how the selected measures changed over time. They cannot tell us what effect immigration had on crime.</p>
+          {indicatorControls}
+          {charts}
+        </section>
+      )} />
       <DataNotes ids={[a, b]} />
     </div>
   )
