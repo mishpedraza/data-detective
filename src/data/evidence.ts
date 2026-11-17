@@ -233,7 +233,7 @@ const BELL: StudyLink = { id: 'bell2013', relevance: 'indirect', note: 'UK; prop
 export const BROADER = new Set<StudyLink>([...BROAD, BELL])
 const without = (ids: string[]) => BROAD.filter((s) => !ids.includes(s.id))
 const PROPERTY_SYNTH = [
-  { lead: 'The clearest evidence of any effect is for property crime, and it depends on the group.', text: 'In the UK, the late-1990s asylum wave raised property crime modestly while the post-2004 EU wave lowered it slightly. In Germany, recognised refugees were linked to more theft and fraud, but asylum seekers were not.' },
+  { lead: 'The clearest evidence of any effect is for property crime, and it depends on the group.', text: 'In the UK, the late-1990s asylum wave raised property crime modestly while the post-2004 EU wave showed no increase. In Germany, recognised refugees were linked to more theft and fraud, but asylum seekers were not.' },
   { lead: 'Other studies find no effect.', text: 'In Italy the link with property crime disappeared once the authors isolated cause and effect. For Spain in 1999–2009, recorded crime rose with the immigrant share in most models, depending on immigrants’ origin.' },
 ]
 const PROPERTY_LINKS: StudyLink[] = [
@@ -266,7 +266,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
     gap: 'No causal study of immigration and sexual offences in Spain was found.',
     causal: 'Causal evidence on immigration and sexual offences is scarce: two German studies of refugees find no clear effect, and none covers Spain. The data here cannot show whether immigration contributed.',
     uncertain: [
-      { text: 'Whether immigration had any effect in Spain: no causal study exists, and national totals cannot show where offences occurred or who committed them.' },
+      { text: 'Whether immigration had any effect in Spain: the cited research does not establish an effect, and national totals cannot show where offences occurred or who committed them.' },
       { text: 'Who the offenders are. Spain’s published statistics generally do not cross offence type with suspects’ nationality. The exception, an Interior Ministry report on sexual offences published since 2019, counts suspects rather than convictions, by nationality rather than birthplace, without adjusting for age and sex.', refs: ['fernandez2026'] },
     ],
     periods: [[2008, 2015], [2016, 2024]],
@@ -274,12 +274,12 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
   'immigration->crime_homicide': {
     confounders: [AGE, ECON, COVID_CONF],
     synthesis: [
-      { lead: 'No study isolates homicide.', text: 'None of the causal studies we verified reports homicide on its own; the Spanish study left it out because numbers per province were too small.' },
+      { lead: 'What the studies here cover.', text: 'None of the causal studies we verified reports homicide on its own; the Spanish study left it out because numbers per province were too small.' },
       { lead: 'Broader results may not apply.', text: 'Studies of overall crime mostly find little or no effect of immigration, with exceptions for particular groups and offences. That should not be assumed to hold for homicide.' },
     ],
     studies: [{ id: 'huang2026', relevance: 'indirect', note: 'Germany; bodily injury, robbery and sex crimes, not homicide.', broader: true }, BELL, ...BROAD],
-    gap: 'No causal study of immigration and homicide in Spain or elsewhere in Europe was found.',
-    causal: 'No causal study isolates homicide: research cannot say whether immigration affected Spain’s homicide rate either way.',
+    gap: 'The studies cited here do not estimate the effect on homicide in Spain.',
+    causal: 'No study cited here estimates the effect on homicide in Spain.',
     uncertain: [NATIONAL],
   },
   'immigration->crime_assault': {

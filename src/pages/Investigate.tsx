@@ -13,6 +13,7 @@ import { INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { InvestigationIntro } from '../components/InvestigationIntro'
 import { editorialQuestionForRelationship } from '../data/editorial'
 import { relationshipById } from '../data/relationships'
+import { REVIEWED_ANSWERS } from '../data/reviewedAnswers'
 import { answerFor } from '../lib/answers'
 
 const MIN = 1998
@@ -86,6 +87,7 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
   const sparkB = useMemo(() => series(b, 'ES'), [b])
   const events = EVENTS.filter((e) => e.end >= from && e.start <= to && (!e.only || e.only.includes(A.dimension) || e.only.includes(B.dimension)))
 
+  const reviewed = REVIEWED_ANSWERS[rel.id]
   const answer = answerFor(rel.id, a, b, cmp, from, to)
   const covA = coverage(a)
   const covB = coverage(b)
@@ -101,8 +103,8 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
       <InvestigationIntro
         active={editorial?.status === 'available' ? editorial.id : undefined}
         current={{ id: rel.id, label: rel.question }}
-        headline={answer?.headline ?? 'There are too few overlapping years to compare these measures.'}
-        note={answer?.dek}
+        headline={reviewed?.headline ?? answer?.headline ?? 'There are too few overlapping years to compare these measures.'}
+        note={reviewed?.scope ?? answer?.dek}
       >
         <details className="investigation-controls">
           <summary className="tell-more">Change indicators or country</summary>
@@ -196,7 +198,7 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
         )}
       </AnimatePresence>
 
-      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
+      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} reviewed={reviewed} />
       <DataNotes ids={[a, b]} />
     </div>
   )
