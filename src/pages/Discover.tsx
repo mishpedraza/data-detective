@@ -16,6 +16,7 @@ function investigationHref(discovery: Featured) {
 function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate: (href: string) => void }) {
   const [prediction, setPrediction] = useState<Prediction>()
   const href = investigationHref(discovery)
+  const options = predictionOptions(discovery)
   const evidence = prediction ? discoveryEvidence(discovery) : null
 
   return (
@@ -24,7 +25,7 @@ function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate:
       {prediction ? (
         <div className="discovery-reveal" aria-live="polite">
           <div className="discovery-options prediction-feedback">
-            {predictionOptions.filter((option) => option === prediction || option === evidence?.answer).map((option) => {
+            {options.filter((option) => option === prediction || option === evidence?.answer).map((option) => {
               const correct = option === evidence?.answer
               const chosen = option === prediction
               return <span key={option} className={correct ? 'prediction-correct' : evidence ? 'prediction-incorrect' : ''}>
@@ -42,7 +43,7 @@ function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate:
         <fieldset className="discovery-prediction">
           <legend>{discovery.prompt}</legend>
           <div className="discovery-options">
-            {predictionOptions.map((option) => (
+            {options.map((option) => (
               <button type="button" key={option} onClick={() => setPrediction(option)}>{option}</button>
             ))}
           </div>

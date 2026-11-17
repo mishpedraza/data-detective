@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { collection, discoveryEvidence, featuredDiscoveries } from '../src/data/discoveries'
+import { collection, discoveryEvidence, featuredDiscoveries, predictionOptions } from '../src/data/discoveries'
 import { RELATIONSHIPS } from '../src/data/relationships'
 import { explain } from '../src/lib/explain'
 
@@ -15,9 +15,11 @@ test('featured predictions have scoped evidence and open actual investigations',
     assert.match(evidence.source, /^https:\/\//)
   }
   assert.match(discoveryEvidence(featuredDiscoveries[0])!.result, /13% below/)
-  assert.match(discoveryEvidence(featuredDiscoveries[1])!.result, /1\.6% above/)
-  assert.match(discoveryEvidence(featuredDiscoveries[2])!.result, /126.*122/)
-  assert.deepEqual(featuredDiscoveries.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'Higher', 'Lower'])
+  assert.match(discoveryEvidence(featuredDiscoveries[1])!.result, /1\.6%.*4\.8%/)
+  assert.match(discoveryEvidence(featuredDiscoveries[2])!.result, /120.*122/)
+  assert.deepEqual(predictionOptions(featuredDiscoveries[0]), ['Higher', 'Lower', 'About the same'])
+  for (const discovery of featuredDiscoveries.slice(1)) assert.deepEqual(predictionOptions(discovery), ['Yes', 'No', 'About the same'])
+  assert.deepEqual(featuredDiscoveries.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No', 'About the same'])
 })
 
 test('a recent immigration and housing gap cites the closest study period', () => {

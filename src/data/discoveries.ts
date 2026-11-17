@@ -2,15 +2,21 @@ import { INDICATORS, series } from './indicators'
 import { surgeryQuestion, surgerySource, surgeryTrend } from './surgeryWaits'
 
 type EndpointComparison =
-  | { kind: 'series'; indicator: string; from: number; to: number; subject: string; precision: number }
+  | { kind: 'series'; indicator: string; from: number; to: number; subject: string; precision: number; benchmark?: string }
   | { kind: 'surgery'; from: string; to: string }
 
-export const predictionOptions = ['Higher', 'Lower', 'About the same'] as const
-export type Prediction = typeof predictionOptions[number]
+const directionOptions = ['Higher', 'Lower', 'About the same'] as const
+const yesNoOptions = ['Yes', 'No', 'About the same'] as const
+export type Prediction = typeof directionOptions[number] | typeof yesNoOptions[number]
 
-function direction(change: number): Prediction {
-  if (change === 0) return 'About the same'
-  return change > 0 ? 'Higher' : 'Lower'
+export function predictionOptions(discovery: Discovery) {
+  const comparison = discovery.comparison
+  return comparison.kind === 'surgery' || comparison.benchmark ? yesNoOptions : directionOptions
+}
+
+function answerFor(change: number, options: readonly Prediction[]): Prediction {
+  const [higher, lower, same] = options
+  return change === 0 ? same : change > 0 ? higher : lower
 }
 
 interface Discovery {
@@ -33,16 +39,16 @@ export const featuredDiscoveries: Discovery[] = [
   {
     id: 'growth-wages',
     question: 'Has pay kept up with Spain’s economy?',
-    prompt: 'Could a typical hourly wage in Spain buy more in 2022 than in 2006?',
-    comparison: { kind: 'series', indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1 },
-    context: 'That was a small gain over 16 years. The economy grew faster per person, and household purchasing power also depends on hours worked and other sources of income.',
+    prompt: 'From 2006 to 2022, did typical hourly pay in Spain grow faster than GDP per person, after inflation?',
+    comparison: { kind: 'series', indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1, benchmark: 'gdp_pc_real' },
+    context: 'Typical hourly pay bought a little more. What a household can afford also depends on hours worked and other sources of income.',
   },
   {
     id: 'surgery-waits',
     question: surgeryQuestion,
-    prompt: 'Had people on Spain’s planned surgery list waited longer or less time in December 2025 than in December 2024?',
-    comparison: { kind: 'surgery', from: 'Dec 2024', to: 'Dec 2025' },
-    context: 'Where you live matters. In December 2025, the average ranged from 50 days in Madrid to 173 in Andalusia.',
+    prompt: 'Had people on Spain’s planned surgery list waited longer in December 2025 than in December 2022? Pick “About the same” for a difference under a week.',
+    comparison: { kind: 'surgery', from: 'Dec 2022', to: 'Dec 2025' },
+    context: 'The national average barely changed across those three years. Where you live matters more: in December 2025, the average ranged from 50 days in Madrid to 173 in Andalusia.',
   },
 ]
 
@@ -56,27 +62,44 @@ export const collection = [
 
 export function discoveryEvidence(discovery: Discovery) {
   const comparison = discovery.comparison
+  const options = predictionOptions(discovery)
   if (comparison.kind === 'surgery') {
     const first = surgeryTrend.find(({ date }) => date === comparison.from)
     const last = surgeryTrend.find(({ date }) => date === comparison.to)
     if (!first || !last) return null
     return {
-      result: `The average was ${first.days} days in December 2024 and ${last.days} days in December 2025.`,
-      answer: direction(last.days - first.days),
+      result: `The average was ${first.days} days in December 2022 and ${last.days} days in December 2025.`,
+      answer: answerFor(Math.abs(last.days - first.days) < 7 ? 0 : last.days - first.days, options),
       source: surgerySource,
       publisher: 'Spain’s Ministry of Health',
     }
   }
-  const indicator = INDICATORS[comparison.indicator]
-  const points = series(comparison.indicator, 'ES')
-  const first = points.find(({ year }) => year === comparison.from)
-  const last = points.find(({ year }) => year === comparison.to)
-  if (!indicator || !first || !last || comparison.from >= comparison.to) return null
-  if (indicator.breaks.some(({ year }) => year > first.year && year <= last.year)) return null
-  if (first.value === 0) return null
+  const { from, to, precision } = comparison
+  const changeFor = (id: string) => {
+    const indicator = INDICATORS[id]
+    const points = series(id, 'ES')
+    const first = points.find(({ year }) => year === from)
+    const last = points.find(({ year }) => year === to)
+    if (!indicator || !first?.value || !last || from >= to) return null
+    if (indicator.breaks.some(({ year }) => year > from && year <= to)) return null
+    return Number(((last.value / first.value - 1) * 100).toFixed(precision))
+  }
+  const change = changeFor(comparison.indicator)
+  if (change === null) return null
+  const { url: source, org: publisher } = INDICATORS[comparison.indicator].source
+  if (comparison.benchmark) {
+    const benchmark = changeFor(comparison.benchmark)
+    if (benchmark === null) return null
+    const showChange = (value: number) => value === 0 ? 'was unchanged' : `${value > 0 ? 'rose' : 'fell'} ${Math.abs(value)}%`
+    return {
+      result: `After inflation, typical hourly pay ${showChange(change)}, while GDP per person ${showChange(benchmark)}.`,
+      answer: answerFor(change - benchmark, options),
+      source,
+      publisher,
+    }
+  }
 
-  const change = Number(((last.value / first.value - 1) * 100).toFixed(comparison.precision))
   const difference = change === 0 ? 'about the same as' : `${Math.abs(change)}% ${change < 0 ? 'below' : 'above'}`
-  const result = `After inflation, ${comparison.subject} in ${last.year} ${comparison.indicator === 'house_price_real' ? 'were' : 'was'} ${difference} the ${first.year} level.`
-  return { result, answer: direction(change), source: indicator.source.url, publisher: indicator.source.org }
+  const result = `After inflation, ${comparison.subject} in ${to} were ${difference} the ${from} level.`
+  return { result, answer: answerFor(change, options), source, publisher }
 }
