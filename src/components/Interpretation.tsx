@@ -217,8 +217,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <>
             {keyLead && <p className="key-lead">{keyLead}</p>}
             <p className="key-limit">
-              {corr.levels.length < 2
+              {corr.levels.length === 0
                 ? `The two series have no overlapping years in ${from}–${to}, so they cannot be compared.`
+                : corr.levels.length === 1
+                  ? `The two series overlap in only one year (${corr.levels[0].year}) in ${from}–${to}, which is too few for a meaningful correlation. Widen the period to compare them.`
                 : `Only ${corr.levels.length} years have data for both series in ${from}–${to}${corr.levels.length >= MIN ? `, and ${corr.changes.length} consecutive-year pairs` : ''}. That is too few for a meaningful correlation, so none is shown. Widen the period to compare them.`}
             </p>
           </>
