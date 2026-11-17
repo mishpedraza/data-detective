@@ -527,3 +527,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .more-q li > a, .more-q li > div { grid-template-columns: 28px minmax(0, 1fr) 18px; gap: 12px; padding: 14px 0; }
   .more-text { font-size: 18px; }
 }
+
+.ti-answer { font-family: var(--serif); font-size: clamp(18px, 2vw, 21px); line-height: 1.45; letter-spacing: -0.005em; color: var(--ink); margin: 0 0 14px; }
+.ti-answer-sm { font-size: clamp(16px, 1.8vw, 18px); color: var(--ink-2); }
+@media (max-width: 640px) { .ti-answer { font-size: 17px; } .ti-answer-sm { font-size: 15.5px; } }
