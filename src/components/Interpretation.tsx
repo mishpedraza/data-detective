@@ -314,9 +314,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <h3>What happened?</h3>
         </div>
         <div className="tell-body">
-          {ans && !driver && <p className="ti-answer">{ans.text}</p>}
+          {ans && <p className="ti-verdict">{ans.verdict}</p>}
+          {ans && !driver && ans.text && <p className="ti-answer">{ans.text}</p>}
           {showChange && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
-          {ans && driver && <p className="ti-answer ti-answer-sm">{ans.text}</p>}
           {tp && <p className="ti-counts">{tp}</p>}
           {trend && <p className="ti-note">{firstSentence(trend.measurement[0].text)}</p>}
           <button className="tell-more" onClick={() => setStats((v) => !v)} aria-expanded={stats}>

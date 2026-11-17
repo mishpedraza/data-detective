@@ -470,8 +470,6 @@ const AFFORDABILITY: TopicEvidence = {
 const GROWTH_WAGES: TopicEvidence = {
   findings: [
     { lead: 'In Spain, wages respond little to booms and busts.', text: 'Records of Spanish workers for 1987–2013 show real wages moving only weakly with the economy, even less in recessions; new hires’ pay moved most, long-tenured workers’ least.', refs: ['font2015'] },
-    { lead: 'Across rich countries, typical pay fell behind the economy.', text: 'In most OECD countries over about two decades, median pay grew more slowly than output, because a smaller share of income went to workers and pay in the middle fell behind the average.', refs: ['oecd2018', 'schwellnus2017'] },
-    { lead: 'How big the gap looks depends on the measures.', text: 'Comparing output with average pay shows a small gap; comparing it with median pay adjusted for consumer prices shows a much larger one.', refs: ['pessoa2013'] },
   ],
   international: DECOUPLING.international,
   spain: [
