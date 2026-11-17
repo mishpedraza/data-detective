@@ -5,7 +5,7 @@ const CRIME = ['crime_homicide_long', 'crime_homicide', 'crime_robbery', 'crime_
 const HOUSING = ['house_price_real', 'rent_real', 'price_to_income', 'house_price_nominal', 'rent_nominal', 'price_to_rent']
 const GROWTH = ['gdp_real', 'gdp_pc_real', 'productivity']
 const JOBS = ['unemployment', 'employment_rate', 'employment']
-const LIVING = ['real_wage', 'median_income_real', 'disp_income_real', 'consumption_pps']
+const LIVING = ['real_wage', 'median_income_real', 'disp_income_real', 'consumption_pps', 'deprivation']
 
 const correlation = { text: 'Two lines moving together, or apart, does not show that one causes the other. Both can be driven by a third factor, such as the business cycle, or the timing can be coincidental.' }
 

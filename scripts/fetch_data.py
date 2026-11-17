@@ -295,6 +295,12 @@ def main():
         definition="Actual individual consumption per person in purchasing power standards, relative to the EU-27 average (= 100). Accounts for price differences between countries.",
         source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind", "url": LINK("prc_ppp_ind")})
 
+    add("deprivation", "living", eurostat("ilc_mdsd11", age="TOTAL", sex="T", unit="PC"),
+        label="People in severe material and social deprivation", short="Severe deprivation", unit="% of population", format="pct1",
+        definition="Share of people who cannot afford at least 7 of 13 everyday items, such as keeping the home warm, a week's holiday, replacing worn-out clothes or facing an unexpected expense (EU-SILC). Survey year shown.",
+        breaks=[{"year": 2015, "note": "The EU definition starts in 2015; the older severe material deprivation measure uses different items and is not joined to it."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_mdsd11", "url": LINK("ilc_mdsd11"), "upstream": "INE Spain (ECV)"}, keep_from=2015)
+
     OUT.write_text(json.dumps({"generated": TODAY, "indicators": INDICATORS}, ensure_ascii=False, separators=(",", ":")))
     print("wrote", OUT, OUT.stat().st_size, "bytes", file=sys.stderr)
 

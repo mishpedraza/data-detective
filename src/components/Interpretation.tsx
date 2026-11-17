@@ -45,7 +45,17 @@ function pairText(A: Indicator, B: Indicator, p: PairComparison, place: string) 
     c.pct != null ? `${nm(ind)} ${fp(c.pct)}${c.cagr != null ? ` (${fp(c.cagr)} a year)` : ''}` : `${nm(ind)} ${absChange(ind, c.first, c.last)}${ind.format === 'pct1' ? '' : ` ${ind.unit}`}`
   const base = `${place}, ${p.window[0]}–${p.window[1]} (years both indicators cover): ${one(A, p.a)}; ${one(B, p.b)}.`
   if (p.gap != null) return `${base} Gap: ${fpt(p.gap)} in favour of ${p.gap >= 0 ? nm(A) : nm(B)}.`
-  return p.a.pct != null && p.b.pct != null ? `${base} No gap is calculated: ${lc(p.reason ?? '')}` : base
+  return p.a.pct != null && p.b.pct != null ? `${base} No gap is calculated: ${(p.reason ?? '').charAt(0).toLowerCase()}${(p.reason ?? '').slice(1)}` : base
+}
+
+function crossText(A: Indicator, B: Indicator, es: PairComparison, other: PairComparison, name: string) {
+  const out = ([[A, es.a, other.a], [B, es.b, other.b]] as const).flatMap(([ind, x, y]) => {
+    if (!x || !y || x.first.year !== y.first.year || x.last.year !== y.last.year) return []
+    if (x.pct != null && y.pct != null) return [`${nm(ind)} ${fpt(x.pct - y.pct)}`]
+    if (usesPoints(ind)) return [`${nm(ind)} ${(x.abs - y.abs) >= 0 ? '+' : '−'}${Math.abs(x.abs - y.abs).toFixed(1)} points`]
+    return []
+  })
+  return out.length ? `Spain’s change minus ${name}’s over the same years: ${out.join('; ')}.` : ''
 }
 
 function absChange(ind: Indicator, first: Point, last: Point) {
@@ -361,7 +371,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             ))}
           </div>
           {tp && <p className="ti-counts">{tp}</p>}
-          <p className="ti-counts"><strong>Calculated from the data.</strong> {pairText(A, B, comparePair(A, B, 'ES', from, to), 'Spain')}{compare && A.data[compare] && B.data[compare] && <> {pairText(A, B, comparePair(A, B, compare, from, to), uc(COUNTRIES[compare].name))}</>}</p>
+          <p className="ti-counts"><strong>Calculated from the data.</strong> {pairText(A, B, comparePair(A, B, 'ES', from, to), 'Spain')}{compare && A.data[compare] && B.data[compare] && <> {pairText(A, B, comparePair(A, B, compare, from, to), uc(COUNTRIES[compare].name))} {crossText(A, B, comparePair(A, B, 'ES', from, to), comparePair(A, B, compare, from, to), COUNTRIES[compare].name)}</>}</p>
           {profile && crimeInd && (
             <p className="ti-counts">
               <strong>What the crime figures count:</strong> {crimeInd.definition}
@@ -560,7 +570,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <div className="tell-part">
             <div className="tell-label">
               <span className="evidence-num">05</span>
-              <h3>What can we conclude, and what remains uncertain?</h3>
+              <h3>What the evidence shows, and what remains uncertain</h3>
             </div>
             <div className="tell-body">
               <dl className="conclude">
@@ -727,7 +737,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">03</span>
-          <h3>What can we conclude?</h3>
+          <h3>What the evidence shows</h3>
         </div>
         <div className="tell-body">
           <dl className="conclude">
@@ -747,7 +757,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             <dd>
               {isImmCrime
                 ? `Only research designed to isolate cause can answer that. For immigration and crime it mostly finds little or no effect on overall crime, with exceptions that depend on who migrates, the offence and the period. None of it isolates homicide.`
-                : 'No verified research summary is available for this question yet, and the data shown here cannot establish cause.'}
+                : TOPIC[rel.id]
+                  ? 'The studies above are descriptive or associational and none isolates Spain, so they do not establish what caused the movements shown. The data shown here cannot establish cause either.'
+                  : 'No verified research summary is available for this question yet, and the data shown here cannot establish cause.'}
             </dd>
           </dl>
           <p className="tell-text">{factors}</p>
