@@ -239,7 +239,7 @@ const DRIVER_Q: Record<string, string> = {
 const BUILT: Record<string, { fn: Fn; covered: string[]; none: [string, string] }> = {
   'growth-wages': { fn: growthWages as Fn, covered: ['gdp_pc_real', 'median_earnings_real', 'real_wage'], none: ['The available data cannot establish whether typical workers became poorer in these years', 'There is not enough GDP and wage data. Widen the period.'] },
   'productivity-wages': { fn: productivityWages as Fn, covered: ['productivity', 'real_wage'], none: ['Not enough data to compare productivity and wages in these years', 'Widen the period.'] },
-  'housing-affordability': { fn: affordability as Fn, covered: ['house_price_real', 'disp_income_real', 'price_to_income'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
+  'housing-affordability': { fn: affordability as Fn, covered: ['house_price_real', 'disp_income_real'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
   'europe-us': { fn: europeUs as Fn, covered: ['gdp_pc_vs_us', 'aic_vs_us', 'wage_vs_us'], none: ['Not enough data to compare with the US in these years', 'Widen the period.'] },
 }
 
