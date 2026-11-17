@@ -56,7 +56,13 @@ function ChangeText({ A, B, compare, from, to }: { A: Indicator; B: Indicator; c
     }
   }
   const aligned = !!(other?.window && es.window && other.window[0] === es.window[0] && other.window[1] === es.window[1])
-  if (!es.window || !es.a || !es.b) return null
+  if (!es.window || !es.a || !es.b) {
+    const desc = (ind: Indicator) => {
+      const pts = inRange(series(ind.id, 'ES'), from, to)
+      return pts.length ? `${nm(ind)} has ${pts.length === 1 ? `one observation (${pts[0].year})` : `data for ${pts[0].year}–${pts[pts.length - 1].year}`}` : `${nm(ind)} has no data`
+    }
+    return <p className="ti-counts">In Spain in {from}–{to}, {desc(A)} and {desc(B)}, so their changes cannot be compared over matching years. Widen the period to compare them.</p>
+  }
   const gapText = (p: PairComparison) => (p.gap != null ? `, a gap of ${pts(p.gap)}` : '')
   const out = [`In Spain, from ${es.window[0]} to ${es.window[1]}, ${moved(A, es.a)} while ${moved(B, es.b)}${gapText(es)}.`]
   const name = compare ? COUNTRIES[compare].name : ''
