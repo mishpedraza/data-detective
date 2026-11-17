@@ -1,6 +1,6 @@
 import { INDICATORS, series } from './indicators'
 
-type EndpointComparison = { indicator: string; from: number; to: number; subject: string; precision: number; benchmark?: string }
+type EndpointComparison = { indicator: string; from: number; to: number; subject: string; precision: number; display?: 'rate'; benchmark?: string }
 
 const directionOptions = ['Higher', 'Lower', 'About the same'] as const
 const yesNoOptions = ['Yes', 'No', 'About the same'] as const
@@ -37,6 +37,12 @@ export const predictions: readonly Discovery[] = [
     comparison: { indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1, benchmark: 'gdp_pc_real' },
     context: 'Typical hourly pay bought a little more. What a household can afford also depends on hours worked and other sources of income.',
   },
+  {
+    id: 'immigration-crime',
+    prompt: 'Was Spain’s recorded homicide rate higher or lower in 2023 than in 2002?',
+    comparison: { indicator: 'crime_homicide_long', from: 2002, to: 2023, subject: 'homicides per 100,000 people', precision: 2, display: 'rate' },
+    context: 'Spain’s foreign-born share rose over these years. Homicide is one measure of serious violence, and the two trends leave open what effect immigration had.',
+  },
 ]
 
 export function discoveryEvidence(discovery: Discovery) {
@@ -62,6 +68,18 @@ export function discoveryEvidence(discovery: Discovery) {
     return {
       result: `After inflation, typical hourly pay ${showChange(change)}, while GDP per person ${showChange(benchmark)}.`,
       answer: answerFor(change - benchmark, options),
+      source,
+      publisher,
+    }
+  }
+
+  if (comparison.display === 'rate') {
+    const points = INDICATORS[comparison.indicator].data.ES
+    const first = Number(points[from].toFixed(precision))
+    const last = Number(points[to].toFixed(precision))
+    return {
+      result: `Spain recorded ${first} ${comparison.subject} in ${from} and ${last} in ${to}.`,
+      answer: answerFor(last - first, options),
       source,
       publisher,
     }

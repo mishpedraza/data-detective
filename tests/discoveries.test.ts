@@ -24,8 +24,13 @@ test('featured predictions have scoped evidence and open actual investigations',
   assert.match(discoveryEvidence(predictions[0])!.result, /13% below/)
   assert.match(discoveryEvidence(predictions[1])!.result, /1\.6%.*4\.8%/)
   assert.deepEqual(predictionOptions(predictions[0]), ['Higher', 'Lower', 'About the same'])
-  for (const discovery of predictions.slice(1)) assert.deepEqual(predictionOptions(discovery), ['Yes', 'No', 'About the same'])
-  assert.deepEqual(predictions.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No'])
+  assert.deepEqual(predictionOptions(predictions[1]), ['Yes', 'No', 'About the same'])
+  assert.match(discoveryEvidence(predictions[2])!.result, /1\.35.*0\.69/)
+  for (const entry of EDITORIAL_QUESTIONS.filter(({ featured }) => featured)) {
+    const relationship = entry.status === 'available' ? entry.relationship : entry.related?.relationship
+    assert.ok(predictions.some(({ id }) => id === relationship), entry.id)
+  }
+  assert.deepEqual(predictions.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No', 'Lower'])
 })
 
 test('a recent immigration and housing gap cites the closest study period', () => {
