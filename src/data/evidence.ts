@@ -145,7 +145,7 @@ export const TREND: Record<string, TrendEvidence> = {
     explanations: [COVID_DROP, SECURITY, ECONOMY],
     studies: [...COVID_STUDIES, { id: 'tseloni2017', relevance: 'indirect', note: 'England and Wales; not tested for Spain.' }, { id: 'buonanno2008', relevance: 'indirect', note: 'Spain, 1993–1999; association only.' }],
     gap: 'Whether better security explains Spain’s burglary decline has not been tested.',
-    summary: 'Lockdowns explain the 2020 dip; better security is a plausible, untested explanation for the longer decline.',
+    summary: 'Better security is a plausible but untested explanation for the longer decline; city studies show lockdowns cut burglary in 2020, though Spain’s national rate did not fall that year.',
   },
 
   crime_theft: {
