@@ -33,7 +33,7 @@ export function DiscoveryPrediction({ discovery, navigate }: {
         </div>
       ) : (
         <fieldset className="discovery-prediction">
-          <legend>{discovery.prompt}</legend>
+          <legend>{discovery.comparisonLabel}</legend>
           <div className="discovery-options">
             {options.map((option) => (
               <button type="button" key={option} onClick={() => setPrediction(option)}>{option}</button>
@@ -45,7 +45,7 @@ export function DiscoveryPrediction({ discovery, navigate }: {
         if (!navigate || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
         event.preventDefault()
         navigate(href)
-      }}>{prediction ? 'Open investigation →' : 'Skip to the evidence →'}</a>
+      }}>Explore the evidence →</a>
     </>
   )
 }

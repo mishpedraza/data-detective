@@ -21,7 +21,7 @@ export const EDITORIAL_QUESTIONS: readonly EditorialQuestion[] = [
     status: 'available', relationship: 'immigration-crime',
   },
   {
-    id: 'housing-affordability', question: 'Why has housing become so unaffordable?', featured: true,
+    id: 'housing-affordability', question: 'Are houses really more expensive than they used to be?', featured: true,
     status: 'available', relationship: 'housing-affordability',
   },
   {
