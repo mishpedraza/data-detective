@@ -9,7 +9,8 @@ import { insightFor } from './insights'
 import { answerFor, isBuiltAnswer, isDriverQuestion, statFor, type Stat } from './answers'
 
 type Dir = 'rose' | 'fell' | 'stable'
-export type Finding = { lead: string; body?: string; refs: string[]; kind?: string; years?: [number, number] }
+/** `role` marks data or measurement notes, which support research on the question but never lead 02. */
+export type Finding = { lead: string; body?: string; refs: string[]; kind?: string; years?: [number, number]; role?: 'data' | 'method' }
 
 const lc = (s: string) => (/^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
 const uc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -25,6 +26,11 @@ function summarise(ind: Indicator, geo: string, from: number, to: number) {
   const dir: Dir = Math.abs(rel) < 0.05 ? 'stable' : rel > 0 ? 'rose' : 'fell'
   const gaps = to - from + 1 - pts.length
   return { pts, first, last, rel, dir, gaps }
+}
+
+/** Share of the selected years that a study's years cover. */
+export function overlapShare(y: [number, number], from: number, to: number) {
+  return Math.max(0, Math.min(to, y[1]) - Math.max(from, y[0])) / Math.max(1, to - from)
 }
 
 /** Years a finding covers: its own, or the span of its studies when every study states one. */
@@ -60,6 +66,7 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
   const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
   const explanations = trend && crimeDir ? trend.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
   const confounders = profile ? profile.confounders.filter((c) => overlaps(c.years)) : []
+  const ans = answerFor(rel.id, a, b, compare, from, to)
   const findings: Finding[] = []
   const insight = insightFor(rel.id, 'ES', from, to, a)
   if (insight) findings.push(insight)
@@ -110,15 +117,27 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
       : { lead: `Research links ${join(phases.map((p) => p.clause))}.`, body: phases.map((p) => p.summary).join(' '), refs: [...new Set(phases.flatMap((p) => p.refs))] })
     for (const p of phases) for (const f of p.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
   }
+  let gapLeads = false
   if (!trend && topic) {
     const fits = (f: { years?: [number, number] }) => !f.years || inYears(f.years)
+    const lead = topic.findings[0]
+    const ap = ans?.period?.split('–').map(Number)
+    const [af, at] = ap?.length === 2 ? ap : [from, to]
+    if (!phases.length && lead?.years && overlapShare(lead.years, af, at) < 0.5) {
+      gapLeads = true
+      const intro = `The closest verified study covers ${lead.years[0]}–${lead.years[1]}. ${lead.lead}`
+      const more = `${intro} ${firstSentence(lead.text)}`
+      findings.push({ lead: topic.gap, body: more.split(/\s+/).length <= 50 ? more : intro, refs: lead.refs ?? [], years: lead.years })
+    }
     for (const f of [...topic.findings.filter(fits), ...topic.findings.filter((f) => !fits(f))]) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [], years: f.years })
   }
   const cmpTopic = topic && compare ? topic.byCountry?.[compare] : undefined
   const cmpFindings = cmpTopic?.findings.filter((f) => !f.years || inYears(f.years)) ?? []
   if (!trend) for (const f of cmpFindings) findings.push({ lead: `In ${COUNTRIES[compare!].name}: ${f.lead.charAt(0).toLowerCase()}${f.lead.slice(1)}`, body: f.text, refs: f.refs ?? [] })
   if (!trend && topic?.cmpGap && compare && compare !== 'none' && !cmpFindings.length && COUNTRIES[compare]) findings.push({ lead: `In ${COUNTRIES[compare].name}: no study explains these years.`, body: topic.cmpGap, refs: [] })
-  const topicGap = phases.length ? phases[phases.length - 1].gap : topic?.gap
+  const k = findings.findIndex((f) => !f.role)
+  if (k > 0) findings.unshift(...findings.splice(k, 1))
+  const topicGap = phases.length ? phases[phases.length - 1].gap : gapLeads ? undefined : topic?.gap
   const yearList = (ys: number[]) => (ys.length > 1 ? `${ys.slice(0, -1).join(', ')} and ${ys[ys.length - 1]}` : `${ys[0]}`)
   const breakParts = [A, B].flatMap((ind) => {
     const ys = ind.breaks.filter((x) => x.year > from && x.year <= to).map((x) => x.year)
@@ -130,7 +149,6 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
   })
   const breakItems: Claim[] = breakParts.length ? [{ text: `Series breaks: ${breakParts.join('; ')}. Figures either side are not fully comparable.`, refs: [A, B].filter((ind) => ind.breaks.some((x) => x.year > from && x.year <= to)).map((ind) => `data:${ind.id}`) }] : []
   const trendGapText = trend && crimeDir ? (trend.summaryDir === 'any' || trend.summaryDir === crimeDir ? trend.gap : `No verified study explains this ${crimeDir === 'stable' ? 'flat trend' : crimeDir} in recorded ${trend.noun} in the selected years.`) : null
-  const ans = answerFor(rel.id, a, b, compare, from, to)
   const driver = isDriverQuestion(rel.id)
   const showChange = !ans || !(ans.covered.includes(a) && ans.covered.includes(b))
   const hasCmp = !!compare && compare !== 'none'

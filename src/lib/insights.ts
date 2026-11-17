@@ -29,20 +29,20 @@ function wageGap(geo: string, from: number, to: number): Finding | null {
     return {
       lead: `Average wages outpaced median pay because they are measured differently, not because top earners pulled away.`,
       body: `In the earnings survey that measures median pay, average hourly pay ${moved(mean!)}, ${dist < -0.5 ? 'less than' : 'about as much as'} the median, and pay grew most ${best} (${spread}). The average-wage figure comes from national accounts, covers all employers and counts pay per full-time job per year; adjusted for the same consumer prices as median pay, it ${moved(cpi!)}.`,
-      refs: ['eurostatSes', 'oecdWages'], years: w,
+      refs: ['eurostatSes', 'oecdWages'], years: w, role: 'method',
     }
   }
   if (gap > 0) {
     return {
       lead: topAway && d1! > d9! ? 'Part of the gap is pay in the middle falling behind both ends.' : topAway ? 'Part of the gap is pay at the top pulling away from the middle.' : 'Most of the gap is measurement, though the average also held up better than the median within the same survey.',
       body: `In the earnings survey that measures median pay, average hourly pay ${moved(mean!)}, high-end pay ${moved(d9!)} and low-end pay ${moved(d1!)}. The average-wage figure comes from national accounts and counts pay per full-time job per year${Math.abs(measure) > 1 ? `; that difference in measurement adds ${Math.abs(measure).toFixed(1)} points ${measure > 0 ? 'to' : 'against'} the average` : ''}.`,
-      refs: ['eurostatSes', 'oecdWages'], years: w,
+      refs: ['eurostatSes', 'oecdWages'], years: w, role: 'method',
     }
   }
   return {
     lead: med! > d9! ? 'Median pay outpaced the average: pay in the middle caught up with the top.' : 'Median pay outpaced the average, though pay grew most at the top.',
     body: `In the earnings survey, low-end pay ${moved(d1!)} and high-end pay ${moved(d9!)}, while average hourly pay ${moved(mean!)}.`,
-    refs: ['eurostatSes', 'oecdWages'], years: w,
+    refs: ['eurostatSes', 'oecdWages'], years: w, role: 'method',
   }
 }
 
@@ -71,12 +71,12 @@ function productivityJobs(geo: string, from: number, to: number): Finding | null
   if (best[0] === w[0] && best[1] === w[1]) return {
     lead: `Output per hour rose because jobs disappeared faster than output fell.`,
     body: `Output ${moved(g)}, but ${jobs} jobs went. The rise in output per hour came from fewer hours worked, not from producing more.`,
-    refs: ['eurostatNA'], years: w, kind: 'descriptive',
+    refs: ['eurostatNA'], years: w, kind: 'descriptive', role: 'data',
   }
   return {
     lead: `${share >= 75 ? 'Most' : 'Much'} of ${place(geo)}’s rise in output per hour came while jobs were disappearing.`,
     body: `In ${span(best)}, output ${moved(g)} but ${jobs} jobs went, so output per hour ${moved(p)}: about ${Math.round(Math.min(share, 100) / 5) * 5}% of the gain over ${span(w)}. The rise came from fewer hours worked, not from producing more.`,
-    refs: ['eurostatNA'], years: w, kind: 'descriptive',
+    refs: ['eurostatNA'], years: w, kind: 'descriptive', role: 'data',
   }
 }
 
@@ -95,16 +95,16 @@ function populationGrowth(geo: string, from: number, to: number, a?: string): Fi
     const people = (y: number) => at('foreign_born', geo, y)! / (at('foreign_born_share', geo, y)! / 100)
     const dPop = people(wf[1]) - people(wf[0])
     const dFb = at('foreign_born', geo, wf[1])! - at('foreign_born', geo, wf[0])!
-    if (dPop > 0 && dFb > 0) fb = ` In ${span(wf)}, the number of foreign-born residents rose by ${(dFb / 1e6).toFixed(1)} million, ${dFb >= dPop ? 'more than the whole population increase' : `about ${Math.round((dFb / dPop) * 100 / 5) * 5}% of that increase`}.`
+    if (dPop > 0 && dFb > 0) fb = ` Foreign-born residents rose by ${(dFb / 1e6).toFixed(1)} million${wf[0] !== w[0] || wf[1] !== w[1] ? ` in ${span(wf)}` : ''}, ${dFb >= dPop ? 'more than the whole population increase' : `about ${Math.round((dFb / dPop) * 100 / 5) * 5}% of it`}.`
   }
   if (gp <= 0.05) return {
     lead: `All of ${place(geo)}’s economic growth came from having more people; output per person ${gp < -0.05 ? 'fell' : 'did not grow'}.`,
-    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, while output per person ${moved(gp)}.${fb} Whether immigration affected output per person is a question no verified study answers for ${place(geo)}.`,
+    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, while output per person ${moved(gp)}.${fb} No verified study shows whether immigration affected output per person in ${place(geo)}.`,
     refs: ['eurostatNA'], years: w, kind: 'descriptive',
   }
   return {
     lead: share >= 55 ? `Most of ${place(geo)}’s economic growth came from having more people, not more output per person.` : share >= 45 ? `About half of ${place(geo)}’s economic growth came from having more people, not more output per person.` : `About ${Math.round(share / 5) * 5}% of ${place(geo)}’s economic growth came from having more people.`,
-    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, so output per person rose much less than total output.${fb} Whether immigrants raised output per person is a separate question that no verified study answers for ${place(geo)}.`,
+    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}.${fb} No verified study shows whether immigrants raised or lowered output per person in ${place(geo)}.`,
     refs: ['eurostatNA'], years: w, kind: 'descriptive',
   }
 }

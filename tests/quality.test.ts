@@ -9,7 +9,7 @@ import { TOPIC } from '../src/data/evidence'
 import { change } from '../src/lib/compare'
 import { inRange } from '../src/lib/stats'
 import { answerFor } from '../src/lib/answers'
-import { explain, findingYears } from '../src/lib/explain'
+import { explain, findingYears, overlapShare } from '../src/lib/explain'
 
 const PERIODS: [number, number][] = [[2000, 2025], [2000, 2007], [2008, 2013], [2014, 2025], [2010, 2022], [2019, 2021], [2006, 2022], [2023, 2025]]
 const val = (v: string) => Number(v.replace('−', '-').replace(/[^0-9.-]/g, ''))
@@ -216,15 +216,51 @@ test('the explanation adds something the headline and statistics do not', () => 
 test('data insights appear when the pattern is in the data, and are sourced', () => {
   const R = (id: string) => RELATIONSHIPS.find((r) => r.id === id)!
   const wages = explain(R('growth-wages'), 'gdp_pc_real', 'real_wage', null, 2000, 2025)
-  assert.match(wages.findings[0].lead, /measured differently/)
-  assert.match(wages.findings[0].body!, /low end/)
+  const gap = wages.findings.find((f) => /measured differently/.test(f.lead))
+  assert.ok(gap, 'the average-vs-median insight is available under Explore the research')
+  assert.match(gap!.body!, /low end/)
   assert.ok(wages.ans!.stats.some((s) => s.label === 'real average wages'), 'average wages must be visible when the insight explains them')
-  const prod = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2000, 2025).findings[0]
-  assert.match(prod.lead, /jobs were disappearing/)
-  assert.match(prod.body!, /^In 2008–2013/)
+  const prodAll = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2000, 2025).findings
+  const prod = prodAll.find((f) => /jobs were disappearing/.test(f.lead))
+  assert.ok(prod, 'job-loss insight present')
+  assert.match(prod!.body!, /^In 2008–2013/)
   const pop = explain(R('immigration-growth'), 'foreign_born_share', 'gdp_real', null, 2000, 2025).findings[0]
   assert.match(pop.lead, /more people/)
-  for (const f of [wages.findings[0], prod, pop]) for (const id of f.refs) assert.ok(REFERENCES[id], id)
-  const flat = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2014, 2025).findings[0]
-  assert.doesNotMatch(flat.lead, /jobs were disappearing/, 'no job-loss insight when employment grew')
+  for (const f of [gap!, prod!, pop]) for (const id of f.refs) assert.ok(REFERENCES[id], id)
+  const flat = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2014, 2025).findings
+  assert.ok(!flat.some((f) => /jobs were disappearing/.test(f.lead)), 'no job-loss insight when employment grew')
+})
+
+const METHOD = /national accounts|deflat|price index|earnings survey|measured differently|full-time job|dataset/i
+
+test('02 leads with research on the question, never with methodology', () => {
+  for (const { rel, a, b, c, from, to } of selections()) {
+    const ex = explain(rel, a, b, c, from, to)
+    const first = ex.findings[0]
+    if (!first) continue
+    const where = `${rel.id} ${a}/${b} ${c ?? '-'} ${from}–${to}`
+    assert.ok(!first.role, `${where}: a ${first.role} note leads 02 ("${first.lead}")`)
+    assert.doesNotMatch(`${first.lead} ${first.body ?? ''}`, METHOD, `${where}: methodology in the visible explanation`)
+    const words = (first.body ?? '').split(/\s+/).filter(Boolean).length
+    assert.ok(words <= 55, `${where}: visible paragraph has ${words} words`)
+    assert.ok(first.lead.split(/\s+/).length <= 30, `${where}: takeaway too long`)
+    if (TOPIC[rel.id] && !/^No /.test(first.lead) && first.lead !== TOPIC[rel.id].gap) {
+      const y = findingYears(first)
+      const ap = ex.ans?.period?.split('–').map(Number)
+      const [f0, t0] = ap?.length === 2 ? ap : [from, to]
+      if (y && TOPIC[rel.id].findings[0]?.years && !TOPIC[rel.id].phases?.length) assert.ok(overlapShare(y, f0, t0) >= 0.5, `${where}: "${first.lead}" covers ${y} but leads for ${f0}–${t0}`)
+    }
+    for (const l of ex.shownLimits) assert.ok(l.text.split(/(?<=[.!?])\s+(?=[A-Z])/).length <= 2, `${where}: 03 longer than two sentences`)
+  }
+})
+
+test('verdicts on pay do not overstate: a small real rise is not "did not reach workers"', () => {
+  const rel = RELATIONSHIPS.find((r) => r.id === 'growth-wages')!
+  for (const [from, to] of PERIODS) for (const b of rel.right.options.length ? rel.right.options : [rel.right.default]) {
+    const ex = explain(rel, 'gdp_pc_real', b, null, from, to)
+    const typical = ex.ans?.stats[1]
+    if (!typical) continue
+    const v = parseFloat(typical.value.replace('−', '-'))
+    if (v >= 0.5) assert.doesNotMatch(`${ex.ans!.headline} ${ex.meaning}`, /did not reach|barely changed|stagnat/, `${from}–${to}: ${typical.value} described as no gain`)
+  }
 })

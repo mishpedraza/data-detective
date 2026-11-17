@@ -418,7 +418,7 @@ export interface Phase {
 
 const DECOUPLING: TopicEvidence = {
   findings: [
-    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over about two decades, workers’ share of income fell and middle earners lost ground to the average.', refs: ['oecd2018', 'schwellnus2017'] },
+    { lead: 'Across rich countries, pay has lagged productivity because workers’ share of income fell and the middle lost ground to the top.', text: 'An OECD study of about 1995–2013 finds both forces in most member countries, with the gap between median and average pay driven by very high earners. It includes Spain but does not explain Spain’s figures separately.', refs: ['oecd2018', 'schwellnus2017'], years: [1995, 2013] },
     { lead: 'The size of the gap depends on the measures.', text: 'Comparing productivity with average pay deflated by the same price index shows a small gap; comparing it with median wages deflated by consumer prices shows a much larger one.', refs: ['pessoa2013'] },
     { lead: 'The link has weakened, not vanished (US evidence).', text: 'In the United States, faster productivity growth still went with faster pay growth, but other factors held typical pay down.', refs: ['stansbury2017'] },
   ],
@@ -429,14 +429,14 @@ const DECOUPLING: TopicEvidence = {
     { id: 'autor2020', relevance: 'indirect', note: 'United States; one explanation for falling labour shares.' },
   ],
   spain: [],
-  gap: 'No verified study explains Spain’s wage–productivity gap since 2000; the OECD studies include Spain but do not report it separately.',
+  gap: 'No verified study explains how Spain’s pay and productivity moved relative to each other, or covers the years since 2013.',
 }
 
 const EUROPE_US: TopicEvidence = {
   findings: [
-    { lead: 'Europe chose more leisure.', text: 'By the early 2000s output per hour was close to US levels; Europeans took more of the gains as shorter hours than as higher incomes.', refs: ['blanchard2004'] },
-    { lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe.', refs: ['prescott2004'] },
-    { lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does.', refs: ['jonesklenow2016'] },
+    { years: [1970, 2003], lead: 'Europe chose more leisure.', text: 'By the early 2000s output per hour was close to US levels; Europeans took more of the gains as shorter hours than as higher incomes.', refs: ['blanchard2004'] },
+    { years: [1970, 1996], lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe.', refs: ['prescott2004'] },
+    { years: [1980, 2007], lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does.', refs: ['jonesklenow2016'] },
   ],
   international: [
     { id: 'jonesklenow2016', relevance: 'indirect', note: 'Includes Spain, France, Germany, Italy and the US; data end in the 2000s.' },
@@ -444,7 +444,7 @@ const EUROPE_US: TopicEvidence = {
     { id: 'prescott2004', relevance: 'indirect', note: 'G-7 countries; Spain and Portugal not included.' },
   ],
   spain: [],
-  gap: 'No verified peer-reviewed study explains why Spain’s GDP per person and wages fell further behind the US level after 2008.',
+  gap: 'No verified study explains how Spain’s position relative to the US changed after 2008.',
 }
 
 const IMM_HOUSING: TopicEvidence = {
@@ -550,6 +550,7 @@ const AFFORDABILITY: TopicEvidence = {
 
 const GROWTH_WAGES: TopicEvidence = {
   findings: [
+    { lead: 'Across rich countries, typical pay has lagged growth because workers’ share of income fell and the middle lost ground to the top.', text: 'An OECD study of about 1995–2013 finds both forces in most member countries, with very high earners pulling average pay away from the median. It includes Spain but does not explain Spain’s figures separately.', refs: ['schwellnus2017'], years: [1995, 2013] },
     { lead: 'In Spain, wages respond little to booms and busts.', text: 'Real pay barely tracked the economy, least in recessions; new hires’ pay moved most, long-serving workers’ least.', refs: ['font2015'], years: [1987, 2013] },
   ],
   international: DECOUPLING.international,
@@ -557,7 +558,7 @@ const GROWTH_WAGES: TopicEvidence = {
     { id: 'font2015', relevance: 'direct', note: 'Spain, 1987–2013.' },
     { id: 'barcelo2021', relevance: 'direct', note: 'Spain; employment effects of the 2019 minimum-wage rise.' },
   ],
-  gap: 'No verified study explains why typical pay in Spain grew so much more slowly than GDP per person since 2000.',
+  gap: 'No verified study explains Spain’s own gap between typical pay and GDP per person, or covers the years since 2013.',
   byCountry: {
     US: {
       findings: [{ lead: 'Pay still follows productivity, but other forces held typical pay down.', text: 'From 1973 to 2016, each extra percentage point of productivity growth went with roughly 0.7 to 1 point more growth in median pay; the gap opened because of other factors, not because the link broke.', refs: ['stansbury2017'] }],
