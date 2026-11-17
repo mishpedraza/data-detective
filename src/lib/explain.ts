@@ -28,6 +28,9 @@ function summarise(ind: Indicator, geo: string, from: number, to: number) {
   return { pts, first, last, rel, dir, gaps }
 }
 
+/** A study must cover at least this share of the answer's years to lead 02. */
+export const MIN_OVERLAP = 1 / 3
+
 /** Share of the selected years that a study's years cover. */
 export function overlapShare(y: [number, number], from: number, to: number) {
   return Math.max(0, Math.min(to, y[1]) - Math.max(from, y[0])) / Math.max(1, to - from)
@@ -120,16 +123,19 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
   let gapLeads = false
   if (!trend && topic) {
     const fits = (f: { years?: [number, number] }) => !f.years || inYears(f.years)
-    const lead = topic.findings[0]
     const ap = ans?.period?.split('–').map(Number)
     const [af, at] = ap?.length === 2 ? ap : [from, to]
-    if (!phases.length && lead?.years && overlapShare(lead.years, af, at) < 0.5) {
+    const dated = topic.findings.filter((f) => f.years)
+    const best = dated.find((f) => overlapShare(f.years!, af, at) >= MIN_OVERLAP)
+    const lead = dated[0]
+    if (!phases.length && best) findings.push({ lead: best.lead, body: best.text, refs: best.refs ?? [], years: best.years })
+    else if (!phases.length && lead?.years) {
       gapLeads = true
       const intro = `The closest verified study covers ${lead.years[0]}–${lead.years[1]}. ${lead.lead}`
       const more = `${intro} ${firstSentence(lead.text)}`
       findings.push({ lead: topic.gap, body: more.split(/\s+/).length <= 50 ? more : intro, refs: lead.refs ?? [], years: lead.years })
     }
-    for (const f of [...topic.findings.filter(fits), ...topic.findings.filter((f) => !fits(f))]) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [], years: f.years })
+    for (const f of [...topic.findings.filter(fits), ...topic.findings.filter((f) => !fits(f))]) if (findings.every((g) => g.lead !== f.lead)) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [], years: f.years })
   }
   const cmpTopic = topic && compare ? topic.byCountry?.[compare] : undefined
   const cmpFindings = cmpTopic?.findings.filter((f) => !f.years || inYears(f.years)) ?? []

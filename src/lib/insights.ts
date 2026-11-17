@@ -99,13 +99,13 @@ function populationGrowth(geo: string, from: number, to: number, a?: string): Fi
   }
   if (gp <= 0.05) return {
     lead: `All of ${place(geo)}’s economic growth came from having more people; output per person ${gp < -0.05 ? 'fell' : 'did not grow'}.`,
-    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, while output per person ${moved(gp)}.${fb} No verified study shows whether immigration affected output per person in ${place(geo)}.`,
-    refs: ['eurostatNA'], years: w, kind: 'descriptive',
+    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, while output per person ${moved(gp)}.${fb}`,
+    refs: ['eurostatNA'], years: w, kind: 'descriptive', role: 'data',
   }
   return {
     lead: share >= 55 ? `Most of ${place(geo)}’s economic growth came from having more people, not more output per person.` : share >= 45 ? `About half of ${place(geo)}’s economic growth came from having more people, not more output per person.` : `About ${Math.round(share / 5) * 5}% of ${place(geo)}’s economic growth came from having more people.`,
-    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}.${fb} No verified study shows whether immigrants raised or lowered output per person in ${place(geo)}.`,
-    refs: ['eurostatNA'], years: w, kind: 'descriptive',
+    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}.${fb}`,
+    refs: ['eurostatNA'], years: w, kind: 'descriptive', role: 'data',
   }
 }
 
