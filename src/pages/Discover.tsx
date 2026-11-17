@@ -1,71 +1,100 @@
 import { motion } from 'framer-motion'
 import * as d3 from 'd3'
 import { hrefFor } from '../lib/route'
-import { INDICATORS, formatValue, series } from '../data/indicators'
+import { INDICATORS, series } from '../data/indicators'
 import { RELATIONSHIPS } from '../data/relationships'
+import { change } from '../lib/compare'
 
-function Spark({ id, tone }: { id: string; tone: 'a' | 'b' }) {
-  const s = series(id, 'ES').filter((p) => p.year >= 2000)
+const FROM = 2000
+
+function Line({ id, tone }: { id: string; tone: 'a' | 'b' }) {
+  const s = series(id, 'ES').filter((p) => p.year >= FROM)
   if (s.length < 2) return null
-  const x = d3.scaleLinear().domain([2000, 2025]).range([2, 158])
-  const y = d3.scaleLinear().domain(d3.extent(s, (p) => p.value) as [number, number]).range([34, 4])
-  const d = d3.line<{ year: number; value: number }>().x((p) => x(p.year)).y((p) => y(p.value)).curve(d3.curveMonotoneX)(s) ?? ''
+  const ind = INDICATORS[id]
+  const x = d3.scaleLinear().domain([FROM, 2025]).range([2, 178])
+  const y = d3.scaleLinear().domain(d3.extent(s, (p) => p.value) as [number, number]).range([30, 4])
+  const d = s.map((p, i) => `${i && p.year === s[i - 1].year + 1 ? 'L' : 'M'}${x(p.year).toFixed(1)},${y(p.value).toFixed(1)}`).join('')
   const last = s[s.length - 1]
+  const c = change(ind, 'ES', s[0].year, last.year)
+  const delta = c ? (c.pct != null ? `${c.pct >= 0 ? '+' : '−'}${Math.abs(c.pct).toFixed(0)}%` : `${c.abs >= 0 ? '+' : '−'}${Math.abs(c.abs).toFixed(1)} pts`) : ''
   return (
-    <span className={`spark-item tone-${tone}`}>
-      <svg width="160" height="38" aria-hidden>
+    <span className={`feat-line tone-${tone}`}>
+      <svg viewBox="0 0 180 34" width="180" height="34" aria-hidden>
         <path d={d} className="spark-line" />
         <circle cx={x(last.year)} cy={y(last.value)} r={2.5} className="spark-dot" />
       </svg>
-      <span className="spark-label">
-        {INDICATORS[id].short} <b>{formatValue(last.value, INDICATORS[id].format)}</b> <i>{last.year}</i>
+      <span className="feat-stat">
+        <b>{delta}</b> {ind.short.replace(/\s*\(.*?\)/g, '').toLowerCase()} <i>{s[0].year}–{last.year}</i>
       </span>
     </span>
   )
 }
 
+type Featured = { q: string; a: string; b: string; rel?: string; note?: string }
+const FEATURED: Featured[] = [
+  { q: 'Why has housing become so unaffordable?', a: 'house_price_real', b: 'disp_income_real', note: 'Investigation in preparation' },
+  { q: 'Does immigration increase crime?', a: 'foreign_born_share', b: 'crime_homicide_long', rel: 'immigration-crime' },
+  { q: 'Is the economy growing while ordinary people get poorer?', a: 'gdp_pc_real', b: 'real_wage', rel: 'growth-wages' },
+]
 const COMING = ['Are younger generations economically worse off than their parents?']
 
 export function Discover({ navigate }: { navigate: (h: string) => void }) {
+  const go = (id: string) => (e: React.MouseEvent) => { e.preventDefault(); navigate(hrefFor('investigate', { r: id })) }
+  const more = RELATIONSHIPS.filter((r) => !FEATURED.some((f) => f.rel === r.id))
   return (
     <div className="discover">
       <section className="hero">
-        <motion.p className="eyebrow" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
-          Data Detective
-        </motion.p>
         <motion.h1 initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}>
-          Question what you <em>think</em> you know.
+          Big questions.<br /> <em>Real evidence.</em>
         </motion.h1>
         <motion.p className="hero-sub" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.6 }}>
-          Popular beliefs about immigration, crime, housing and living standards, tested against 25 years of official statistics. Pick a question to start investigating.
+          Explore what the data reveals about the issues shaping our lives.
         </motion.p>
-        <motion.a className="cta" href={hrefFor('investigate')} onClick={(e) => { e.preventDefault(); navigate(hrefFor('investigate')) }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
-          Start with Spain <span aria-hidden>→</span>
-        </motion.a>
       </section>
 
-      <section className="questions" aria-label="Questions">
-        <h2 className="section-label">Questions people argue about</h2>
+      <section className="featured" aria-label="Featured questions">
         <ol>
-          {RELATIONSHIPS.map((r, i) => (
-            <motion.li key={r.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: Math.min(i, 3) * 0.05 }}>
-              <a href={hrefFor('investigate', { r: r.id })} onClick={(e) => { e.preventDefault(); navigate(hrefFor('investigate', { r: r.id })) }}>
+          {FEATURED.map((f, i) => {
+            const body = (
+              <>
                 <span className="q-num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="q-text">{r.question}</span>
-                <span className="q-sparks">
-                  <Spark id={r.left.default} tone="a" />
-                  <Spark id={r.right.default} tone="b" />
+                <span className="feat-text">
+                  <span className="feat-q">{f.q}</span>
+                  {f.note && <span className="feat-note">{f.note}</span>}
                 </span>
+                <span className="feat-viz">
+                  <Line id={f.a} tone="a" />
+                  <Line id={f.b} tone="b" />
+                </span>
+                {f.rel && <span className="q-go" aria-hidden>→</span>}
+              </>
+            )
+            return (
+              <motion.li key={f.q} className={f.rel ? '' : 'soon'} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 + i * 0.06 }}>
+                {f.rel ? <a href={hrefFor('investigate', { r: f.rel })} onClick={go(f.rel)}>{body}</a> : <div>{body}</div>}
+              </motion.li>
+            )
+          })}
+        </ol>
+      </section>
+
+      <section className="more-q" aria-label="More questions">
+        <h2 className="section-label">More questions to investigate</h2>
+        <ol>
+          {more.map((r, i) => (
+            <li key={r.id}>
+              <a href={hrefFor('investigate', { r: r.id })} onClick={go(r.id)}>
+                <span className="q-num">{String(FEATURED.length + i + 1).padStart(2, '0')}</span>
+                <span className="more-text">{r.question}</span>
                 <span className="q-go" aria-hidden>→</span>
               </a>
-            </motion.li>
+            </li>
           ))}
           {COMING.map((q, i) => (
-            <li key={q} className="coming">
+            <li key={q} className="soon">
               <div>
-                <span className="q-num">{String(RELATIONSHIPS.length + i + 1).padStart(2, '0')}</span>
-                <span className="q-text">{q}</span>
-                <span className="q-soon">In preparation: needs income and home-ownership data by age</span>
+                <span className="q-num">{String(FEATURED.length + more.length + i + 1).padStart(2, '0')}</span>
+                <span className="more-text">{q}<span className="feat-note">In preparation</span></span>
               </div>
             </li>
           ))}
