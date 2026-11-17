@@ -2,14 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
-import { Evidence } from '../components/Evidence'
+import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
 import { RangeBrush } from '../components/RangeBrush'
 import { ScatterChart } from '../components/ScatterChart'
 import { TimeChart } from '../components/TimeChart'
-import { COMPARE_OPTIONS, COUNTRIES } from '../data/countries'
+import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
-import { DIMENSIONS, INDICATORS, coverage, series } from '../data/indicators'
+import { DIMENSIONS, INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { RELATIONSHIPS, relationshipById } from '../data/relationships'
 
 const MIN = 1998
@@ -42,15 +42,24 @@ export function Investigate({ params }: { params: URLSearchParams }) {
     return f && t ? [f, t] : defaultRange(a, b)
   })
   const [view, setView] = useState<'time' | 'scatter'>(() => (params.get('view') === 'scatter' ? 'scatter' : 'time'))
-  const [mode, setMode] = useState<'levels' | 'changes'>('levels')
+  const [mode, setMode] = useState<'levels' | 'changes'>(() => (params.get('mode') === 'changes' ? 'changes' : 'levels'))
   const [hoverYear, setHoverYear] = useState<number | null>(null)
   const [playing, setPlaying] = useState(false)
   const playRef = useRef<number | null>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined })
+    const box = tabsRef.current
+    const btn = box?.querySelector<HTMLElement>('button.active')
+    if (!box || !btn) return
+    const left = btn.offsetLeft - box.offsetLeft
+    if (left < box.scrollLeft || left + btn.offsetWidth > box.scrollLeft + box.clientWidth - 48) box.scrollTo({ left: Math.max(0, left - 24), behavior: 'smooth' })
+  }, [rel.id])
+
+  useEffect(() => {
+    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined, mode: view === 'scatter' && mode === 'changes' ? 'changes' : undefined })
     if (window.location.hash !== q) window.history.replaceState(null, '', q)
-  }, [rel.id, a, b, compare, from, to, view])
+  }, [rel.id, a, b, compare, from, to, view, mode])
 
   function chooseRelationship(id: string) {
     const r = relationshipById(id)
@@ -80,13 +89,21 @@ export function Investigate({ params }: { params: URLSearchParams }) {
 
   const A = INDICATORS[a]
   const B = INDICATORS[b]
-  const cmp = compare === 'none' ? null : compare
   const leftOpts = (rel.left.options.length ? rel.left.options : Object.keys(INDICATORS)).filter((id) => rel.id !== 'custom' || INDICATORS[id].dimension === A.dimension)
   const rightOpts = (rel.right.options.length ? rel.right.options : Object.keys(INDICATORS)).filter((id) => rel.id !== 'custom' || INDICATORS[id].dimension === B.dimension)
-  const compareOpts = COMPARE_OPTIONS.filter((g) => g === 'none' || (A.data[g] && B.data[g])).map((g) => ({ value: g, label: g === 'none' ? 'nothing else' : COUNTRIES[g].name, hint: g === 'none' ? 'Spain only' : undefined }))
+  const compareOpts = COMPARE_OPTIONS.filter((g) => g === 'none' || (A.data[g] && B.data[g] && comparability(A, g).ok && comparability(B, g).ok)).map((g) => ({ value: g, label: g === 'none' ? 'nothing else' : COUNTRIES[g].name, hint: g === 'none' ? 'Spain only' : undefined }))
+  const cmp = compare !== 'none' && compareOpts.some((o) => o.value === compare) ? compare : null
+  const cmpNote = cmp ? [A, B].filter((x) => x.dimension === 'crime').map((x) => comparability(x, cmp).note).filter(Boolean).join(' ') : ''
+  const cmpBlocked = compare !== 'none' && !cmp && COUNTRIES[compare]
+    ? [A, B].map((x) => (x.data[compare] ? comparability(x, compare) : { ok: false, note: `No data for ${COUNTRIES[compare].name} on ${x.short.toLowerCase()}.` })).find((c) => !c.ok)?.note
+    : undefined
   const sparkA = useMemo(() => series(a, 'ES'), [a])
   const sparkB = useMemo(() => series(b, 'ES'), [b])
   const events = EVENTS.filter((e) => e.end >= from && e.start <= to && (!e.only || e.only.includes(A.dimension) || e.only.includes(B.dimension)))
+
+  const covA = coverage(a)
+  const covB = coverage(b)
+  const valueAt = (id: string, y: number) => INDICATORS[id].data.ES?.[String(y)]
 
   const handleHover = (y: number | null) => {
     if (playing) setPlaying(false)
@@ -102,7 +119,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
       </section>
 
       <nav className="rel-tabs" aria-label="Relationships">
-        <div className="rel-tabs-inner">
+        <div className="rel-tabs-inner" ref={tabsRef}>
           {RELATIONSHIPS.map((r) => (
             <button key={r.id} className={r.id === rel.id ? 'active' : ''} onClick={() => chooseRelationship(r.id)}>
               {r.shortQuestion}
@@ -122,7 +139,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
             with{' '}
             <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
             in Spain, alongside{' '}
-            <InlinePicker label="Comparison" value={compare} onChange={setCompare} options={compareOpts} display={compare === 'none' ? 'nothing else' : COUNTRIES[compare].name} />
+            <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'nothing else'} />
             , from {from} to {to}.
           </div>
         </motion.section>
@@ -156,8 +173,31 @@ export function Investigate({ params }: { params: URLSearchParams }) {
       <AnimatePresence mode="wait">
         {view === 'time' ? (
           <motion.div key="time" className="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="year-strip" aria-live="polite">
+              {hoverYear == null ? (
+                <span>{cmpBlocked ? `${COUNTRIES[compare].name.replace(/^the/, 'The')} is not shown. ${cmpBlocked}` : cmpNote || 'Hover, tap or drag across either chart to compare the same year in both.'}</span>
+              ) : (
+                <>
+                  <span className="year-strip-year">{hoverYear}</span>
+                  {[A, B].map((ind, i) => {
+                    const v = valueAt(ind.id, hoverYear)
+                    return (
+                      <span key={ind.id} className={`year-strip-item tone-${i ? 'b' : 'a'}`}>
+                        {lowerFirst(ind.short)} {v == null ? <em>Data unavailable</em> : <strong>{formatValue(v, ind.format)}</strong>}
+                      </span>
+                    )
+                  })}
+                  <button className="year-strip-clear" onClick={() => { setPlaying(false); setHoverYear(null) }}>Clear</button>
+                </>
+              )}
+            </div>
             <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels />
             <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" />
+            {covA && covB && (covA[0] !== covB[0] || covA[1] !== covB[1]) && (
+              <p className="coverage-note">
+                The two series cover different years: <strong className="tone-a-text">{lowerFirst(A.short)}</strong> {covA[0]}–{covA[1]}, <strong className="tone-b-text">{lowerFirst(B.short)}</strong> {covB[0]}–{covB[1]}. Hatched areas mark years with no observation; they are gaps, not zero values, and nothing is estimated to fill them.
+              </p>
+            )}
             <ul className="event-legend">
               {events.map((e) => (
                 <li key={e.id}>
@@ -177,7 +217,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
         Showing <span className="tone-a-text">{DIMENSIONS[A.dimension].label.toLowerCase()}</span> and <span className="tone-b-text">{DIMENSIONS[B.dimension].label.toLowerCase()}</span> on separate scales, because they are measured in different units.
       </p>
 
-      <Evidence rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
+      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
       <DataNotes ids={[a, b]} />
     </div>
   )

@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import * as d3 from 'd3'
 import { INDICATORS, formatValue, tickFormat } from '../data/indicators'
 import { correlations, changeMode } from '../lib/narrative'
-import { describeR } from '../lib/stats'
+import { MIN_CORR_YEARS, describeR } from '../lib/stats'
 import { useMeasure } from '../lib/useMeasure'
 import { useTweenPath } from '../lib/useTweenPath'
 
@@ -24,7 +24,9 @@ export function ScatterChart({ a, b, from, to, mode, hoverYear, onHover }: Props
   const B = INDICATORS[b]
   const c = useMemo(() => correlations(a, b, 'ES', from, to), [a, b, from, to])
   const pts = mode === 'levels' ? c.levels : c.changes
-  const r = mode === 'levels' ? c.rLevels : c.rChanges
+  const rawR = mode === 'levels' ? c.rLevels : c.rChanges
+  const nPts = mode === 'levels' ? c.levels.length : c.changes.length
+  const r = nPts >= MIN_CORR_YEARS ? rawR : null
   const height = Math.min(520, Math.max(340, width * 0.62))
   const innerW = Math.max(10, width - M.left - M.right)
   const innerH = height - M.top - M.bottom
@@ -57,8 +59,9 @@ export function ScatterChart({ a, b, from, to, mode, hoverYear, onHover }: Props
         <div className="r-badge">
           <span className="r-value">{r == null ? '—' : `r = ${r.toFixed(2).replace('-', '−')}`}</span>
           <span className="r-text">
-            {describeR(r)} across {pts.length} years
-            {mode === 'changes' ? ' of year-to-year changes' : ''}
+            {nPts < MIN_CORR_YEARS
+              ? `Only ${nPts} ${mode === 'changes' ? 'year-to-year changes' : 'shared years'}: too few for a meaningful correlation`
+              : <>{describeR(r)} across {pts.length} years{mode === 'changes' ? ' of year-to-year changes' : ''}</>}
           </span>
         </div>
         <p className="scatter-note">Each dot is one year. Lines join consecutive years, so you can trace the path through time. A correlation describes how closely the points follow a straight line — it says nothing about cause.</p>

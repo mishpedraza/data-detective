@@ -1,6 +1,6 @@
 export type DimensionId = 'immigration' | 'crime' | 'economy' | 'housing' | 'living'
 
-export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'index'
+export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'eur2' | 'index'
 
 export interface SeriesBreak {
   year: number
@@ -25,7 +25,12 @@ export interface Indicator {
   notes?: string
   source: Source
   breaks: SeriesBreak[]
+  /** Years Eurostat flags as a break in series for countries other than Spain. */
+  geoBreaks?: Record<string, number[]>
+  /** Where a country's figures come from a different source than the indicator's main one. */
+  geoSources?: Record<string, { org: string; dataset: string; url: string; note: string }>
   derived?: boolean
+  parts?: { label: string; code: string; data: Record<string, number> }[]
   retrieved: string
   data: Record<string, Record<string, number>>
 }

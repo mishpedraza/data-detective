@@ -2,7 +2,7 @@ import { useMemo, useId } from 'react'
 import * as d3 from 'd3'
 import { COUNTRIES } from '../data/countries'
 import { EVENTS } from '../data/events'
-import { formatValue, series, tickFormat } from '../data/indicators'
+import { coverage, formatValue, series, tickFormat } from '../data/indicators'
 import type { Indicator, Point } from '../data/types'
 import { inRange } from '../lib/stats'
 import { useMeasure } from '../lib/useMeasure'
@@ -20,7 +20,7 @@ interface Props {
   height?: number
 }
 
-const M = { top: 28, right: 64, bottom: 28, left: 8 }
+const MARGIN = { top: 28, right: 64, bottom: 28, left: 8 }
 
 function segments(points: Point[], breaks: number[]) {
   const out: Point[][] = []
@@ -42,15 +42,19 @@ function Line({ d, className }: { d: string; className: string }) {
   return <path d={t} className={className} />
 }
 
-export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, tone, showEventLabels, height = 300 }: Props) {
+export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, tone, showEventLabels, height }: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>()
+  const compact = width > 0 && width < 640
+  const h = height ?? (compact ? 210 : 300)
+  const M = compact ? { ...MARGIN, top: 16, bottom: 24 } : MARGIN
+  const cov = coverage(indicator.id)
   const uid = useId().replace(/:/g, '')
   const main = useMemo(() => inRange(series(indicator.id, 'ES'), from, to), [indicator.id, from, to])
   const comp = useMemo(() => (compare ? inRange(series(indicator.id, compare), from, to) : []), [indicator.id, compare, from, to])
   const breakYears = indicator.breaks.map((b) => b.year).filter((y) => y > from && y <= to)
 
   const innerW = Math.max(10, width - M.left - M.right)
-  const innerH = height - M.top - M.bottom
+  const innerH = h - M.top - M.bottom
   const x = d3.scaleLinear().domain([from, to]).range([0, innerW])
   const vals = [...main, ...comp].map((p) => p.value)
   const lo = d3.min(vals) ?? 0
@@ -62,7 +66,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
     .domain([zeroBased ? 0 : lo - pad, hi + pad])
     .range([innerH, 0])
     .nice(4)
-  const ticks = y.ticks(4)
+  const ticks = y.ticks(compact ? 3 : 4)
   const tf = tickFormat(indicator.format)
   const xTicks = d3.ticks(from, to, Math.max(2, Math.min(8, Math.floor(innerW / 90)))).filter(Number.isInteger)
 
@@ -84,9 +88,16 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
 
   const hv = hoverYear != null ? main.find((p) => p.year === hoverYear) : undefined
   const hc = hoverYear != null ? comp.find((p) => p.year === hoverYear) : undefined
-  const readout = hv ?? main[main.length - 1]
+  const missing = hoverYear != null && !hv
+  const readout = hoverYear != null ? hv : main[main.length - 1]
+  const readoutYear = hoverYear ?? readout?.year
   const lastComp = comp[comp.length - 1]
   const lastMain = main[main.length - 1]
+
+  function handleDown(e: React.PointerEvent<SVGRectElement>) {
+    if (e.pointerType !== 'mouse') e.currentTarget.setPointerCapture(e.pointerId)
+    handleMove(e)
+  }
 
   function handleMove(e: React.PointerEvent<SVGRectElement>) {
     const r = e.currentTarget.getBoundingClientRect()
@@ -111,21 +122,28 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
       <figcaption className="chart-head">
         <div>
           <div className="chart-title">{indicator.label}</div>
-          <div className="chart-unit">{indicator.unit}</div>
+          <div className="chart-unit">
+            {indicator.unit}
+            {cov && <span className="chart-coverage"> · data {cov[0]}–{cov[1]}</span>}
+          </div>
         </div>
         <div className="readout" aria-live="polite">
-          <span className="readout-year">{readout?.year ?? '—'}</span>
-          <span className="readout-value">{formatValue(readout?.value, indicator.format)}</span>
+          <span className="readout-year">{hoverYear == null && readoutYear != null ? `Latest · ${readoutYear}` : (readoutYear ?? '—')}</span>
+          {missing ? (
+            <span className="readout-value unavailable">Data unavailable</span>
+          ) : (
+            <span className="readout-value">{formatValue(readout?.value, indicator.format)}</span>
+          )}
           {compare && (
             <span className="readout-comp">
-              {COUNTRIES[compare].name.replace('the ', '')} {formatValue((hv ? hc : comp.find((p) => p.year === readout?.year))?.value, indicator.format)}
+              {COUNTRIES[compare].name.replace('the ', '')} {(hoverYear != null ? hc : comp.find((p) => p.year === readoutYear)) ? formatValue((hoverYear != null ? hc : comp.find((p) => p.year === readoutYear))?.value, indicator.format) : 'data unavailable'}
             </span>
           )}
         </div>
       </figcaption>
       <div ref={ref} className="chart-wrap">
         {width > 0 && (
-          <svg width={width} height={height} role="img" aria-label={`${indicator.label} in Spain, ${from}–${to}`}>
+          <svg width={width} height={h} role="img" aria-label={`${indicator.label} in Spain, ${from}–${to}`}>
             <defs>
               <linearGradient id={`g${uid}`} x1="0" x2="0" y1="0" y2="1">
                 <stop offset="0%" className="grad-top" />
@@ -160,11 +178,20 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
                   )}
                 </g>
               )}
-              {dataEnd != null && dataEnd < to && <rect className="nodata-end" x={x(dataEnd) + 2} width={Math.max(0, innerW - x(dataEnd) - 2)} y={0} height={innerH} fill={`url(#h${uid})`} />}
+              {dataEnd != null && dataEnd < to && (
+                <g className="nodata">
+                  <rect className="nodata-end" x={x(dataEnd) + 2} width={Math.max(0, innerW - x(dataEnd) - 2)} y={0} height={innerH} fill={`url(#h${uid})`} />
+                  {innerW - x(dataEnd) > 56 && !(hoverYear != null && hoverYear > dataEnd) && (
+                    <text x={(x(dataEnd) + innerW) / 2} y={innerH / 2} textAnchor="middle">
+                      No data
+                    </text>
+                  )}
+                </g>
+              )}
               {ticks.map((t) => (
                 <g key={t} className="ytick" style={{ transform: `translateY(${y(t)}px)` }}>
                   <line x1={0} x2={innerW} />
-                  <text x={innerW + 8} dy="0.32em">
+                  <text x={innerW + 8} dy="0.32em" style={{ display: hoverYear == null && endLabels.some((l) => Math.abs(l.y - y(t)) < 13) ? 'none' : undefined }}>
                     {tf(t)}
                   </text>
                 </g>
@@ -199,6 +226,11 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
                   <line y1={-4} y2={innerH} />
                   {hc && <circle className="dot comp" cy={y(hc.value)} r={4} />}
                   {hv && <circle className="dot main" cy={y(hv.value)} r={5.5} />}
+                  {missing && (
+                    <text className="hover-missing" y={innerH / 2} x={x(hoverYear) > innerW - 90 ? -6 : 6} textAnchor={x(hoverYear) > innerW - 90 ? 'end' : 'start'}>
+                      Data unavailable
+                    </text>
+                  )}
                   {hv && (
                     <text className="hover-value" y={y(hv.value) - 12} textAnchor={x(hoverYear) > innerW - 40 ? 'end' : 'middle'}>
                       {formatValue(hv.value, indicator.format)}
@@ -213,7 +245,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
                 width={innerW}
                 height={innerH + M.top}
                 onPointerMove={handleMove}
-                onPointerDown={handleMove}
+                onPointerDown={handleDown}
                 onPointerLeave={(e) => e.pointerType === 'mouse' && onHover(null)}
               />
             </g>

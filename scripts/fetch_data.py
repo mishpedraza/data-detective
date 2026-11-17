@@ -3,6 +3,7 @@
 Run: python3 scripts/fetch_data.py  ->  writes src/data/generated/indicators.json
 No API keys are needed. Every series keeps its source, dataset code and retrieval date.
 """
+import time
 import json, datetime, pathlib, csv, io, sys
 import requests
 
@@ -19,8 +20,8 @@ class Series(dict):
     flags: dict
 
 
-def eurostat(dataset, **filters):
-    params = [("format", "JSON"), ("lang", "EN")] + [("geo", g) for g in GEOS]
+def eurostat(dataset, extra_geos=(), **filters):
+    params = [("format", "JSON"), ("lang", "EN")] + [("geo", g) for g in list(GEOS) + list(extra_geos)]
     params += [(k, v) for k, v in filters.items()]
     d = S.get(ESTAT + dataset, params=params, timeout=120).json()
     if "error" in d:
@@ -45,25 +46,33 @@ def eurostat(dataset, **filters):
     return out
 
 
-def worldbank(indicator):
+def worldbank(indicator, extra=None, only_extra=False):
     out = {}
-    for g, iso3 in GEOS.items():
+    for g, iso3 in (({} if only_extra else GEOS) | (extra or {})).items():
         if not iso3:
             continue
-        r = S.get(f"https://api.worldbank.org/v2/country/{iso3}/indicator/{indicator}",
-                  params={"format": "json", "per_page": 200, "date": f"{START}:{END}"}, timeout=60).json()
+        for attempt in range(4):
+            try:
+                r = S.get(f"https://api.worldbank.org/v2/country/{iso3}/indicator/{indicator}",
+                          params={"format": "json", "per_page": 200, "date": f"{START}:{END}"}, timeout=120).json()
+                break
+            except (requests.RequestException, ValueError):
+                if attempt == 3:
+                    raise
+                time.sleep(20)
         for row in r[1] or []:
             if row["value"] is not None:
                 out.setdefault(g, {})[int(row["date"])] = float(row["value"])
     return out
 
 
-def oecd(flow, key_tpl):
+def oecd(flow, key_tpl, extra=None):
     out = {}
-    keys = "+".join(v for v in GEOS.values() if v)
+    geos = GEOS | (extra or {})
+    keys = "+".join(v for v in geos.values() if v)
     url = f"https://sdmx.oecd.org/public/rest/data/{flow}/{key_tpl.format(geo=keys)}?startPeriod={START}"
     txt = S.get(url, headers={"Accept": "application/vnd.sdmx.data+csv"}, timeout=120).text
-    inv = {v: k for k, v in GEOS.items() if v}
+    inv = {v: k for k, v in geos.items() if v}
     for row in csv.DictReader(io.StringIO(txt)):
         yr = int(row["TIME_PERIOD"][:4])
         if START <= yr <= END and row["OBS_VALUE"]:
@@ -80,6 +89,11 @@ def combine(a, b, fn):
             w = b.get(g, {}).get(y)
             if w not in (None, 0):
                 out.setdefault(g, {})[y] = fn(v, w)
+    out = Series(out)
+    out.flags = {}
+    for src in (a, b):
+        for g, ys in getattr(src, "flags", {}).items():
+            out.flags.setdefault(g, set()).update(ys)
     return out
 
 
@@ -111,6 +125,9 @@ def add(id, dimension, data, **meta):
     if es_years:
         breaks[:] = [b for b in breaks if min(es_years) < b["year"] <= max(es_years)]
     breaks.sort(key=lambda b: b["year"])
+    other = {g: sorted(y for y in ys & set(data.get(g, {})) if y >= meta.get("keep_from", 0) and y > min(data[g])) for g, ys in flags.items() if g != "ES"}
+    if any(other.values()):
+        meta["geoBreaks"] = {g: ys for g, ys in other.items() if ys}
     keep_from = meta.pop("keep_from", None)
     if keep_from:
         data = {g: {y: v for y, v in s.items() if y >= keep_from} for g, s in data.items()}
@@ -147,7 +164,21 @@ def main():
         definition="Resident population on 1 January born outside the reporting country, regardless of current citizenship. Includes Spanish citizens born abroad.",
         notes="Spain's population register (Padrón) also records many migrants without legal residence, because registering gives access to healthcare and schooling, so coverage of irregular migrants is better than in most countries.",
         **fb_meta)
-    add("foreign_born_share", "immigration", combine(fb, tot, lambda a, b: a / b * 100),
+    fbs = combine(fb, tot, lambda a, b: a / b * 100)
+    us_fb = {}
+    txt = S.get("https://sdmx.oecd.org/public/rest/data/OECD.ELS.IMD,DSD_MIG_F@DF_MIG_POPF,/USA.W.......?startPeriod=" + str(START),
+                headers={"Accept": "application/vnd.sdmx.data+csv"}, timeout=180).text
+    for row in csv.DictReader(io.StringIO(txt)):
+        if row["MEASURE"] == "B14" and row["SEX"] == "_T" and row["OBS_VALUE"]:
+            us_fb[int(row["TIME_PERIOD"][:4])] = float(row["OBS_VALUE"])
+    us_pop = worldbank("SP.POP.TOTL", extra={"US": "USA"}, only_extra=True).get("US", {})
+    if not us_fb or not us_pop:
+        raise RuntimeError("US foreign-born share: OECD or World Bank returned nothing")
+    fbs["US"] = {y: v / us_pop[y] * 100 for y, v in us_fb.items() if y in us_pop and START <= y <= END}
+    add("foreign_born_share", "immigration", fbs,
+        geoSources={"US": {"org": "OECD International Migration Database ÷ World Bank population", "dataset": "DF_MIG_POPF (B14) ÷ SP.POP.TOTL",
+                           "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_MIG_F%40DF_MIG_POPF&df[ag]=OECD.ELS.IMD",
+                           "note": "US figures come from the Census Bureau's surveys via the OECD. The US counts people who were not US citizens at birth, so people born abroad to US-citizen parents are excluded; Eurostat counts everyone born abroad. The difference is small but means levels are not exactly comparable."}},
         label="Share of the population born abroad", short="Foreign-born share", unit="% of population", format="pct1",
         definition="Foreign-born residents as a percentage of the total resident population on 1 January (our calculation).",
         notes="Spain's population register (Padrón) also records many migrants without legal residence.", derived=True, **fb_meta)
@@ -165,7 +196,7 @@ def main():
     cats = [
         ("crime_homicide", "ICCS0101", "Intentional homicide", "Homicide", "Unlawful death inflicted on a person with the intent to cause death or serious injury.", []),
         ("crime_assault", "ICCS020111", "Serious assault", "Serious assault", "Intentional or reckless application of force causing serious bodily injury.", [jump_2010, sp_break_2015]),
-        ("crime_sexual", "ICCS0301", "Sexual violence", "Sexual violence", "Rape and sexual assault (ICCS 0301).", [sp_break_2015, {"year": 2022, "note": "Organic Law 10/2022 ('only yes means yes') redefined sexual offences, merging 'sexual abuse' into 'sexual assault'. Reporting has also risen with greater awareness."}]),
+        ("crime_sexual", "ICCS0301", "Sexual violence", "Sexual violence", "Offences of rape (ICCS 03011) and sexual assault (ICCS 03012) recorded by police. Counts offences known to police, not victims, arrests, prosecutions or convictions.", [{"year": 2015, "note": "Spain's Criminal Code reform (LO 1/2015) raised the age of sexual consent to 16 and abolished minor offences ('faltas')."}, {"year": 2022, "note": "Organic Law 10/2022 ('only yes means yes', in force October 2022) removed the legal distinction between sexual 'abuse' and sexual 'aggression': all non-consensual sexual acts became sexual aggression."}]),
         ("crime_robbery", "ICCS0401", "Robbery", "Robbery", "Taking property from a person using force or threat of force.", [sp_break_2015]),
         ("crime_burglary", "ICCS0501", "Burglary", "Burglary", "Gaining unauthorised access to premises with intent to commit a crime.", [sp_break_2015]),
         ("crime_theft", "ICCS0502", "Theft", "Theft", "Taking property without consent and without force against a person (e.g. pickpocketing, shoplifting).", [jump_2010, sp_break_2015]),
@@ -174,9 +205,13 @@ def main():
         ("crime_drugs", "ICCS0601", "Drug offences", "Drug offences", "Unlawful possession, use, production or trafficking of controlled drugs. Strongly driven by police activity.", []),
     ]
     for id, code, label, short, definition, breaks in cats:
+        extra = {}
+        if id == "crime_sexual":
+            extra["parts"] = [{"label": lab, "code": c, "data": {str(y): round(v, 4) for y, v in sorted(eurostat("crim_off_cat", iccs=c, unit="P_HTHAB").get("ES", {}).items())}}
+                              for c, lab in (("ICCS03011", "Rape"), ("ICCS03012", "Sexual assault"))]
         add(id, data=eurostat("crim_off_cat", iccs=code, unit="P_HTHAB"), label=f"{label} recorded by police", short=short,
-            definition=definition, breaks=breaks, **crime_meta)
-    add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5"), label="Intentional homicide (long series)", short="Homicide (UNODC)",
+            definition=definition, breaks=breaks, **crime_meta, **extra)
+    add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5", extra={"US": "USA"}), label="Intentional homicide (long series)", short="Homicide (UNODC)",
         unit="per 100,000 residents", format="decimal2",
         definition="Intentional homicides per 100,000 people, compiled by UNODC from national criminal justice and public-health sources.",
         source={"org": "UNODC via World Bank", "dataset": "VC.IHR.PSRC.P5", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5"},
@@ -260,6 +295,45 @@ def main():
         label="Material living standards vs EU average", short="Purchasing power", unit="EU average = 100", format="index",
         definition="Actual individual consumption per person in purchasing power standards, relative to the EU-27 average (= 100). Accounts for price differences between countries.",
         source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind", "url": LINK("prc_ppp_ind")})
+
+    add("deprivation", "living", eurostat("ilc_mdsd11", age="TOTAL", sex="T", unit="PC"),
+        label="People in severe material and social deprivation", short="Severe deprivation", unit="% of population", format="pct1",
+        definition="Share of people who cannot afford at least 7 of 13 everyday items, such as keeping the home warm, a week's holiday, replacing worn-out clothes or facing an unexpected expense (EU-SILC). Survey year shown.",
+        breaks=[{"year": 2015, "note": "The EU definition starts in 2015; the older severe material deprivation measure uses different items and is not joined to it."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_mdsd11", "url": LINK("ilc_mdsd11"), "upstream": "INE Spain (ECV)"}, keep_from=2015)
+
+    add("poverty_rate", "living", eurostat("ilc_li02", statinfo="MED_EI", rskpovth="B_60", unit="PC", age="TOTAL", sex="T"),
+        label="People at risk of poverty", short="At-risk-of-poverty rate", unit="% of population", format="pct1",
+        definition="Share of people whose equivalised disposable income is below 60% of their country's median (EU-SILC). This is a relative measure: it tracks how many fall far behind the typical household, not whether incomes rose or fell. Survey year shown; incomes refer to the previous calendar year.",
+        breaks=[{"year": 2004, "note": "Spain's EU-SILC series starts in 2004; earlier survey (ECHP) figures are excluded as not comparable."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_li02", "url": LINK("ilc_li02"), "upstream": "INE Spain (ECV)"}, keep_from=2004)
+    add("housing_overburden", "living", eurostat("ilc_lvho07a", rskpovth="TOTAL", unit="PC", age="TOTAL", sex="T"),
+        label="People spending over 40% of income on housing", short="Housing cost overburden", unit="% of population", format="pct1",
+        definition="Share of people living in households where total housing costs, net of housing allowances, exceed 40% of disposable income, net of housing allowances (EU-SILC). Survey year shown.",
+        breaks=[{"year": 2004, "note": "Spain's EU-SILC series starts in 2004; earlier survey (ECHP) figures are excluded as not comparable."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_lvho07a", "url": LINK("ilc_lvho07a"), "upstream": "INE Spain (ECV)"}, keep_from=2004)
+    ses = eurostat("earn_ses_pub2s", sizeclas="GE10", sex="T", unit="EUR")
+    add("median_earnings_real", "living", combine(ses, hicp15, lambda a, b: a / b * 100),
+        label="Typical (median) hourly pay after inflation", short="Median hourly pay", unit="€ per hour, 2015 prices", format="eur2",
+        definition="Median gross hourly earnings of all employees in firms with 10 or more employees, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation). Excludes apprentices and the smallest firms.",
+        source={"org": EUROSTAT_SRC, "dataset": "earn_ses_pub2s ÷ prc_hicp_aind", "url": LINK("earn_ses_pub2s"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}, derived=True)
+
+    def vs_us(src):
+        us = src.get("US", {})
+        return {g: {y: v / us[y] * 100 for y, v in ys.items() if us.get(y)} for g, ys in src.items() if g != "US"}
+    PPP_NOTE = "Purchasing power parities convert each country's prices to a common basis; they are estimates and are revised, so small differences between countries are not meaningful."
+    add("gdp_pc_vs_us", "economy", vs_us(eurostat("prc_ppp_ind", extra_geos=["US"], na_item="VI_PPS_EU27_2020_HAB", ppp_cat="GDP")),
+        label="GDP per person compared with the United States", short="GDP per person vs US", unit="United States = 100", format="index",
+        definition="GDP per person in purchasing power standards, as a share of the US level (US = 100). Our calculation from Eurostat's volume indices, which include the US. " + PPP_NOTE,
+        source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind (GDP)", "url": LINK("prc_ppp_ind")}, derived=True)
+    add("aic_vs_us", "living", vs_us(eurostat("prc_ppp_ind", extra_geos=["US"], na_item="VI_PPS_EU27_2020_HAB", ppp_cat="A01")),
+        label="Consumption per person compared with the United States", short="Consumption vs US", unit="United States = 100", format="index",
+        definition="Actual individual consumption per person (goods and services households use, including those paid for by government, such as health and education) in purchasing power standards, as a share of the US level (US = 100). Our calculation from Eurostat. " + PPP_NOTE,
+        source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind (A01)", "url": LINK("prc_ppp_ind")}, derived=True)
+    add("wage_vs_us", "living", vs_us(oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.USD_PPP.A.Q...", extra={"US": "USA"})),
+        label="Average wage compared with the United States", short="Average wage vs US", unit="United States = 100", format="index",
+        definition="Average annual wage per full-time-equivalent employee in US dollars at purchasing power parity and constant prices, as a share of the US level (US = 100). Our calculation from OECD data. Averages are pulled up by high earners, more so in the US. " + PPP_NOTE,
+        source={"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE), USD PPP", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE"}, derived=True)
 
     OUT.write_text(json.dumps({"generated": TODAY, "indicators": INDICATORS}, ensure_ascii=False, separators=(",", ":")))
     print("wrote", OUT, OUT.stat().st_size, "bytes", file=sys.stderr)
