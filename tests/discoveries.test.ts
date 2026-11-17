@@ -1,24 +1,31 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { collection, discoveryEvidence, featuredDiscoveries, predictionOptions } from '../src/data/discoveries'
+import { discoveryEvidence, predictions, predictionOptions } from '../src/data/discoveries'
+import { EDITORIAL_QUESTIONS, editorialQuestionById, editorialQuestionForRelationship } from '../src/data/editorial'
 import { RELATIONSHIPS } from '../src/data/relationships'
 import { explain } from '../src/lib/explain'
 
 test('featured predictions have scoped evidence and open actual investigations', () => {
   const ids = new Set(RELATIONSHIPS.map(({ id }) => id))
-  const cards = [...featuredDiscoveries, ...collection]
-  assert.equal(new Set(cards.map(({ question }) => question)).size, cards.length)
-  for (const card of cards) assert.ok(ids.has(card.id), card.id)
-  for (const discovery of featuredDiscoveries) {
+  assert.equal(EDITORIAL_QUESTIONS.length, 11)
+  assert.equal(EDITORIAL_QUESTIONS.filter(({ featured }) => featured).length, 3)
+  assert.equal(new Set(EDITORIAL_QUESTIONS.map(({ question }) => question)).size, 11)
+  for (const entry of EDITORIAL_QUESTIONS) {
+    assert.equal(editorialQuestionById(entry.id), entry)
+    if (entry.status === 'available') assert.ok(ids.has(entry.relationship), entry.id)
+    else if (entry.related) assert.ok(ids.has(entry.related.relationship), entry.id)
+  }
+  for (const { id } of predictions) assert.ok(editorialQuestionForRelationship(id), id)
+  for (const discovery of predictions) {
     const evidence = discoveryEvidence(discovery)
     assert.ok(evidence, discovery.id)
     assert.match(evidence.source, /^https:\/\//)
   }
-  assert.match(discoveryEvidence(featuredDiscoveries[0])!.result, /13% below/)
-  assert.match(discoveryEvidence(featuredDiscoveries[1])!.result, /1\.6%.*4\.8%/)
-  assert.deepEqual(predictionOptions(featuredDiscoveries[0]), ['Higher', 'Lower', 'About the same'])
-  for (const discovery of featuredDiscoveries.slice(1)) assert.deepEqual(predictionOptions(discovery), ['Yes', 'No', 'About the same'])
-  assert.deepEqual(featuredDiscoveries.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No'])
+  assert.match(discoveryEvidence(predictions[0])!.result, /13% below/)
+  assert.match(discoveryEvidence(predictions[1])!.result, /1\.6%.*4\.8%/)
+  assert.deepEqual(predictionOptions(predictions[0]), ['Higher', 'Lower', 'About the same'])
+  for (const discovery of predictions.slice(1)) assert.deepEqual(predictionOptions(discovery), ['Yes', 'No', 'About the same'])
+  assert.deepEqual(predictions.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No'])
 })
 
 test('a recent immigration and housing gap cites the closest study period', () => {

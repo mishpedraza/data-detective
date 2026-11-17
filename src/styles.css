@@ -555,7 +555,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .surgery-chart polyline { fill: none; stroke: var(--b); stroke-width: 2; }
 .surgery-chart circle { fill: var(--b); }
 
-.discovery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.discovery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
 .discovery-card { display: flex; flex-direction: column; align-items: flex-start; padding: 26px clamp(16px, 2.5vw, 32px); }
 .discovery-card + .discovery-card { border-left: 1px solid var(--rule); }
 .discovery-card:first-child { padding-left: 0; }
@@ -587,3 +587,9 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .investigation-controls { margin-top: 12px; }
 .investigation-controls summary { cursor: pointer; }
 .investigation-controls .sentence { margin-top: 10px; }
+
+.editorial-navigation { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 24px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+.editorial-navigation label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: 14px; min-width: 0; }
+.editorial-navigation select { max-width: min(100%, 360px); font: inherit; padding: 5px; }
+.investigation-preview { padding-bottom: 64px; }
+.investigation-preview .tell-text { max-width: 62ch; }

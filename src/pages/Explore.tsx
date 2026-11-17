@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { hrefFor } from '../lib/route'
 import { ScatterChart } from '../components/ScatterChart'
 import { DIMENSIONS, INDICATORS, coverage, indicatorsFor } from '../data/indicators'
+import { editorialQuestionForRelationship } from '../data/editorial'
 import { RELATIONSHIPS } from '../data/relationships'
 import type { DimensionId } from '../data/types'
 
@@ -48,6 +49,7 @@ export function Explore({ navigate }: { navigate: (h: string) => void }) {
     () => RELATIONSHIPS.find((r) => r.left.options.includes(a) && r.right.options.includes(b)),
     [a, b],
   )
+  const editorial = curated && editorialQuestionForRelationship(curated.id)
   const href = hrefFor('investigate', { r: curated?.id ?? 'custom', a, b, from: period.from, to: period.to })
   return (
     <div className="explore">
@@ -71,7 +73,7 @@ export function Explore({ navigate }: { navigate: (h: string) => void }) {
           </p>
           <ScatterChart a={a} b={b} from={period.from} to={period.to} mode="levels" hoverYear={null} onHover={() => {}} />
           <a className="cta" href={href} onClick={(e) => { e.preventDefault(); navigate(href) }}>
-            {curated ? `Open “${curated.question}”` : 'Open full investigation'} <span aria-hidden>→</span>
+            {editorial?.status === 'available' ? `Open “${editorial.question}”` : 'Open this comparison'} <span aria-hidden>→</span>
           </a>
         </div>
         <Column value={b} onChange={setB} tone="b" title="…against this" />

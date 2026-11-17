@@ -1,64 +1,28 @@
-import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { collection, discoveryEvidence, featuredDiscoveries, predictionOptions, type Prediction } from '../data/discoveries'
-import { RELATIONSHIPS } from '../data/relationships'
+import { predictions } from '../data/discoveries'
+import { DiscoveryPrediction } from '../components/DiscoveryPrediction'
+import { EDITORIAL_QUESTIONS } from '../data/editorial'
 import { hrefFor } from '../lib/route'
 
-type Featured = typeof featuredDiscoveries[number]
+type Featured = typeof EDITORIAL_QUESTIONS[number]
 
-function investigationHref(discovery: Featured) {
-  const comparison = discovery.comparison
-  return hrefFor('investigate', { r: discovery.id, from: comparison.from, to: comparison.to })
-}
-
-function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate: (href: string) => void }) {
-  const [prediction, setPrediction] = useState<Prediction>()
-  const href = investigationHref(discovery)
-  const options = predictionOptions(discovery)
-  const evidence = prediction ? discoveryEvidence(discovery) : null
+function DiscoveryCard({ entry, navigate }: { entry: Featured; navigate: (href: string) => void }) {
+  const discovery = entry.status === 'available' ? predictions.find(({ id }) => id === entry.relationship) : undefined
+  const href = hrefFor('investigate', { r: entry.id })
 
   return (
     <article className="discovery-card">
-      <h2>{discovery.question}</h2>
-      {prediction ? (
-        <div className="discovery-reveal" aria-live="polite">
-          <div className="discovery-options prediction-feedback">
-            {options.filter((option) => option === prediction || option === evidence?.answer).map((option) => {
-              const correct = option === evidence?.answer
-              const chosen = option === prediction
-              return <span key={option} className={correct ? 'prediction-correct' : evidence ? 'prediction-incorrect' : ''}>
-                {option} · {correct ? chosen ? 'Your pick was right' : 'Correct answer' : chosen && evidence ? 'Your pick was off' : 'Your pick'}
-              </span>
-            })}
-          </div>
-          {evidence ? <>
-            <p className="tell-lead">{evidence.result}</p>
-            <p className="tell-text">{discovery.context}</p>
-            <a className="tell-more" href={evidence.source}>{evidence.publisher}</a>
-          </> : <p className="tell-text">The available data don’t cover both dates in this comparison.</p>}
-        </div>
-      ) : (
-        <fieldset className="discovery-prediction">
-          <legend>{discovery.prompt}</legend>
-          <div className="discovery-options">
-            {options.map((option) => (
-              <button type="button" key={option} onClick={() => setPrediction(option)}>{option}</button>
-            ))}
-          </div>
-        </fieldset>
-      )}
-      <a className="tell-more discovery-open" href={href} onClick={(event) => {
-        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-        event.preventDefault()
-        navigate(href)
-      }}>{prediction ? 'Open investigation →' : 'Skip to the evidence →'}</a>
+      <h2>{entry.question}</h2>
+      {entry.status === 'preview' && <p className="tell-text">Investigation not yet available</p>}
+      {discovery ? <DiscoveryPrediction discovery={discovery} navigate={navigate} /> :
+        <a className="tell-more discovery-open" href={href}>{entry.status === 'preview' ? 'Read preview →' : 'Open investigation →'}</a>}
     </article>
   )
 }
 
 export function Discover({ navigate }: { navigate: (h: string) => void }) {
-  const curated = [...featuredDiscoveries, ...collection]
-  const archive = RELATIONSHIPS.filter((rel) => !curated.some(({ id }) => id === rel.id))
+  const featured = EDITORIAL_QUESTIONS.filter((entry) => entry.featured)
+  const more = EDITORIAL_QUESTIONS.filter((entry) => !entry.featured)
 
   return (
     <div className="discover">
@@ -70,30 +34,19 @@ export function Discover({ navigate }: { navigate: (h: string) => void }) {
       </section>
 
       <section className="discovery-grid" aria-label="Featured discoveries">
-        {featuredDiscoveries.map((discovery) => <DiscoveryCard key={discovery.id} discovery={discovery} navigate={navigate} />)}
+        {featured.map((entry) => <DiscoveryCard key={entry.id} entry={entry} navigate={navigate} />)}
       </section>
 
       <section className="more-q" aria-labelledby="discover-more">
         <h2 id="discover-more" className="section-label">Keep exploring</h2>
         <ol>
-          {collection.map(({ id, question, params }) => (
-            <li key={id}><a href={hrefFor('investigate', { r: id, ...params })}>
-              <span className="more-text">{question}</span>
+          {more.map(({ id, question, status }) => (
+            <li key={id}><a href={hrefFor('investigate', { r: id })}>
+              <span className="more-text">{question}{status === 'preview' && <span className="feat-note">Preview · Investigation not yet available</span>}</span>
               <span className="q-go" aria-hidden>→</span>
             </a></li>
           ))}
         </ol>
-        <details className="discovery-archive">
-          <summary className="tell-more">All investigations</summary>
-          <ol>
-            {archive.map(({ id, question }) => (
-              <li key={id}><a href={hrefFor('investigate', { r: id })}>
-                <span className="more-text">{question}</span>
-                <span className="q-go" aria-hidden>→</span>
-              </a></li>
-            ))}
-          </ol>
-        </details>
       </section>
     </div>
   )

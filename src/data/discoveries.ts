@@ -16,38 +16,27 @@ function answerFor(change: number, options: readonly Prediction[]): Prediction {
   return change === 0 ? same : change > 0 ? higher : lower
 }
 
-interface Discovery {
+export interface Discovery {
   id: string
-  question: string
   prompt: string
   comparison: EndpointComparison
   // Context adds an interpretation or boundary to the measured finding.
   context: string
 }
 
-export const featuredDiscoveries: Discovery[] = [
+export const predictions: readonly Discovery[] = [
   {
     id: 'housing-affordability',
-    question: 'Why has housing become so unaffordable?',
     prompt: 'In Spain, were home prices higher or lower in 2025 than in 2007, after inflation?',
     comparison: { indicator: 'house_price_real', from: 2007, to: 2025, subject: 'home prices', precision: 0 },
     context: 'The 2007 boom is a high bar. Whether a home is affordable today also depends on income, mortgage rates and where you live.',
   },
   {
     id: 'growth-wages',
-    question: 'Has pay kept up with Spain’s economy?',
     prompt: 'From 2006 to 2022, did typical hourly pay in Spain grow faster than GDP per person, after inflation?',
     comparison: { indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1, benchmark: 'gdp_pc_real' },
     context: 'Typical hourly pay bought a little more. What a household can afford also depends on hours worked and other sources of income.',
   },
-]
-
-export const collection = [
-  { id: 'growth-wages', question: 'Can Spanish households afford less than they used to?', params: { b: 'median_income_real', from: 2021, to: 2025 } },
-  { id: 'europe-us', question: 'Are Europeans falling behind Americans?' },
-  { id: 'productivity-wages', question: 'Have wages kept pace with productivity?' },
-  { id: 'immigration-employment', question: 'Does immigration take jobs from locals?' },
-  { id: 'immigration-crime', question: 'Does immigration increase crime?' },
 ]
 
 export function discoveryEvidence(discovery: Discovery) {
