@@ -39,23 +39,66 @@ function summarise(ind: Indicator, geo: string, from: number, to: number) {
 const fp = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`
 const fpt = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)} percentage points`
 
-function pairText(A: Indicator, B: Indicator, p: PairComparison, place: string) {
-  if (!p.window || !p.a || !p.b) return `${place}: ${p.reason}`
-  const one = (ind: Indicator, c: NonNullable<PairComparison['a']>) =>
-    c.pct != null ? `${nm(ind)} ${fp(c.pct)}${c.cagr != null ? ` (${fp(c.cagr)} a year)` : ''}` : `${nm(ind)} ${absChange(ind, c.first, c.last)}${ind.format === 'pct1' ? '' : ` ${ind.unit}`}`
-  const base = `${place}, ${p.window[0]}–${p.window[1]} (years both indicators cover): ${one(A, p.a)}; ${one(B, p.b)}.`
-  if (p.gap != null) return `${base} Gap: ${fpt(p.gap)} in favour of ${p.gap >= 0 ? nm(A) : nm(B)}.`
-  return p.a.pct != null && p.b.pct != null ? `${base} No gap is calculated: ${(p.reason ?? '').charAt(0).toLowerCase()}${(p.reason ?? '').slice(1)}` : base
+function cell(ind: Indicator, c: PairComparison['a']) {
+  if (!c) return <td>–</td>
+  return c.pct != null
+    ? <td>{fp(c.pct)}{c.cagr != null && <small>{fp(c.cagr)}/yr</small>}</td>
+    : <td>{absChange(ind, c.first, c.last)}{ind.format !== 'pct1' && <small>{ind.unit}</small>}</td>
 }
 
-function crossText(A: Indicator, B: Indicator, es: PairComparison, other: PairComparison, name: string) {
-  const out = ([[A, es.a, other.a], [B, es.b, other.b]] as const).flatMap(([ind, x, y]) => {
-    if (!x || !y || x.first.year !== y.first.year || x.last.year !== y.last.year) return []
-    if (x.pct != null && y.pct != null) return [`${nm(ind)} ${fpt(x.pct - y.pct)}`]
-    if (usesPoints(ind)) return [`${nm(ind)} ${(x.abs - y.abs) >= 0 ? '+' : '−'}${Math.abs(x.abs - y.abs).toFixed(1)} points`]
-    return []
-  })
-  return out.length ? `Spain’s change minus ${name}’s over the same years: ${out.join('; ')}.` : ''
+function diff(ind: Indicator, x: PairComparison['a'], y: PairComparison['a']) {
+  if (!x || !y || x.first.year !== y.first.year || x.last.year !== y.last.year || x.breaks.length || y.breaks.length) return <td>–</td>
+  if (x.pct != null && y.pct != null) return <td>{fpt(x.pct - y.pct).replace('percentage points', 'pts')}</td>
+  if (usesPoints(ind)) return <td>{`${x.abs - y.abs >= 0 ? '+' : '−'}${Math.abs(x.abs - y.abs).toFixed(1)} pts`}</td>
+  return <td>–</td>
+}
+
+function ChangeTable({ A, B, compare, from, to }: { A: Indicator; B: Indicator; compare: string | null; from: number; to: number }) {
+  let es = comparePair(A, B, 'ES', from, to)
+  let other = compare && A.data[compare] && B.data[compare] ? comparePair(A, B, compare, from, to) : null
+  if (other?.window && es.window && (other.window[0] !== es.window[0] || other.window[1] !== es.window[1])) {
+    const f = Math.max(es.window[0], other.window[0])
+    const t = Math.min(es.window[1], other.window[1])
+    if (t > f) {
+      es = comparePair(A, B, 'ES', f, t)
+      other = comparePair(A, B, compare!, f, t)
+    }
+  }
+  const showGap = es.gap != null || (other?.gap != null)
+  const rows = [['Spain', es], ...(other ? [[uc(COUNTRIES[compare!].name), other]] : [])] as [string, PairComparison][]
+  const notes = rows.flatMap(([n, p]) => (p.reason && (!p.a || !p.b || (p.a.pct != null && p.b.pct != null)) ? [`${n}: ${p.reason}`] : []))
+  return (
+    <div className="ti-table-wrap">
+      <table className="ti-table">
+        <caption><strong>Calculated from the data:</strong> change over the years {other ? 'all four series' : 'both indicators'} cover</caption>
+        <thead>
+          <tr><th /><th>{uc(nm(A))}</th><th>{uc(nm(B))}</th>{showGap && <th>Gap</th>}</tr>
+        </thead>
+        <tbody>
+          {rows.map(([n, p]) => (
+            <tr key={n}>
+              <th scope="row">{n}<small>{p.window ? `${p.window[0]}–${p.window[1]}` : 'no shared years'}</small></th>
+              {cell(A, p.a)}
+              {cell(B, p.b)}
+              {showGap && <td>{p.gap != null ? fpt(p.gap).replace('percentage points', 'pts') : '–'}</td>}
+            </tr>
+          ))}
+          {other && (
+            <tr className="ti-diff">
+              <th scope="row">Spain minus {COUNTRIES[compare!].name.replace(/^the /, '')}</th>
+              {diff(A, es.a, other.a)}
+              {diff(B, es.b, other.b)}
+              {showGap && <td />}
+            </tr>
+          )}
+        </tbody>
+      </table>
+      <p className="ti-table-note">
+        % changes and percentage-point (pts) gaps use unrounded values; rates and shares change in points.{showGap && ' Gap = first indicator’s % change minus the second’s.'}
+        {notes.map((n) => ` ${n}`)}
+      </p>
+    </div>
+  )
 }
 
 function absChange(ind: Indicator, first: Point, last: Point) {
@@ -371,7 +414,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             ))}
           </div>
           {tp && <p className="ti-counts">{tp}</p>}
-          <p className="ti-counts"><strong>Calculated from the data.</strong> {pairText(A, B, comparePair(A, B, 'ES', from, to), 'Spain')}{compare && A.data[compare] && B.data[compare] && <> {pairText(A, B, comparePair(A, B, compare, from, to), uc(COUNTRIES[compare].name))} {crossText(A, B, comparePair(A, B, 'ES', from, to), comparePair(A, B, compare, from, to), COUNTRIES[compare].name)}</>}</p>
+          <ChangeTable A={A} B={B} compare={compare} from={from} to={to} />
           {profile && crimeInd && (
             <p className="ti-counts">
               <strong>What the crime figures count:</strong> {crimeInd.definition}

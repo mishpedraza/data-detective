@@ -54,7 +54,7 @@ export function comparePair(A: Indicator, B: Indicator, geo: string, from: numbe
   let reason: string | undefined
   if (!a || !b) reason = 'Not enough data.'
   else if (a.pct == null || b.pct == null) reason = 'One indicator is a rate or share, so its change is in points and cannot be set against a % change.'
-  else if (a.breaks.length || b.breaks.length) reason = `A series break in ${[...a.breaks, ...b.breaks].sort().join(', ')} means values before and after are not fully comparable.`
+  else if (a.breaks.length || b.breaks.length) reason = `${[[A, a], [B, b]].filter(([, c]) => (c as Change).breaks.length).map(([i, c]) => `${(i as Indicator).short} has a series break in ${(c as Change).breaks.join(', ')}`).join('; ')}, so values before and after are not fully comparable.`
   const gap = reason || !a || !b || a.pct == null || b.pct == null ? null : a.pct - b.pct
   return { window: w, a, b, gap, reason }
 }
