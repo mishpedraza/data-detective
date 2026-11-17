@@ -205,6 +205,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   // An explanation applies only if the selection has observations both before its end year and from its start year on.
   const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
   const explanations = profile && crimeDir ? profile.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
+  const confounders = profile ? profile.confounders.filter((c) => overlaps(c.years)) : []
   const sameAmountQ = profile && sc
     ? sc.dir === 'stable' ? `Does that mean ${profile.noun} stayed the same?` : `Does that mean ${profile.noun} ${sc.dir === 'rose' ? 'increased' : 'decreased'} by the same amount?`
     : profile ? `Do recorded figures measure actual ${profile.noun}?` : ''
@@ -433,11 +434,11 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                 </dl>
               )}
               <button className="tell-more" onClick={() => setConf((v) => !v)} aria-expanded={conf}>
-                {conf ? '− Hide other factors' : `+ Other factors that could make the two move together (${profile.confounders.length})`}
+                {conf ? '− Hide other factors' : `+ Other factors that could make the two move together (${confounders.length})`}
               </button>
               {conf && (
                 <ul className="tell-list">
-                  {profile.confounders.map((c, i) => (
+                  {confounders.map((c, i) => (
                     <li key={i}>
                       {c.text}
                       {fn(c.refs)}

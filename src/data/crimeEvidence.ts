@@ -28,7 +28,8 @@ export interface CrimeProfile {
   /** Why recorded figures may differ from actual incidence. */
   recorded: { text: string; refs?: string[] }[]
   explanations: Explanation[]
-  confounders: { text: string; refs?: string[] }[]
+  /** `years` limits a factor to selections that span those years. */
+  confounders: { text: string; refs?: string[]; years?: [number, number] }[]
   synthesis: { lead: string; text: string }[]
   /** Studies that report results for this offence or the closest category. */
   direct: StudyLink[]
@@ -80,7 +81,7 @@ export const CRIME_PROFILES: Record<string, CrimeProfile> = {
     ],
     confounders: [
       { text: 'Reporting and awareness: if willingness to report rose during years when immigration also rose, the two would move together without one causing the other.' },
-      { text: 'Legal changes: the 2022 reform came as immigration was rising quickly, so any rise in recorded offences it caused would line up with immigration by coincidence.', refs: ['lo2022'] },
+      { text: 'Legal changes: the 2022 reform came as immigration was rising quickly, so any rise in recorded offences it caused would line up with immigration by coincidence.', refs: ['lo2022'], years: [2022, 2100] },
       AGE,
       CITIES,
     ],
