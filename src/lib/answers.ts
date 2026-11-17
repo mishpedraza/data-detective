@@ -43,77 +43,102 @@ const cagr = (id: string, geo: string, w: [number, number]) => change(INDICATORS
 /** Below 0.2% a year either way counts as barely changed. */
 const FLAT = 0.2
 
-type Built = { headline: string; period?: string; stats: Stat[]; meaning: string; detail: string[] }
+type Built = { headline: string; period?: string; stats: Stat[]; meaning: string; detail: string[]; covered?: string[] }
 type Short = string
-type Fn = { (geo: string, from: number, to: number, short: true): Short | null; (geo: string, from: number, to: number, short: false): Built | null }
+type Fn = { (geo: string, from: number, to: number, short: true, a?: string, b?: string): Short | null; (geo: string, from: number, to: number, short: false, a?: string, b?: string): Built | null }
 
-function growthWages(geo: string, from: number, to: number, short: boolean): Built | Short | null {
-  const w = window(['gdp_pc_real', 'median_earnings_real'], geo, from, to)
-  if (!w) {
+/** Measures of how the typical person fared, in order of preference for the growth question. */
+const TYPICAL: Record<string, { who: string; what: string; label: (geo: string) => string }> = {
+  median_earnings_real: { who: 'typical workers', what: 'typical workers’ real pay', label: (geo) => (INDICATORS.median_earnings_real.geoUnits?.[geo] ? 'real median weekly pay of full-time workers' : 'real median hourly pay') },
+  median_income_real: { who: 'typical households', what: 'typical household income', label: () => 'real median household income' },
+}
+const uc1 = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+
+function growthWages(geo: string, from: number, to: number, short: boolean, _a?: string, b?: string): Built | Short | null {
+  const order = b === 'median_income_real' ? ['median_income_real', 'median_earnings_real'] : ['median_earnings_real', 'median_income_real']
+  const m = order.find((id) => window(['gdp_pc_real', id], geo, from, to))
+  const P = place(geo)
+  if (!m) {
     if (short) return null
     const wa = window(['gdp_pc_real', 'real_wage'], geo, from, to)
     const a = wa ? pct('real_wage', geo, wa) : null
     const g = wa ? pct('gdp_pc_real', geo, wa) : null
     return {
-      headline: `The available data cannot establish whether typical workers in ${place(geo)} became poorer in ${from}–${to}`,
+      headline: `The available data cannot establish whether typical workers or households in ${P} became poorer in ${from}–${to}`,
       stats: [],
-      meaning: 'Median pay, the measure of the typical worker, is surveyed only in 2006, 2010, 2014, 2018 and 2022, and this period includes fewer than two of those years.',
-      detail: wa && a != null && g != null ? [`For context only, not the typical worker: real GDP per person ${moved(g)} and real average wages, which high earners pull up, ${moved(a)} over ${span(wa)}.`] : [],
+      meaning: 'Median pay is surveyed only in 2006, 2010, 2014, 2018 and 2022, and median household income only from 2004; this period includes fewer than two years of either.',
+      detail: wa && a != null && g != null ? [`For context only, not the typical person: real GDP per person ${moved(g)} and real average wages, which high earners pull up, ${moved(a)} over ${span(wa)}.`] : [],
+      covered: [],
     }
   }
+  const T = TYPICAL[m]
+  const w = window(['gdp_pc_real', m], geo, from, to)!
   const g = pct('gdp_pc_real', geo, w)
-  const p = pct('median_earnings_real', geo, w)
+  const p = pct(m, geo, w)
   const gy = cagr('gdp_pc_real', geo, w)
-  const py = cagr('median_earnings_real', geo, w)
+  const py = cagr(m, geo, w)
   if (g == null || p == null || gy == null || py == null) return null
-  if (short) return `In ${place(geo)} in ${span(w)}, real GDP per person ${moved(g)} and real median ${INDICATORS.median_earnings_real.geoUnits?.[geo] ? 'weekly pay of full-time workers' : 'hourly pay'} ${moved(p)}.`
+  if (short) return `In ${P} in ${span(w)}, real GDP per person ${moved(g)} and ${T.label(geo)} ${moved(p)}.`
   const gap = g - p
   const econ = gy > FLAT ? 'grew' : gy < -FLAT ? 'shrank' : 'stalled'
   const pay = py > FLAT ? 'rose' : py < -FLAT ? 'fell' : 'barely changed'
-  const P = place(geo)
   const headline =
     pay === 'rose'
       ? econ === 'grew'
-        ? gap > 2 ? `Typical workers’ real pay rose in ${P}, but less than the economy` : gap < -2 ? `Typical workers’ real pay in ${P} grew faster than the economy` : `${P}’s economy and typical workers’ real pay grew together`
-        : `Typical workers’ real pay rose in ${P} while the economy ${econ}`
+        ? gap > 2 ? `${uc1(T.what)} rose in ${P}, but less than the economy` : gap < -2 ? `${uc1(T.what)} in ${P} grew faster than the economy` : `${P}’s economy and ${T.what} grew together`
+        : `${uc1(T.what)} rose in ${P} while the economy ${econ}`
       : econ === 'grew'
-        ? `${P}’s economy grew, but typical workers’ real pay ${pay}`
-        : `${P}’s economy ${econ} and typical workers’ real pay ${pay}`
-  const avg = pct('real_wage', geo, w)
+        ? `${P}’s economy grew, but ${T.what} ${pay}`
+        : `${P}’s economy ${econ} and ${T.what} ${pay}`
   const meaning =
     pay === 'fell'
-      ? `Typical workers lost purchasing power${econ === 'grew' ? ', a real decline, not just a smaller share of growth' : ''}.`
+      ? `${uc1(T.who)} lost purchasing power${econ === 'grew' ? ', a real decline, not just a smaller share of growth' : ''}.`
       : pay === 'barely changed'
-        ? `Typical workers did not become poorer${econ === 'grew' ? ', but the growth did not reach their pay' : ''}.`
-        : gap > 2 ? 'Typical workers became better off, but by less than the economy grew.' : 'Typical workers became better off.'
+        ? `${uc1(T.who)} did not become poorer${econ === 'grew' ? ', but the growth did not reach them' : ''}.`
+        : gap > 2 ? `${uc1(T.who)} became better off, but by less than the economy grew.` : `${uc1(T.who)} became better off.`
+  const other = order.find((id) => id !== m)!
+  const po = pct(other, geo, w)
+  const avg = pct('real_wage', geo, w)
   const yr = (v: number) => `${signed(v)} a year`
-  const detail = [`Per year: GDP per person ${yr(gy)}, median pay ${yr(py)}.`]
-  if (avg != null && Math.abs(avg - p) > 2) detail.push(`Average wages, which high earners pull up, changed ${signed(avg)} against ${signed(p)} for median pay, so pay ${avg > p ? 'at the top did better than in the middle' : 'in the middle did better than the average'}.`)
-  if (w[0] > from || w[1] < to) detail.push(`Median pay is surveyed every four years, so these figures cover ${span(w)}.`)
+  const detail = [`Per year: GDP per person ${yr(gy)}, ${T.label(geo).replace(/^real /, '')} ${yr(py)}.`]
+  if (m !== order[0]) detail.push(`${uc1(TYPICAL[order[0]].label(geo))} has fewer than two observations in these years, so the answer uses ${T.label(geo)}.`)
+  if (m === 'median_income_real' || (po != null && other === 'median_income_real')) detail.push('Median household income is income after taxes and benefits, adjusted for household size, from the EU-SILC survey; each survey year reports the previous year’s income.')
+  if (avg != null && Math.abs(avg - p) > 2 && m === 'median_earnings_real') detail.push(`Average wages, which high earners pull up, changed ${signed(avg)} against ${signed(p)} for median pay, so pay ${avg > p ? 'at the top did better than in the middle' : 'in the middle did better than the average'}.`)
+  if (w[0] > from || w[1] < to) detail.push(`These figures cover ${span(w)}, the years within your selection with data for both measures.`)
   const stats = [
     { value: signed(g), label: 'real GDP per person' },
-    { value: signed(p), label: 'real median hourly pay' },
-    ...(avg != null ? [{ value: signed(avg), label: 'real average wages' }] : []),
+    { value: signed(p), label: T.label(geo) },
+    ...(po != null ? [{ value: signed(po), label: TYPICAL[other].label(geo) }] : avg != null ? [{ value: signed(avg), label: 'real average wages' }] : []),
   ]
-  return { headline, period: span(w), stats, meaning, detail }
+  return { headline, period: span(w), stats, meaning, detail, covered: ['gdp_pc_real', m, ...(po != null ? [other] : avg != null ? ['real_wage'] : [])] }
 }
 
-function productivityWages(geo: string, from: number, to: number, short: boolean): Built | Short | null {
-  const w = window(['productivity', 'real_wage'], geo, from, to)
+const WAGE: Record<string, { noun: string; label: string }> = {
+  real_wage: { noun: 'average wages', label: 'real average wages' },
+  median_earnings_real: { noun: 'median pay', label: 'real median hourly pay' },
+}
+
+function productivityWages(geo: string, from: number, to: number, short: boolean, _a?: string, b?: string): Built | Short | null {
+  const wid = b && b in WAGE ? b : 'real_wage'
+  const W = WAGE[wid]
+  const w = window(['productivity', wid], geo, from, to)
   if (!w) return null
   const q = pct('productivity', geo, w)
-  const p = pct('real_wage', geo, w)
+  const p = pct(wid, geo, w)
   if (q == null || p == null) return null
-  if (short) return `In ${place(geo)} in ${span(w)}, output per hour ${moved(q)} and real average wages ${moved(p)}.`
+  if (short) return `In ${place(geo)} in ${span(w)}, output per hour ${moved(q)} and ${W.label} ${moved(p)}.`
   const gap = q - p
-  const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, average wages kept pace with productivity` : gap > 0 ? `In ${place(geo)}, average wages fell behind productivity` : `In ${place(geo)}, average wages grew faster than productivity`
+  const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, ${W.noun} kept pace with productivity` : gap > 0 ? `In ${place(geo)}, ${W.noun} fell behind productivity` : `In ${place(geo)}, ${W.noun} grew faster than productivity`
   const meaning = Math.abs(gap) <= 2
-    ? 'Average pay changed about as much as the output of an hour’s work.'
-    : `The change in average pay was ${pts(gap)} ${gap > 0 ? 'below' : 'above'} the change in output per hour${p < 0 ? ', and pay fell after inflation' : ''}.`
+    ? `${uc1(W.noun)} changed about as much as the output of an hour’s work.`
+    : `The change in ${W.noun} was ${pts(gap)} ${gap > 0 ? 'below' : 'above'} the change in output per hour${p < 0 ? ', and pay fell after inflation' : ''}.`
+  const detail = ['Output per hour is adjusted for the prices of everything the economy produces, wages for consumer prices, so part of any gap can reflect differences between those prices rather than pay.']
+  if (wid === 'real_wage') detail.push('Average wages are not what the typical worker earns; select median pay to compare the middle of the distribution.')
+  if (w[0] > from || w[1] < to) detail.push(`These figures cover ${span(w)}, the years within your selection with data for both measures.`)
   return {
     headline, period: span(w), meaning,
-    stats: [{ value: signed(q), label: 'output per hour worked' }, { value: signed(p), label: 'real average wages' }],
-    detail: ['Output per hour is not GDP per person, and average wages are not what the typical worker earns.'],
+    stats: [{ value: signed(q), label: 'output per hour worked' }, { value: signed(p), label: W.label }],
+    detail, covered: ['productivity', wid],
   }
 }
 
@@ -144,57 +169,77 @@ const annuity = (rate: number) => { const m = rate / 1200; return m === 0 ? 1 / 
 /** Change in a ratio, in %, from the % changes of its numerator and denominator. */
 const ratioPct = (num: number, den: number) => ((1 + num / 100) / (1 + den / 100) - 1) * 100
 
-function affordability(geo: string, from: number, to: number, short: boolean): Built | Short | null {
-  const w = window(['house_price_real', 'disp_income_real'], geo, from, to)
+const HOUSING_REAL: Record<string, string> = { house_price_real: 'house prices', rent_real: 'rents' }
+const INCOME_REAL: Record<string, { noun: string; label: string }> = {
+  disp_income_real: { noun: 'incomes', label: 'real household income per person' },
+  median_income_real: { noun: 'incomes', label: 'real median household income' },
+  real_wage: { noun: 'wages', label: 'real average wages' },
+}
+
+function affordability(geo: string, from: number, to: number, short: boolean, a?: string, b?: string): Built | Short | null {
+  const hid = a && a in HOUSING_REAL ? a : 'house_price_real'
+  const iid = b && b in INCOME_REAL ? b : 'disp_income_real'
+  const hn = HOUSING_REAL[hid], I = INCOME_REAL[iid], inc = I.noun
+  const w = window([hid, iid], geo, from, to)
   if (!w) return null
-  const h = pct('house_price_real', geo, w)
-  const i = pct('disp_income_real', geo, w)
+  const h = pct(hid, geo, w)
+  const i = pct(iid, geo, w)
   if (h == null || i == null) return null
   const r = ratioPct(h, i)
-  if (short) return `In ${place(geo)} in ${span(w)}, real house prices ${moved(h)} and real household income ${moved(i)}, so prices relative to income ${moved(r)}.`
+  if (short) return `In ${place(geo)} in ${span(w)}, real ${hn} ${moved(h)} and ${I.label} ${moved(i)}, so ${hn} relative to ${inc} ${moved(r)}.`
   const gap = h - i
   const rel = gap > 0
-    ? h > 0 ? `house prices rose ${i > 0 ? 'faster than incomes' : 'while incomes fell'}` : 'incomes fell more than house prices'
-    : i > 0 ? `incomes ${h > 0 ? 'grew faster than house prices' : 'rose while house prices fell'}` : 'house prices fell more than incomes'
+    ? h > 0 ? `${hn} rose ${i > 0 ? `faster than ${inc}` : `while ${inc} fell`}` : `${inc} fell more than ${hn}`
+    : i > 0 ? `${inc} ${h > 0 ? `grew faster than ${hn}` : `rose while ${hn} fell`}` : `${hn} fell more than ${inc}`
   const flat = Math.abs(r) <= 2
-  const headline = flat ? `In ${place(geo)}, house prices and incomes moved roughly together` : `In ${place(geo)}, ${rel}`
-  const meaning = flat
-    ? 'Measured by purchase price, affordability relative to income barely changed; monthly mortgage payments also depend on interest rates.'
-    : `Measured by purchase price, a home cost ${Math.abs(r).toFixed(0)}% ${r > 0 ? 'more' : 'less'} relative to income in ${w[1]} than in ${w[0]}; monthly mortgage payments also depend on interest rates.`
+  const headline = flat ? `In ${place(geo)}, ${hn} and ${inc} moved roughly together` : `In ${place(geo)}, ${rel}`
+  const isHouse = hid === 'house_price_real'
+  const meaning = isHouse
+    ? flat
+      ? `Measured by purchase price, affordability relative to ${inc} barely changed; monthly mortgage payments also depend on interest rates.`
+      : `Measured by purchase price, a home cost ${Math.abs(r).toFixed(0)}% ${r > 0 ? 'more' : 'less'} relative to ${inc} in ${w[1]} than in ${w[0]}; monthly mortgage payments also depend on interest rates.`
+    : flat
+      ? `Rents relative to ${inc} barely changed.`
+      : `Relative to ${inc}, rents were ${Math.abs(r).toFixed(0)}% ${r > 0 ? 'higher' : 'lower'} in ${w[1]} than in ${w[0]}.`
   const detail: string[] = []
-  const prices = inRange(series('house_price_real', geo), w[0], w[1])
+  const prices = inRange(series(hid, geo), w[0], w[1])
   const cuts = [w[0], ...turningPoints(prices).map((p) => p.year), w[1]]
   if (cuts.length > 2) {
     const parts = cuts.slice(1).map((y, k) => {
       const s: [number, number] = [cuts[k], y]
-      const a = pct('house_price_real', geo, s), b = pct('disp_income_real', geo, s)
-      return a != null && b != null ? `${span(s)}, prices ${signed(a)} and income ${signed(b)}` : null
+      const x = pct(hid, geo, s), z = pct(iid, geo, s)
+      return x != null && z != null ? `${span(s)}, ${hn} ${signed(x)} and ${inc} ${signed(z)}` : null
     })
     if (parts.every(Boolean)) detail.push(`By phase: ${parts.join('; ')}.`)
     const peak = prices.reduce((m, p) => (p.value > m.value ? p : m), prices[0])
     const end = prices[prices.length - 1]
-    if (peak.year < end.year && end.value < peak.value) detail.push(`Real house prices in ${end.year} were still ${((1 - end.value / peak.value) * 100).toFixed(0)}% below their ${peak.year} peak.`)
+    if (peak.year < end.year && end.value < peak.value) detail.push(`Real ${hn} in ${end.year} were still ${((1 - end.value / peak.value) * 100).toFixed(0)}% below their ${peak.year} peak.`)
   }
-  const wm = window(['house_price_real', 'disp_income_real', 'mortgage_rate'], geo, w[0], w[1])
-  if (wm) {
-    const r0 = series('mortgage_rate', geo).find((p) => p.year === wm[0])!.value
-    const r1 = series('mortgage_rate', geo).find((p) => p.year === wm[1])!.value
-    const hm = pct('house_price_real', geo, wm), im = pct('disp_income_real', geo, wm)
-    if (hm != null && im != null) {
-      const pay = ratioPct((1 + hm / 100) * (annuity(r1) / annuity(r0)) * 100 - 100, im)
-      detail.push(`Mortgage payments: the average rate on new home loans went from ${r0.toFixed(1)}% in ${wm[0]} to ${r1.toFixed(1)}% in ${wm[1]}. For a 25-year loan covering the same share of the price, the monthly payment relative to income ${moved(pay)}, against ${signed(ratioPct(hm, im))} for the purchase price relative to income.`)
+  if (isHouse) {
+    const wm = window([hid, iid, 'mortgage_rate'], geo, w[0], w[1])
+    if (wm) {
+      const r0 = series('mortgage_rate', geo).find((p) => p.year === wm[0])!.value
+      const r1 = series('mortgage_rate', geo).find((p) => p.year === wm[1])!.value
+      const hm = pct(hid, geo, wm), im = pct(iid, geo, wm)
+      if (hm != null && im != null) {
+        const pay = ratioPct((1 + hm / 100) * (annuity(r1) / annuity(r0)) * 100 - 100, im)
+        detail.push(`Mortgage payments: the average rate on new home loans went from ${r0.toFixed(1)}% in ${wm[0]} to ${r1.toFixed(1)}% in ${wm[1]}. For a 25-year loan covering the same share of the price, the monthly payment relative to ${inc} ${moved(pay)}, against ${signed(ratioPct(hm, im))} for the purchase price relative to ${inc}.`)
+      }
     }
+    const oecd = pct('price_to_income', geo, w)
+    if (oecd != null) detail.push(`OECD’s price-to-income ratio, which divides nominal prices by nominal disposable income per person, changed ${signed(oecd)} over the same years; it measures income slightly differently.`)
   }
-  const oecd = pct('price_to_income', geo, w)
-  if (oecd != null) detail.push(`OECD’s price-to-income ratio, which divides nominal prices by nominal disposable income per person, changed ${signed(oecd)} over the same years; it measures income slightly differently.`)
+  if (iid === 'median_income_real') detail.push('Median household income comes from the EU-SILC survey; each survey year reports the previous year’s income.')
+  if (a && a !== hid) detail.push(`The headline compares real house prices with ${I.label}; ${INDICATORS[a].short.toLowerCase()} is shown separately because it is not an inflation-adjusted price.`)
+  if (w[0] > from || w[1] < to) detail.push(`These figures cover ${span(w)}, the years within your selection with data for both measures.`)
   return {
     headline, period: span(w), meaning,
     stats: [
-      { value: signed(h), label: 'real house prices' },
-      { value: signed(i), label: 'real household income per person' },
-      { value: signed(r), label: 'house prices relative to income' },
+      { value: signed(h), label: `real ${hn}` },
+      { value: signed(i), label: I.label },
+      { value: signed(r), label: `${hn} relative to ${inc}` },
     ],
-    detail,
+    detail, covered: [hid, iid],
   }
 }
 
@@ -271,11 +316,11 @@ function describePair(a: string, b: string, from: number, to: number) {
 export function answerFor(relId: string, a: string, b: string, compare: string | null, from: number, to: number): Answer | null {
   const bt = BUILT[relId]
   if (bt) {
-    const main = bt.fn('ES', from, to, false)
+    const main = bt.fn('ES', from, to, false, a, b)
     if (!main) return { headline: bt.none[0], stats: [], meaning: bt.none[1], detail: [], covered: [] }
     const [f, t] = main.period ? main.period.split('–').map(Number) : [from, to]
-    const other = compare && compare !== 'none' ? bt.fn(compare, f, t, true) : null
-    return { ...main, detail: other ? [...main.detail, other] : main.detail, covered: bt.covered }
+    const other = compare && compare !== 'none' ? bt.fn(compare, f, t, true, a, b) : null
+    return { ...main, detail: other ? [...main.detail, other] : main.detail, covered: main.covered ?? bt.covered }
   }
   const d = describePair(a, b, from, to)
   const q = DRIVER_Q[relId]

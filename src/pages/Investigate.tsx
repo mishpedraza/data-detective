@@ -34,8 +34,8 @@ const optionFor = (id: string) => {
 export function Investigate({ params }: { params: URLSearchParams }) {
   const [relId, setRelId] = useState(() => params.get('r') ?? 'immigration-crime')
   const rel = relationshipById(relId)
-  const [a, setA] = useState(() => (params.get('a') && INDICATORS[params.get('a')!] ? params.get('a')! : rel.left.default))
-  const [b, setB] = useState(() => (params.get('b') && INDICATORS[params.get('b')!] ? params.get('b')! : rel.right.default))
+  const [a, setA] = useState(() => (params.get('a') && INDICATORS[params.get('a')!] && (!rel.left.options.length || rel.left.options.includes(params.get('a')!)) ? params.get('a')! : rel.left.default))
+  const [b, setB] = useState(() => (params.get('b') && INDICATORS[params.get('b')!] && (!rel.right.options.length || rel.right.options.includes(params.get('b')!)) ? params.get('b')! : rel.right.default))
   const [compare, setCompare] = useState<string>(() => params.get('c') ?? rel.defaultCompare ?? 'none')
   const [[from, to], setRange] = useState<[number, number]>(() => {
     const f = Number(params.get('from'))
