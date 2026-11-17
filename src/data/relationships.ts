@@ -5,7 +5,7 @@ const CRIME = ['crime_homicide_long', 'crime_homicide', 'crime_robbery', 'crime_
 const HOUSING = ['house_price_real', 'rent_real', 'price_to_income', 'house_price_nominal', 'rent_nominal', 'price_to_rent']
 const GROWTH = ['gdp_real', 'gdp_pc_real', 'productivity']
 const JOBS = ['unemployment', 'employment_rate', 'employment']
-const LIVING = ['real_wage', 'median_earnings_real', 'median_income_real', 'disp_income_real', 'consumption_pps', 'deprivation', 'poverty_rate', 'housing_overburden']
+const LIVING = ['real_wage', 'median_earnings_real', 'median_income_real', 'disp_income_real', 'deprivation', 'poverty_rate', 'housing_overburden']
 
 const correlation = { text: 'Two lines moving together, or apart, does not show that one causes the other. Both can be driven by a third factor, such as the business cycle, or the timing can be coincidental.' }
 
@@ -130,8 +130,8 @@ export const RELATIONSHIPS: Relationship[] = [
     question: 'Have wages kept pace with productivity?',
     shortQuestion: 'Productivity ↔ Real wages',
     kicker: 'Productivity and pay',
-    left: { dimension: 'economy', options: ['productivity', 'gdp_pc_real'], default: 'productivity' },
-    right: { dimension: 'living', options: LIVING, default: 'real_wage' },
+    left: { dimension: 'economy', options: ['productivity'], default: 'productivity' },
+    right: { dimension: 'living', options: ['real_wage', 'median_earnings_real'], default: 'real_wage' },
     explain: [
       { text: 'Economic theory links pay to productivity over the long run, but in many OECD countries median wages have grown more slowly than productivity.', refs: ['oecd2018'] },
       { text: 'Spain’s productivity growth has been slow by European standards, which limits how fast real wages can grow sustainably.' },
