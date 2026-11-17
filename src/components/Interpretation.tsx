@@ -56,11 +56,14 @@ function ChangeText({ A, B, compare, from, to }: { A: Indicator; B: Indicator; c
       other = comparePair(A, B, compare!, f, t)
     }
   }
+  const aligned = !!(other?.window && es.window && other.window[0] === es.window[0] && other.window[1] === es.window[1])
   if (!es.window || !es.a || !es.b) return null
   const gapText = (p: PairComparison) => (p.gap != null ? `, a gap of ${pts(p.gap)}` : '')
   const out = [`In Spain, from ${es.window[0]} to ${es.window[1]}, ${moved(A, es.a)} while ${moved(B, es.b)}${gapText(es)}.`]
   const name = compare ? COUNTRIES[compare].name : ''
-  if (other?.a && other.b) {
+  if (other?.a && other.b && !aligned) {
+    out.push(`In ${name}, from ${other.window![0]} to ${other.window![1]}, ${moved(A, other.a)} and ${moved(B, other.b)}${gapText(other)}. The two countries’ data cover too few common years to compare their changes directly.`)
+  } else if (other?.a && other.b) {
     out.push(`Over the same years in ${name}, ${moved(A, other.a)} and ${moved(B, other.b)}${gapText(other)}.`)
     const diffs = ([[A, es.a, other.a], [B, es.b, other.b]] as const).flatMap(([ind, x, y]) => {
       if (x.breaks.length || y.breaks.length) return []
