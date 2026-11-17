@@ -131,22 +131,24 @@ export function Investigate({ params }: { params: URLSearchParams }) {
           <p className="eyebrow">{rel.kicker}</p>
           <h1 className="question finding">{answer?.headline ?? rel.question}</h1>
           {answer?.dek && <p className="finding-dek">{answer.dek}</p>}
-          <div className="sentence">
-            Compare{' '}
-            <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
-            with{' '}
-            <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
-            in Spain, alongside{' '}
-            <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'nothing else'} />
-            , from {from} to {to}.
-          </div>
+          <details className="investigation-controls">
+            <summary className="tell-more">Change indicators or country</summary>
+            <div className="sentence">
+              Compare{' '}
+              <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
+              with{' '}
+              <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
+              in Spain. Compare with{' '}
+              <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'no other country'} />.
+            </div>
+          </details>
         </motion.section>
       </AnimatePresence>
 
       <div className="toolbar">
         <div className="segmented" role="tablist" aria-label="View">
           <button role="tab" aria-selected={view === 'time'} className={view === 'time' ? 'on' : ''} onClick={() => setView('time')}>Over time</button>
-          <button role="tab" aria-selected={view === 'scatter'} className={view === 'scatter' ? 'on' : ''} onClick={() => setView('scatter')}>Relationship</button>
+          <button role="tab" aria-selected={view === 'scatter'} className={view === 'scatter' ? 'on' : ''} onClick={() => setView('scatter')}>Correlation</button>
         </div>
         {view === 'scatter' ? (
           <div className="segmented small" role="tablist" aria-label="Compare">
@@ -167,6 +169,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
           <RangeBrush min={MIN} max={MAX} from={from} to={to} onChange={(f, t) => setRange([f, t])} sparkA={sparkA} sparkB={sparkB} />
         </div>
       </div>
+      {view === 'scatter' && <p className="chart-notes">Each dot is a year. This view shows how closely the measures move together. Choose Year-to-year changes to compare annual rises and falls. Correlation alone cannot establish cause.</p>}
 
       <AnimatePresence mode="wait">
         {view === 'time' ? (

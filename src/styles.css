@@ -583,3 +583,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .prediction-feedback span { border: 1px solid currentColor; border-radius: 3px; font-size: 13px; padding: 6px 8px; }
 .prediction-feedback .prediction-correct { color: #225c3c; background: #e8f0e6; }
 .prediction-feedback .prediction-incorrect { color: #8a302b; background: #f7e8e4; }
+
+.investigation-controls { margin-top: 12px; }
+.investigation-controls summary { cursor: pointer; }
+.investigation-controls .sentence { margin-top: 10px; }

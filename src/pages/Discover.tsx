@@ -77,8 +77,8 @@ export function Discover({ navigate }: { navigate: (h: string) => void }) {
       <section className="more-q" aria-labelledby="discover-more">
         <h2 id="discover-more" className="section-label">Keep exploring</h2>
         <ol>
-          {collection.map(({ id, question }) => (
-            <li key={id}><a href={hrefFor('investigate', { r: id })}>
+          {collection.map(({ id, question, params }) => (
+            <li key={id}><a href={hrefFor('investigate', { r: id, ...params })}>
               <span className="more-text">{question}</span>
               <span className="q-go" aria-hidden>→</span>
             </a></li>
