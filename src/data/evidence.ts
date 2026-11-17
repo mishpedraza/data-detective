@@ -384,3 +384,33 @@ export const trendEvidence = (indicatorId: string, geo = 'ES'): TrendEvidence | 
 }
 export const relationshipEvidence = (driverDimension: string, outcomeId: string): RelationshipEvidence | null =>
   RELATIONSHIP[`${driverDimension}->${outcomeId}`] ?? null
+
+/** Research for investigations outside crime, keyed by relationship id. */
+export interface TopicEvidence {
+  /** Findings as reported by researchers, each tied to a source. */
+  findings: (Note & { lead: string })[]
+  international: StudyLink[]
+  spain: StudyLink[]
+  gap: string
+}
+
+const DECOUPLING: TopicEvidence = {
+  findings: [
+    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over roughly two decades, real median compensation grew more slowly than productivity in most OECD countries, because labour’s share of income fell and median wages fell behind average wages (OECD 2018; Schwellnus et al. 2017).', refs: ['oecd2018'] },
+    { lead: 'The size of the gap depends on the measures.', text: 'Comparing productivity with average pay deflated by the same price index shows a small gap; comparing it with median wages deflated by consumer prices shows a much larger one (Pessoa & Van Reenen 2013, working paper).' },
+    { lead: 'The link has weakened, not vanished (US evidence).', text: 'In the United States, faster productivity growth still went with faster pay growth, but other factors held typical pay down (Stansbury & Summers 2017, working paper).' },
+  ],
+  international: [
+    { id: 'schwellnus2017', relevance: 'indirect', note: 'OECD countries; measures the gap and its two components.' },
+    { id: 'pessoa2013', relevance: 'indirect', note: 'UK and US; explains why different wage and price measures give different gaps.' },
+    { id: 'stansbury2017', relevance: 'indirect', note: 'United States only.' },
+    { id: 'autor2020', relevance: 'indirect', note: 'United States; one explanation for falling labour shares.' },
+  ],
+  spain: [],
+  gap: 'No verified peer-reviewed study of Spain’s wage–productivity gap since 2000 was found. Spain is included in the OECD comparisons, but country results are not reported separately here.',
+}
+
+export const TOPIC: Record<string, TopicEvidence> = {
+  'growth-wages': DECOUPLING,
+  'productivity-wages': DECOUPLING,
+}

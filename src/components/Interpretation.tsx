@@ -4,7 +4,7 @@ import { COUNTRIES, comparability } from '../data/countries'
 import { DIMENSIONS, INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, studyById, type Study } from '../data/research'
-import { BROADER, countryEvidence, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
+import { BROADER, TOPIC, countryEvidence, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
@@ -677,6 +677,29 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
               <p className="tell-fine">
                 All studies were checked against the original publication or its official abstract. “Peer-reviewed article” means an original study in a refereed journal; “invited review article” means a commissioned survey of the evidence. 
               </p>
+            </>
+          ) : TOPIC[rel.id] ? (
+            <>
+              <ul className="synthesis">
+                {TOPIC[rel.id].findings.map((f) => (
+                  <li key={f.lead}>
+                    <span className="expl-tag expl-tag-evidence">Reported by researchers</span> <strong>{f.lead}</strong> {f.text}
+                    {fn(f.refs)}
+                  </li>
+                ))}
+              </ul>
+              {([['International research', TOPIC[rel.id].international], ['Research on Spain', TOPIC[rel.id].spain]] as const).map(([h, links]) => links.length > 0 && (
+                <div key={h} className="study-group">
+                  <h4>{h}</h4>
+                  <ul className="studies">
+                    {links.map((l) => {
+                      const st = studyById(l.id)
+                      return st && <StudyCard key={l.id} s={st} note={l.note} period={periodNote(st, from, to)} open={openStudy === l.id} onToggle={() => setOpenStudy((o) => (o === l.id ? null : l.id))} />
+                    })}
+                  </ul>
+                </div>
+              ))}
+              <p className="synthesis-note"><strong>Research gap:</strong> {TOPIC[rel.id].gap}</p>
             </>
           ) : (
             <>

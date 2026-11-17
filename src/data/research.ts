@@ -1,5 +1,5 @@
-export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending'
-export type Status = 'peer-reviewed' | 'review'
+export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending' | 'wages' | 'laborshare'
+export type Status = 'peer-reviewed' | 'review' | 'working-paper'
 export type Design = 'causal' | 'association' | 'descriptive' | 'review'
 
 export interface Study {
@@ -11,7 +11,7 @@ export interface Study {
   url: string
   status: Status
   design: Design
-  scope: 'Spain' | 'Europe' | 'United States' | 'Review'
+  scope: 'Spain' | 'Europe' | 'United States' | 'International' | 'Review'
   /** Countries the data covers (ISO codes as used for comparison countries). */
   geo?: string[]
   place: string
@@ -42,11 +42,14 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   drugs: 'Drug offences',
   victimisation: 'Survey-reported victimisation',
   reoffending: 'Reoffending by immigrants',
+  wages: 'Wages and compensation',
+  laborshare: 'Labour share of income',
 }
 
 export const STATUS_LABEL: Record<Status, string> = {
   'peer-reviewed': 'Peer-reviewed article',
   review: 'Invited review article',
+  'working-paper': 'Working paper (not peer-reviewed)',
 }
 
 export const DESIGN_LABEL: Record<Design, string> = {
@@ -578,6 +581,81 @@ export const TREND_STUDIES: Study[] = [
     finding: 'Cybercrime reported to police increased during the COVID-19 outbreak, especially in the two strictest lockdown months; online shopping and auction fraud and hacking of social media and email rose most.',
     method: 'Time-series analysis of crimes known to UK police.',
     limitations: 'UK only, and a short period; describes changes rather than estimating causes.',
+  },
+  {
+    id: 'schwellnus2017',
+    authors: 'Cyrille Schwellnus, Andreas Kappeler & Pierre-Alain Pionnier',
+    year: 2017,
+    title: 'Decoupling of wages from productivity: Macro-level facts',
+    outlet: 'OECD Economics Department Working Papers No. 1373',
+    url: doi('10.1787/d4764493-en'),
+    status: 'working-paper',
+    design: 'descriptive',
+    scope: 'International',
+    place: 'OECD countries',
+    period: 'About 1995–2013',
+    outcomes: ['wages', 'laborshare'],
+    headline: 'In most OECD countries, typical workers’ pay grew more slowly than productivity.',
+    finding: 'Over two decades, productivity growth decoupled from real median compensation in most OECD countries. The gap is explained by falling labour shares (in about two-thirds of countries) and by median wages falling behind average wages.',
+    method: 'Decomposes the difference between productivity growth and real median compensation growth into a labour-share part and a wage-inequality part, country by country.',
+    limitations: 'Descriptive: it measures the gap and its components, not what caused them. The labour-share contribution shrinks once sectors such as housing and primary industries are excluded.',
+  },
+  {
+    id: 'pessoa2013',
+    authors: 'João Paulo Pessoa & John Van Reenen',
+    year: 2013,
+    title: 'Decoupling of Wage Growth and Productivity Growth? Myth and Reality',
+    outlet: 'CEP Discussion Paper No. 1246, London School of Economics',
+    url: 'https://cep.lse.ac.uk/pubs/download/dp1246.pdf',
+    status: 'working-paper',
+    design: 'descriptive',
+    scope: 'International',
+    place: 'United Kingdom and United States',
+    period: 'Since the 1970s',
+    outcomes: ['wages'],
+    headline: 'How large the wage–productivity gap looks depends on which wages and prices are compared.',
+    finding: 'Distinguishes “net decoupling” (productivity vs average compensation, both deflated by the same GDP price index), which is small, from “gross decoupling” (productivity vs median wages deflated by consumer prices), which is large.',
+    method: 'Compares growth of GDP per hour with average compensation and median wages under different price deflators.',
+    limitations: 'UK and US only. A gap between GDP and an average wage partly reflects price measurement, non-wage benefits and inequality among workers.',
+  },
+  {
+    id: 'stansbury2017',
+    authors: 'Anna Stansbury & Lawrence H. Summers',
+    year: 2017,
+    title: 'Productivity and Pay: Is the link broken?',
+    outlet: 'NBER Working Paper No. 24165',
+    url: doi('10.3386/w24165'),
+    status: 'working-paper',
+    design: 'association',
+    scope: 'United States',
+    geo: ['US'],
+    place: 'United States',
+    period: '1973–2016',
+    years: [1973, 2016],
+    outcomes: ['wages'],
+    headline: 'Faster productivity growth still went with faster pay growth, but other forces held typical pay down.',
+    finding: 'One percentage point higher productivity growth was associated with 0.7–1 point higher median and average compensation growth, and 0.4–0.7 points for production and non-supervisory workers.',
+    method: 'Regressions of compensation growth on productivity growth over time.',
+    limitations: 'United States only; associational time-series evidence.',
+  },
+  {
+    id: 'autor2020',
+    authors: 'David Autor, David Dorn, Lawrence F. Katz, Christina Patterson & John Van Reenen',
+    year: 2020,
+    title: 'The Fall of the Labor Share and the Rise of Superstar Firms',
+    outlet: 'Quarterly Journal of Economics 135(2): 645–709',
+    url: doi('10.1093/qje/qjaa004'),
+    status: 'peer-reviewed',
+    design: 'association',
+    scope: 'United States',
+    geo: ['US'],
+    place: 'United States (with cross-country checks)',
+    period: 'Since 1982',
+    outcomes: ['laborshare'],
+    headline: 'Falling labour shares are linked to the growing weight of highly productive “superstar” firms.',
+    finding: 'As sales concentrated in the most productive firms, which have high markups and low labour shares, the aggregate labour share fell.',
+    method: 'Firm-level panel data from the US Economic Census since 1982, testing predictions of the superstar-firm hypothesis.',
+    limitations: 'Mainly US firm data; other explanations for falling labour shares are not ruled out.',
   },
 ]
 
