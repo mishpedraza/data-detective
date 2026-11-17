@@ -38,7 +38,7 @@ export const RELATIONSHIPS: Relationship[] = [
     right: { dimension: 'crime', options: CRIME, default: 'crime_homicide_long' },
     explain: [
       { text: 'Reviews of the international research find that, on average, places with more immigration do not have more crime: across studies from 1994 to 2014 the association is negative but very weak, and results vary a lot between settings.', refs: ['ousey2018'] },
-      { text: 'Studies that try to isolate cause and effect find small, crime-specific effects. In Italy, immigration raised robberies but not overall crime; in the UK, one migration wave led to a modest rise in property crime and another to a small fall, with no effect on violent crime.', refs: ['bianchi2012', 'bell2013'] },
+      { text: 'Studies that try to isolate cause and effect find small, crime-specific effects. In Italy, immigration raised robberies but not overall crime; in the UK, one migration wave led to a modest rise in property crime and the other showed no increase, and neither had a detectable effect on violent crime.', refs: ['bianchi2012', 'bell2013'] },
       { text: 'For Spain in 1999–2009, researchers found a significant relationship between immigration and crime, but explained it by the characteristics of different immigrant groups, particularly their human capital, and noted that Spain’s crime rates rose less than in other European countries with similar migration waves.', refs: ['alonso2012'] },
       { text: 'Recorded crime is concentrated among young men in every population. Migrant populations are often younger and more male than the population as a whole, so raw comparisons mix up age with origin.', refs: ['hirschi1983'] },
     ],

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { COUNTRIES } from '../data/countries'
 import { INDICATORS, formatValue, series } from '../data/indicators'
+import type { ReviewedAnswer } from '../data/reviewedAnswers'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, studyById, type Study } from '../data/research'
 import type { ExplStatus, StudyLink } from '../data/evidence'
@@ -18,6 +19,7 @@ interface Props {
   compare: string | null
   from: number
   to: number
+  reviewed?: ReviewedAnswer
 }
 
 
@@ -131,7 +133,7 @@ function StudyCard({ s, note, period, open, onToggle }: { s: Study; note?: strin
   )
 }
 
-export function Interpretation({ rel, a, b, compare, from, to }: Props) {
+export function Interpretation({ rel, a, b, compare, from, to, reviewed }: Props) {
   const [why, setWhy] = useState(false)
   const [stats, setStats] = useState(false)
   const [caveats, setCaveats] = useState(false)
@@ -159,6 +161,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     })
 
   const { crimeInd, immInd, trend, profile, cmpEv, explanations, confounders, findings, kindLabel, periodLabel, topic, cmpTopic, ans, keyStats, meaning, showCmp, shownLimits, moreLimits } = explain(rel, a, b, compare, from, to)
+  const moreFindings = reviewed ? findings : findings.slice(1)
+  const additionalLimits = reviewed ? [...shownLimits, ...moreLimits] : moreLimits
   const T = rel.outcome === 'left' ? A : B
   const tp = (() => {
     const pts = inRange(series(T.id, 'ES'), from, to)
@@ -224,9 +228,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <h3>The findings</h3>
         </div>
         <div className="tell-body">
+          {reviewed && <p className="tell-lead">{reviewed.finding.text}{fn(reviewed.finding.refs)}</p>}
           {keyStats.length > 0 && (
             <>
-              {ans?.period && <p className="stat-cap">Spain, {ans.period}{ans.period !== `${from}–${to}` && ` · the years with data in your ${from}–${to} selection`}</p>}
+              {ans?.period && <p className="stat-cap">{reviewed ? 'Chart comparison · ' : ''}Spain, {ans.period}{ans.period !== `${from}–${to}` && ` · the years with data in your ${from}–${to} selection`}</p>}
               <ul className="stats">
                 {keyStats.map((st) => (
                   <li key={st.label}>
@@ -237,12 +242,13 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
               </ul>
             </>
           )}
-          {meaning && <p className={`ti-answer${ans?.meaning ? "" : " ti-answer-sm"}`}>{meaning}</p>}
+          {!reviewed && meaning && <p className={`ti-answer${ans?.meaning ? "" : " ti-answer-sm"}`}>{meaning}</p>}
           <button className="tell-more" onClick={() => setStats((v) => !v)} aria-expanded={stats}>
             {stats ? '− Hide details' : '+ More detail'}
           </button>
           {stats && (
             <div className="ti-details">
+              {reviewed && meaning && <p className="tell-text">{meaning}</p>}
               {ans?.detail.map((d) => <p key={d} className="tell-text">{d}</p>)}
               {showCmp && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
               {tp && <p className="ti-counts">{tp}</p>}
@@ -312,7 +318,11 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <h3>The explanation</h3>
         </div>
         <div className="tell-body">
-          {findings.length ? (
+          {reviewed ? (
+            <div className="reviewed-explanation">
+              {reviewed.explanation.map((claim) => <p className="finding-body" key={claim.text}>{claim.text}{fn(claim.refs)}</p>)}
+            </div>
+          ) : findings.length ? (
             <ul className="findings">
               {findings.slice(0, 1).map((f) => (
                 <li key={f.lead}>
@@ -326,13 +336,13 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             <p className="tell-text">We have not yet verified research on this question, so no findings are shown.</p>
           )}
           <button className="tell-more" onClick={() => setWhy((v) => !v)} aria-expanded={why}>
-            {why ? '− Hide the research' : findings.length ? '+ Explore the research' : `+ Background notes, not yet verified study by study (${rel.explain.length})`}
+            {why ? '− Hide the research' : reviewed || findings.length ? '+ Explore the research' : `+ Background notes, not yet verified study by study (${rel.explain.length})`}
           </button>
           {why && (
             <div className="research-more">
-              {findings.length > 1 && (
+              {moreFindings.length > 0 && (
                 <ul className="findings">
-                  {findings.slice(1).map((f) => (
+                  {moreFindings.map((f) => (
                     <li key={f.lead}>
                       <p className="finding-lead">{f.lead}</p>
                       {f.body && <p className="finding-body">{f.body}</p>}
@@ -431,18 +441,18 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
         </div>
         <div className="tell-body">
           <ul className="uncertain">
-            {shownLimits.map((c, i) => (
+            {(reviewed ? [reviewed.limitation] : shownLimits).map((c, i) => (
               <li key={i}>{c.text}{fn(c.refs)}</li>
             ))}
           </ul>
-          {moreLimits.length > 0 && (
+          {additionalLimits.length > 0 && (
             <>
               <button className="tell-more" onClick={() => setCaveats((v) => !v)} aria-expanded={caveats}>
                 {caveats ? '− Hide limitations' : '+ Explore limitations'}
               </button>
               {caveats && (
                 <ul className="tell-list">
-                  {moreLimits.map((c, i) => (
+                  {additionalLimits.map((c, i) => (
                     <li key={i}>{c.text}{fn(c.refs)}</li>
                   ))}
                 </ul>
