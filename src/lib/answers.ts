@@ -76,7 +76,10 @@ function affordability(geo: string, from: number, to: number, short: boolean): B
   if (h == null || i == null) return null
   if (short) return { verdict: '', text: `In ${place(geo)} over the same years, real house prices ${moved(h)} and real household income ${moved(i)}.` }
   const gap = h - i
-  const verdict = gap > 2 ? `In ${place(geo)}, house prices rose much faster than incomes, so buying a home became less affordable.` : gap < -2 ? `In ${place(geo)}, incomes grew faster than house prices, so buying a home became more affordable.` : `In ${place(geo)}, house prices and incomes moved roughly together.`
+  const rel = gap > 0
+    ? h > 0 ? `house prices rose ${i > 0 ? 'faster than incomes' : 'while incomes fell'}` : 'incomes fell more than house prices'
+    : i > 0 ? `incomes ${h > 0 ? 'grew faster than house prices' : 'rose while house prices fell'}` : 'house prices fell more than incomes'
+  const verdict = Math.abs(gap) <= 2 ? `In ${place(geo)}, house prices and incomes moved roughly together.` : `In ${place(geo)}, ${rel}, so buying a home became ${gap > 0 ? 'less' : 'more'} affordable relative to incomes.`
   return { verdict, text: `Between ${w[0]} and ${w[1]}, real house prices ${moved(h)} and real household income per person ${moved(i)}${Math.abs(gap) > 2 ? `, a gap of ${pts(gap)}` : ''}. The research below looks at why.` }
 }
 
