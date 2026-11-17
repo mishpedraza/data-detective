@@ -10,6 +10,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
   const [opened, setOpened] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
+  const choiceIndex = useRef(0)
   const returning = useRef(false)
   useEffect(() => {
     if (opened) panel.current?.focus({ preventScroll: true })
@@ -26,7 +27,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
           <legend>{interaction.label}</legend>
           <div className="discovery-options">
             {interaction.choices.map((choice, index) => (
-              <button key={choice} ref={index === 0 ? trigger : undefined} type="button" onClick={() => { setPick(choice); setOpened(true) }}>{choice}</button>
+              <button key={choice} ref={index === choiceIndex.current ? trigger : undefined} type="button" onClick={() => { choiceIndex.current = index; setPick(choice); setOpened(true) }}>{choice}</button>
             ))}
           </div>
         </fieldset>
@@ -37,13 +38,18 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
     </>
   )
 
-  const { finding, comparison, facts, note, next, refs } = interaction.reveal
+  const { finding, comparison, facts, note, measure, refs } = interaction.reveal
   const answer = interaction.kind === 'prediction' ? interaction.answer : undefined
   const largest = comparison && Math.max(...comparison.map(({ amount }) => amount))
   return (
     <div className="discovery-reveal" ref={panel} tabIndex={-1} aria-live="polite">
-      {pick && <p className="discovery-guess">You chose <strong className={answer ? (pick === answer ? 'discovery-match' : 'discovery-mismatch') : undefined}>{pick.toLowerCase()}</strong>. {answer === pick ? 'That matches the comparison.' : ''}</p>}
-      <p className={`discovery-result${answer ? ' discovery-match' : ''}`}>{finding}</p>
+      {answer && <p className="discovery-guess">
+        {pick === answer
+          ? <strong className="discovery-match">Correct</strong>
+          : <><span className="discovery-mismatch">Your guess · {pick}</span><span className="discovery-match">Answer · {answer}</span></>}
+      </p>}
+      <p className="discovery-result">{finding}</p>
+      {measure && <p className="discovery-measure">{measure}</p>}
       {comparison && largest && (
         <ul className="story-bars discovery-bars">
           {comparison.map(({ label, value, amount }) => (
@@ -60,7 +66,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
       <p className="discovery-note">{note}</p>
       <StorySources refs={refs} />
       <div className="discovery-reveal-actions">
-        {evidenceLink(next)}
+        {evidenceLink()}
         <button type="button" className="discovery-clue" onClick={() => {
           returning.current = true
           setPick('')

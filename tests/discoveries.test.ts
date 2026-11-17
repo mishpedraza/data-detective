@@ -62,10 +62,10 @@ test('Discover has one sourced teaser per existing question and grades only defi
       const source = ref.startsWith('data:') ? INDICATORS[ref.slice(5)]?.source : studyById(ref) ?? REFERENCES[ref]
       assert.match(source?.url ?? '', /^https:\/\//, ref)
     }
-    if (interaction.kind === 'prediction' && interaction.answer) assert.ok(interaction.choices.includes(interaction.answer), id)
+    if (interaction.kind === 'prediction') assert.ok(interaction.choices.includes(interaction.answer), id)
   }
   const parent = DISCOVER_TEASERS['children-and-happiness']!.interaction
-  assert.ok(parent?.kind === 'prediction' && parent.answer === undefined)
+  assert.ok(parent?.kind === 'contrast' && parent.reveal.comparison?.length === 3)
   const housing = DISCOVER_TEASERS['housing-affordability']!.interaction
   assert.ok(housing?.kind === 'prediction' && housing.answer === 'Lower')
   assert.match(housing.reveal.finding, /13% below/)
