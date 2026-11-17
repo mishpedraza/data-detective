@@ -392,8 +392,25 @@ export interface TopicEvidence {
   international: StudyLink[]
   spain: StudyLink[]
   gap: string
-  /** Research on a comparison country, shown when that country is selected. */
-  byCountry?: Record<string, { findings: (Note & { lead: string })[]; studies: StudyLink[] }>
+  /** Research on a comparison country, shown when that country is selected; `years` limits a finding to periods it covers. */
+  byCountry?: Record<string, { findings: (Note & { lead: string; years?: [number, number] })[]; studies: StudyLink[] }>
+  /** Research tied to phases of the trend; only phases inside the selected years are shown. */
+  phases?: Phase[]
+  /** Shown when the comparison country has no research covering the selected years. */
+  cmpGap?: string
+}
+
+/** A phase of a trend, e.g. a boom, and the research explaining it. `span` runs from the year before the phase to its last year. */
+export interface Phase {
+  span: [number, number]
+  /** Explanation when this is the only phase selected. */
+  lead: string
+  /** Part of a combined sentence when several phases are selected, e.g. "the boom before 2008 to cheap credit". */
+  clause: string
+  summary: string
+  refs: string[]
+  findings: (Note & { lead: string })[]
+  gap: string
 }
 
 const DECOUPLING: TopicEvidence = {
@@ -451,16 +468,53 @@ const IMM_EMPLOYMENT: TopicEvidence = {
 }
 
 const AFFORDABILITY: TopicEvidence = {
-  findings: [
-    { lead: 'Loose lending fed Spain’s 2000s price boom.', text: 'During the boom, banks charged non-employed borrowers the same mortgage spreads as employed ones, and appraisals appear to have been inflated to meet loan-to-value limits.', refs: ['akin2014'] },
-    { lead: 'Tourist rentals raised rents in Barcelona, most in hotspots.', text: 'Airbnb raised rents by about 2% in the average neighbourhood and about 7% in the tenth of neighbourhoods with the most listings.', refs: ['garcialopez2020'] },
-    { lead: 'Renting grew where incomes are low and supply is rigid.', text: 'Rental demand rose among young households, immigrants and temporary workers, concentrated in Madrid, Catalonia and the islands, where supply responds slowly.', refs: ['lopezrodriguez2019'] },
+  findings: [],
+  phases: [
+    {
+      span: [1995, 2007],
+      lead: 'Cheaper credit and looser borrowing limits fuelled the boom.',
+      clause: 'the boom before 2008 to cheap credit',
+      summary: 'Before 2008, credit from abroad became cheaper, borrowing limits looser and investors accepted lower returns on Spanish housing.',
+      refs: ['intveld2014'],
+      findings: [
+        { lead: 'Banks lent loosely during the boom.', text: 'Banks charged non-employed borrowers the same mortgage spreads as employed ones, and appraisals appear to have been inflated to meet loan-to-value limits.', refs: ['akin2014'] },
+        { lead: 'Immigration accounted for about a quarter of the 2000s price rise.', text: 'Estimates for 2000–2010 attribute about 2% a year of price growth, and about half of new construction, to population growth from immigration.', refs: ['gonzalez2013'] },
+      ],
+      gap: 'No verified study splits the whole boom-era price rise between credit, interest rates, immigration and incomes.',
+    },
+    {
+      span: [2007, 2013],
+      lead: 'Credit tightened sharply as prices fell.',
+      clause: 'the 2008–2013 fall to a credit crunch',
+      summary: 'After 2008, borrowing limits tightened as house prices fell, and the credit crunch hit households hardest.',
+      refs: ['intveld2014'],
+      findings: [
+        { lead: 'Banks lent more cautiously after the boom.', text: 'A study of individual Spanish mortgages finds lending standards were softer in the boom than in the bust.', refs: ['akin2014'] },
+      ],
+      gap: 'No verified study measures how much the credit crunch, unemployment and unsold homes each contributed to the 2008–2013 price fall.',
+    },
+    {
+      span: [2013, 2025],
+      lead: 'Since 2014, demand has outpaced a slow-growing supply of homes.',
+      clause: 'the rise since 2014 to demand outpacing supply',
+      summary: 'Since 2014, population growth, mostly from immigration, and buyers from abroad have met a supply of new homes held back by labour shortages, rising costs and little building land.',
+      refs: ['bde2024'],
+      findings: [
+        { lead: 'Unlike before 2008, banks kept lending prudently.', text: 'Lower-income households who could not get a mortgage turned to a small rental market, where rents are high relative to prices.', refs: ['bde2024'] },
+        { lead: 'Tourist rentals raised rents in Barcelona, most in hotspots.', text: 'Airbnb raised rents by about 2% in the average neighbourhood and about 7% in the tenth of neighbourhoods with the most listings.', refs: ['garcialopez2020'] },
+        { lead: 'Renting grew where incomes are low and supply is rigid.', text: 'Rental demand rose among young households, immigrants and temporary workers, concentrated in Madrid, Catalonia and the islands, where supply responds slowly.', refs: ['lopezrodriguez2019'] },
+      ],
+      gap: 'No verified study measures how much immigration, buyers from abroad, limited building, tourism and incomes each contributed to Spain’s price and rent rises since 2014.',
+    },
   ],
+  cmpGap: 'No verified study in Data Detective explains house prices there in these years.',
   international: [
     { id: 'glaeser2008', relevance: 'indirect', note: 'US cities; on why supply flexibility matters.' },
   ],
   spain: [
+    { id: 'intveld2014', relevance: 'direct', note: 'Spain, 1995–2013; boom and bust; model-based.' },
     { id: 'akin2014', relevance: 'direct', note: 'Spain, 2000s credit boom.' },
+    { id: 'bde2024', relevance: 'direct', note: 'Spain, 2014–2023; descriptive.' },
     { id: 'garcialopez2020', relevance: 'direct', note: 'Barcelona only.' },
     { id: 'lopezrodriguez2019', relevance: 'direct', note: 'Spain, mid-2010s; descriptive.' },
     { id: 'monras2023', relevance: 'direct', note: 'Catalonia; working paper.' },
@@ -470,7 +524,7 @@ const AFFORDABILITY: TopicEvidence = {
   byCountry: {
     US: {
       findings: [
-        { lead: 'Easier mortgage credit drove the mid-2000s price boom.', text: 'From 2002 to 2005, lending grew fastest in neighbourhoods with many subprime borrowers, even though their incomes grew relatively slowly; prices, and later defaults, rose most there.', refs: ['miansufi2009'] },
+        { years: [2002, 2007], lead: 'Easier mortgage credit drove the mid-2000s price boom.', text: 'From 2002 to 2005, lending grew fastest in neighbourhoods with many subprime borrowers, even though their incomes grew relatively slowly; prices, and later defaults, rose most there.', refs: ['miansufi2009'] },
         { lead: 'Limits on building keep prices far above construction costs.', text: 'In Manhattan and other expensive markets, homes sell far above what they cost to build; the authors attribute much of the gap to rules restricting new housing.', refs: ['glaeser2005'] },
       ],
       studies: [
@@ -478,6 +532,12 @@ const AFFORDABILITY: TopicEvidence = {
         { id: 'glaeser2005', relevance: 'direct', note: 'United States, to the early 2000s.' },
         { id: 'glaeser2008', relevance: 'direct', note: 'US cities; supply flexibility and booms.' },
       ],
+    },
+    PT: {
+      findings: [
+        { years: [2013, 2016], lead: 'House prices rose most where Airbnb expanded, especially in tourist areas.', text: 'A 1 percentage point rise in a municipality’s Airbnb share went with 3.7% higher prices; by early 2016, prices in high-tourism parishes of Lisbon and Porto had risen about 32% relative to low-tourism ones.', refs: ['franco2021'] },
+      ],
+      studies: [{ id: 'franco2021', relevance: 'direct', note: 'Portugal, 2014–early 2016.' }],
     },
   },
 }

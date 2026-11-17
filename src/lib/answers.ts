@@ -2,6 +2,7 @@ import { COUNTRIES } from '../data/countries'
 import { INDICATORS, series } from '../data/indicators'
 import { change, comparePair, type Change } from './compare'
 import { inRange } from './stats'
+import type { Point } from '../data/types'
 
 export interface Stat {
   value: string
@@ -116,23 +117,84 @@ function productivityWages(geo: string, from: number, to: number, short: boolean
   }
 }
 
+/** Years where a series turns, ignoring swings smaller than `th` (15%). */
+function turningPoints(pts: Point[], th = 0.15): Point[] {
+  if (pts.length < 3) return []
+  const out: Point[] = []
+  let dir = 0, cand = pts[0], lo = pts[0], hi = pts[0]
+  for (const p of pts.slice(1)) {
+    if (dir === 0) {
+      if (p.value > hi.value) hi = p
+      if (p.value < lo.value) lo = p
+      if (hi.value >= lo.value * (1 + th) && hi.year > lo.year) { dir = 1; cand = hi; if (lo.year > pts[0].year) out.push(lo) }
+      else if (lo.value <= hi.value * (1 - th) && lo.year > hi.year) { dir = -1; cand = lo; if (hi.year > pts[0].year) out.push(hi) }
+    } else if (dir === 1) {
+      if (p.value > cand.value) cand = p
+      else if (p.value <= cand.value * (1 - th)) { out.push(cand); cand = p; dir = -1 }
+    } else {
+      if (p.value < cand.value) cand = p
+      else if (p.value >= cand.value * (1 + th)) { out.push(cand); cand = p; dir = 1 }
+    }
+  }
+  return out.filter((p) => p.year < pts[pts.length - 1].year)
+}
+
+/** Monthly payment per unit borrowed on a 25-year loan at an annual rate in %. */
+const annuity = (rate: number) => { const m = rate / 1200; return m === 0 ? 1 / 300 : m / (1 - (1 + m) ** -300) }
+/** Change in a ratio, in %, from the % changes of its numerator and denominator. */
+const ratioPct = (num: number, den: number) => ((1 + num / 100) / (1 + den / 100) - 1) * 100
+
 function affordability(geo: string, from: number, to: number, short: boolean): Built | Short | null {
   const w = window(['house_price_real', 'disp_income_real'], geo, from, to)
   if (!w) return null
   const h = pct('house_price_real', geo, w)
   const i = pct('disp_income_real', geo, w)
   if (h == null || i == null) return null
-  if (short) return `In ${place(geo)} in ${span(w)}, real house prices ${moved(h)} and real household income ${moved(i)}.`
+  const r = ratioPct(h, i)
+  if (short) return `In ${place(geo)} in ${span(w)}, real house prices ${moved(h)} and real household income ${moved(i)}, so prices relative to income ${moved(r)}.`
   const gap = h - i
   const rel = gap > 0
     ? h > 0 ? `house prices rose ${i > 0 ? 'faster than incomes' : 'while incomes fell'}` : 'incomes fell more than house prices'
     : i > 0 ? `incomes ${h > 0 ? 'grew faster than house prices' : 'rose while house prices fell'}` : 'house prices fell more than incomes'
-  const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, house prices and incomes moved roughly together` : `In ${place(geo)}, ${rel}`
-  const meaning = Math.abs(gap) <= 2 ? 'Affordability relative to incomes barely changed.' : `Buying a home became ${gap > 0 ? 'less' : 'more'} affordable relative to incomes.`
+  const flat = Math.abs(r) <= 2
+  const headline = flat ? `In ${place(geo)}, house prices and incomes moved roughly together` : `In ${place(geo)}, ${rel}`
+  const meaning = flat
+    ? 'Measured by purchase price, affordability relative to income barely changed; monthly mortgage payments also depend on interest rates.'
+    : `Measured by purchase price, a home cost ${Math.abs(r).toFixed(0)}% ${r > 0 ? 'more' : 'less'} relative to income in ${w[1]} than in ${w[0]}; monthly mortgage payments also depend on interest rates.`
+  const detail: string[] = []
+  const prices = inRange(series('house_price_real', geo), w[0], w[1])
+  const cuts = [w[0], ...turningPoints(prices).map((p) => p.year), w[1]]
+  if (cuts.length > 2) {
+    const parts = cuts.slice(1).map((y, k) => {
+      const s: [number, number] = [cuts[k], y]
+      const a = pct('house_price_real', geo, s), b = pct('disp_income_real', geo, s)
+      return a != null && b != null ? `${span(s)}, prices ${signed(a)} and income ${signed(b)}` : null
+    })
+    if (parts.every(Boolean)) detail.push(`By phase: ${parts.join('; ')}.`)
+    const peak = prices.reduce((m, p) => (p.value > m.value ? p : m), prices[0])
+    const end = prices[prices.length - 1]
+    if (peak.year < end.year && end.value < peak.value) detail.push(`Real house prices in ${end.year} were still ${((1 - end.value / peak.value) * 100).toFixed(0)}% below their ${peak.year} peak.`)
+  }
+  const wm = window(['house_price_real', 'disp_income_real', 'mortgage_rate'], geo, w[0], w[1])
+  if (wm) {
+    const r0 = series('mortgage_rate', geo).find((p) => p.year === wm[0])!.value
+    const r1 = series('mortgage_rate', geo).find((p) => p.year === wm[1])!.value
+    const hm = pct('house_price_real', geo, wm), im = pct('disp_income_real', geo, wm)
+    if (hm != null && im != null) {
+      const pay = ratioPct((1 + hm / 100) * (annuity(r1) / annuity(r0)) * 100 - 100, im)
+      detail.push(`Mortgage payments: the average rate on new home loans went from ${r0.toFixed(1)}% in ${wm[0]} to ${r1.toFixed(1)}% in ${wm[1]}. For a 25-year loan covering the same share of the price, the monthly payment relative to income ${moved(pay)}, against ${signed(ratioPct(hm, im))} for the purchase price relative to income.`)
+    }
+  }
+  const oecd = pct('price_to_income', geo, w)
+  if (oecd != null) detail.push(`OECD’s price-to-income ratio, which divides nominal prices by nominal disposable income per person, changed ${signed(oecd)} over the same years; it measures income slightly differently.`)
   return {
     headline, period: span(w), meaning,
-    stats: [{ value: signed(h), label: 'real house prices' }, { value: signed(i), label: 'real household income per person' }],
-    detail: [],
+    stats: [
+      { value: signed(h), label: 'real house prices' },
+      { value: signed(i), label: 'real household income per person' },
+      { value: signed(r), label: 'house prices relative to income' },
+    ],
+    detail,
   }
 }
 
@@ -177,7 +239,7 @@ const DRIVER_Q: Record<string, string> = {
 const BUILT: Record<string, { fn: Fn; covered: string[]; none: [string, string] }> = {
   'growth-wages': { fn: growthWages as Fn, covered: ['gdp_pc_real', 'median_earnings_real', 'real_wage'], none: ['The available data cannot establish whether typical workers became poorer in these years', 'There is not enough GDP and wage data. Widen the period.'] },
   'productivity-wages': { fn: productivityWages as Fn, covered: ['productivity', 'real_wage'], none: ['Not enough data to compare productivity and wages in these years', 'Widen the period.'] },
-  'housing-affordability': { fn: affordability as Fn, covered: ['house_price_real', 'disp_income_real'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
+  'housing-affordability': { fn: affordability as Fn, covered: ['house_price_real', 'disp_income_real', 'price_to_income'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
   'europe-us': { fn: europeUs as Fn, covered: ['gdp_pc_vs_us', 'aic_vs_us', 'wage_vs_us'], none: ['Not enough data to compare with the US in these years', 'Widen the period.'] },
 }
 

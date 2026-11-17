@@ -24,6 +24,7 @@ export const RELATIONSHIPS: Relationship[] = [
       { text: 'Spain’s official rent index covers rents on all existing contracts, so it rises much more slowly than the rents new tenants are offered; it can show real rents falling while new rents soar.', only: ['rent_real', 'rent_nominal', 'price_to_rent'] },
       { text: 'National averages hide large regional differences: Madrid, Barcelona, the Balearics and the Canaries have moved very differently from the rest of Spain.' },
       { text: 'Price-to-income compares house prices with average disposable income per person, not with what first-time buyers earn or can borrow.', only: ['price_to_income'] },
+      { text: 'These figures measure the purchase price relative to income. What buyers pay each month also depends on interest rates, loan terms and how much banks will lend, so mortgage payments can become easier or harder even when the price-to-income ratio is unchanged.' },
       { text: 'The housing-cost overburden rate counts all households, including outright owners with no housing costs, so it understates pressure on renters and young buyers.', only: ['housing_overburden'] },
       correlation,
     ],
