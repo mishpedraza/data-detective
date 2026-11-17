@@ -1,5 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { DISCOVER_TEASERS } from '../src/data/discoverEdition'
+import { REFERENCES } from '../src/data/references'
+import { INDICATORS } from '../src/data/indicators'
 import { discoveryEvidence, predictions, predictionOptions } from '../src/data/discoveries'
 import { EDITORIAL_QUESTIONS, editorialQuestionById } from '../src/data/editorial'
 import { EDITORIAL_STORIES } from '../src/data/editorialStories'
@@ -46,4 +49,23 @@ test('a recent immigration and housing gap cites the closest study period', () =
   const lead = explain(rel, 'imm_rate', 'house_price_real', null, 2023, 2025).findings[0]
   assert.deepEqual(lead.refs, ['bde2024'])
   assert.match(lead.lead, /No study measures how much/)
+})
+
+test('Discover has one sourced teaser per existing question and grades only defined comparisons', () => {
+  assert.deepEqual(Object.keys(DISCOVER_TEASERS), EDITORIAL_QUESTIONS.map(({ id }) => id))
+  for (const [id, teaser] of Object.entries(DISCOVER_TEASERS)) {
+    assert.ok(teaser?.hook, id)
+    const interaction = teaser.interaction
+    if (!interaction) continue
+    for (const ref of interaction.reveal.refs) {
+      const source = ref.startsWith('data:') ? INDICATORS[ref.slice(5)]?.source : REFERENCES[ref]
+      assert.match(source?.url ?? '', /^https:\/\//, ref)
+    }
+    if (interaction.kind === 'prediction' && interaction.answer) assert.ok(interaction.choices.includes(interaction.answer), id)
+  }
+  const parent = DISCOVER_TEASERS['children-and-happiness']!.interaction
+  assert.ok(parent?.kind === 'prediction' && parent.answer === undefined)
+  const housing = DISCOVER_TEASERS['housing-affordability']!.interaction
+  assert.ok(housing?.kind === 'prediction' && housing.answer === 'Lower')
+  assert.match(housing.reveal.finding, /13% below/)
 })
