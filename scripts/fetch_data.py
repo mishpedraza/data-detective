@@ -301,6 +301,22 @@ def main():
         breaks=[{"year": 2015, "note": "The EU definition starts in 2015; the older severe material deprivation measure uses different items and is not joined to it."}],
         source={"org": EUROSTAT_SRC, "dataset": "ilc_mdsd11", "url": LINK("ilc_mdsd11"), "upstream": "INE Spain (ECV)"}, keep_from=2015)
 
+    add("poverty_rate", "living", eurostat("ilc_li02", statinfo="MED_EI", rskpovth="B_60", unit="PC", age="TOTAL", sex="T"),
+        label="People at risk of poverty", short="At-risk-of-poverty rate", unit="% of population", format="pct1",
+        definition="Share of people whose equivalised disposable income is below 60% of their country's median (EU-SILC). This is a relative measure: it tracks how many fall far behind the typical household, not whether incomes rose or fell. Survey year shown; incomes refer to the previous calendar year.",
+        breaks=[{"year": 2004, "note": "Spain's EU-SILC series starts in 2004; earlier survey (ECHP) figures are excluded as not comparable."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_li02", "url": LINK("ilc_li02"), "upstream": "INE Spain (ECV)"}, keep_from=2004)
+    add("housing_overburden", "living", eurostat("ilc_lvho07a", rskpovth="TOTAL", unit="PC", age="TOTAL", sex="T"),
+        label="People spending over 40% of income on housing", short="Housing cost overburden", unit="% of population", format="pct1",
+        definition="Share of people living in households where total housing costs, net of housing allowances, exceed 40% of disposable income, net of housing allowances (EU-SILC). Survey year shown.",
+        breaks=[{"year": 2004, "note": "Spain's EU-SILC series starts in 2004; earlier survey (ECHP) figures are excluded as not comparable."}],
+        source={"org": EUROSTAT_SRC, "dataset": "ilc_lvho07a", "url": LINK("ilc_lvho07a"), "upstream": "INE Spain (ECV)"}, keep_from=2004)
+    ses = eurostat("earn_ses_pub2s", sizeclas="GE10", sex="T", unit="EUR")
+    add("median_earnings_real", "living", combine(ses, hicp15, lambda a, b: a / b * 100),
+        label="Typical (median) hourly pay after inflation", short="Median hourly pay", unit="€ per hour, 2015 prices", format="eur2",
+        definition="Median gross hourly earnings of all employees in firms with 10 or more employees, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation). Excludes apprentices and the smallest firms.",
+        source={"org": EUROSTAT_SRC, "dataset": "earn_ses_pub2s ÷ prc_hicp_aind", "url": LINK("earn_ses_pub2s"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}, derived=True)
+
     OUT.write_text(json.dumps({"generated": TODAY, "indicators": INDICATORS}, ensure_ascii=False, separators=(",", ":")))
     print("wrote", OUT, OUT.stat().st_size, "bytes", file=sys.stderr)
 

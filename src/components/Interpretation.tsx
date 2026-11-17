@@ -73,7 +73,12 @@ function ChangeText({ A, B, compare, from, to }: { A: Indicator; B: Indicator; c
     })
     if (diffs.length) out.push(`Compared with ${name}, the change in Spain was ${diffs.join(' and ')}.`)
   }
-  const notes = [['Spain', es], [uc(name), other]].flatMap(([n, p]) => (p && typeof p !== 'string' && p.reason && p.a?.pct != null && p.b?.pct != null ? [`${n}: ${p.reason}`] : []))
+  const rows: [string, PairComparison | null][] = [['Spain', es], [uc(name), other]]
+  const notes = rows.flatMap(([n, p]) =>
+    p?.a && p.b
+      ? ([[A, p.a], [B, p.b]] as const).filter(([, c]) => c.breaks.length).map(([ind, c]) => `In ${n === 'Spain' ? 'Spain' : name}, ${nm(ind)} has a series break in ${c.breaks.join(', ')}, so values before and after are not fully comparable.`)
+      : [],
+  )
   return <p className="ti-counts">{out.join(' ')}{notes.length > 0 && <> {notes.join(' ')}</>}</p>
 }
 

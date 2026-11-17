@@ -1,6 +1,6 @@
 export type DimensionId = 'immigration' | 'crime' | 'economy' | 'housing' | 'living'
 
-export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'index'
+export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'eur2' | 'index'
 
 export interface SeriesBreak {
   year: number

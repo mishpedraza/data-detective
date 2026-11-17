@@ -5,7 +5,7 @@ const CRIME = ['crime_homicide_long', 'crime_homicide', 'crime_robbery', 'crime_
 const HOUSING = ['house_price_real', 'rent_real', 'price_to_income', 'house_price_nominal', 'rent_nominal', 'price_to_rent']
 const GROWTH = ['gdp_real', 'gdp_pc_real', 'productivity']
 const JOBS = ['unemployment', 'employment_rate', 'employment']
-const LIVING = ['real_wage', 'median_income_real', 'disp_income_real', 'consumption_pps', 'deprivation']
+const LIVING = ['real_wage', 'median_earnings_real', 'median_income_real', 'disp_income_real', 'consumption_pps', 'deprivation', 'poverty_rate', 'housing_overburden']
 
 const correlation = { text: 'Two lines moving together, or apart, does not show that one causes the other. Both can be driven by a third factor, such as the business cycle, or the timing can be coincidental.' }
 
@@ -101,6 +101,8 @@ export const RELATIONSHIPS: Relationship[] = [
       correlation,
       { text: 'Average wages, median income and household income measure different things. A rising average can coexist with stagnant pay for many workers.' },
       { text: 'Inflation measures are national averages. Households that spend more on rent or energy may have lost more purchasing power than these figures show.' },
+      { text: 'The at-risk-of-poverty rate is relative to each year’s median income, so it cannot show whether people became poorer in absolute terms; severe deprivation and real income are better guides to that.' },
+      { text: 'Median hourly pay comes from a survey run every four years, so it shows five points rather than a year-by-year trend, and it excludes firms with fewer than 10 employees.' },
     ],
   },
   {
