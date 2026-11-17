@@ -277,3 +277,11 @@ test('02 leads with a study, not with our own data notes, whenever a study cover
     assert.ok(first.refs.some((id) => studyById(id)), `${rel.id} ${a}/${b} ${from}–${to}: "${first.lead}" cites no study`)
   }
 })
+
+test('Spain growth and wages keeps the average-pay study in Explore the research', () => {
+  const rel = RELATIONSHIPS.find((r) => r.id === 'growth-wages')!
+  const ex = explain(rel, 'gdp_pc_real', 'real_wage', 'PT', 2000, 2025)
+  assert.match(ex.ans!.headline, /real pay rose slightly/)
+  assert.equal(ex.findings[0].lead, TOPIC[rel.id].gap)
+  assert.ok(ex.findings.slice(1).some((f) => f.refs.includes('bosca2025')))
+})

@@ -558,7 +558,7 @@ const AFFORDABILITY: TopicEvidence = {
 
 const GROWTH_WAGES: TopicEvidence = {
   findings: [
-    { lead: 'Spanish employers’ labour costs kept pace with productivity, but workers’ purchasing power grew more slowly.', text: 'Between 2007 and 2024, inflation-adjusted labour costs per employee rose about 15%. However, everyday living costs increased faster than the prices Spanish businesses received, while higher employer contributions added to labour costs without directly increasing wages.', refs: ['bosca2025'], years: [2007, 2024] },
+    { lead: 'Spanish employers’ labour costs kept pace with productivity, but workers’ purchasing power grew more slowly.', text: 'From 2007 to 2024, average pay bought about the same. Consumer prices rose faster than the prices of what Spain produced, and higher employer social contributions added to labour costs without adding directly to wages. The study measures average pay per employee.', refs: ['bosca2025'], years: [2007, 2024] },
     { lead: 'After 2013, high unemployment and low expected inflation held pay down.', text: 'Banco de España estimates link Spain’s weak wage growth in the recovery to labour-market slack, including involuntary part-time and discouraged workers, and to low inflation expectations.', refs: ['cuadrado2018'], years: [2014, 2018] },
     { lead: 'Unlike the OECD pattern, workers’ share of Spain’s income did not fall.', text: 'Compensation of employees was 47.0% of GDP in 2006 and 47.7% in 2022. Output per hour rose 15% over those years, but hours worked per resident fell 9%, which is why GDP per person rose only 5% (our calculation from Eurostat national accounts).', refs: ['eurostatNA'] },
     { lead: 'Across rich countries, typical pay has lagged growth because workers’ share of income fell and the middle lost ground to the top.', text: 'An OECD study of about 1995–2013 finds both forces in most member countries, with very high earners pulling average pay away from the median. It includes Spain but does not explain Spain’s figures separately.', refs: ['schwellnus2017'], years: [1995, 2013] },
@@ -571,7 +571,7 @@ const GROWTH_WAGES: TopicEvidence = {
     { id: 'font2015', relevance: 'direct', note: 'Spain, 1987–2013.' },
     { id: 'barcelo2021', relevance: 'direct', note: 'Spain; employment effects of the 2019 minimum-wage rise.' },
   ],
-  gap: 'The Spanish research measures average pay per employee; no study explains median hourly pay specifically.',
+  gap: 'The research here leaves the change in typical living standards unexplained.',
   byCountry: {
     US: {
       findings: [{ lead: 'Pay still follows productivity, but other forces held typical pay down.', text: 'From 1973 to 2016, each extra percentage point of productivity growth went with roughly 0.7 to 1 point more growth in median pay; the gap opened because of other factors, not because the link broke.', refs: ['stansbury2017'] }],

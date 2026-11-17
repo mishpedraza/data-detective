@@ -128,7 +128,14 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
     const dated = topic.findings.filter((f) => f.years)
     const best = dated.find((f) => overlapShare(f.years!, af, at) >= MIN_OVERLAP)
     const lead = dated[0]
-    if (!phases.length && best) findings.push({ lead: best.lead, body: best.text, refs: best.refs ?? [], years: best.years })
+    if (rel.id === 'growth-wages') {
+      gapLeads = true
+      findings.push({
+        lead: topic.gap,
+        body: 'A growing economy can produce more per person while the buying power of a typical worker’s pay or household’s income changes very little.',
+        refs: [],
+      })
+    } else if (!phases.length && best) findings.push({ lead: best.lead, body: best.text, refs: best.refs ?? [], years: best.years })
     else if (!phases.length && lead?.years) {
       gapLeads = true
       const intro = `The closest verified study covers ${lead.years[0]}–${lead.years[1]}. ${lead.lead}`
