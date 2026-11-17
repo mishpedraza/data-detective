@@ -157,7 +157,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   if (okL && okC) {
     const L = Math.abs(corr.rLevels!), C = Math.abs(corr.rChanges!)
     if (L >= 0.5 && C < 0.2) keyTurn = 'But their year-to-year movements show almost no linear relationship.'
-    else if (L >= 0.5 && C >= 0.2 && Math.sign(corr.rLevels!) === Math.sign(corr.rChanges!)) keyTurn = `Their year-to-year movements also show ${describeR(corr.rChanges)}, weaker than in their levels.`
+    else if (L >= 0.5 && C >= 0.2 && Math.sign(corr.rLevels!) === Math.sign(corr.rChanges!)) keyTurn = `Their year-to-year movements also show ${describeR(corr.rChanges)}, ${C < L ? 'weaker than' : C > L ? 'stronger than' : 'as strong as'} in their levels.`
     else if (L >= 0.5) keyTurn = `Their year-to-year movements show ${describeR(corr.rChanges)}, the opposite sign to their levels.`
     else keyTurn = `Over these years their levels show ${describeR(corr.rLevels)}, and their year-to-year changes ${describeR(corr.rChanges)}.`
   }
