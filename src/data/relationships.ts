@@ -11,6 +11,24 @@ const correlation = { text: 'Two lines moving together, or apart, does not show 
 
 export const RELATIONSHIPS: Relationship[] = [
   {
+    id: 'housing-affordability',
+    question: 'Why has housing become so unaffordable?',
+    shortQuestion: 'Housing ↔ Incomes',
+    outcome: 'left',
+    kicker: 'Housing affordability',
+    left: { dimension: 'housing', options: HOUSING, default: 'house_price_real' },
+    right: { dimension: 'living', options: ['disp_income_real', 'median_income_real', 'real_wage', 'housing_overburden'], default: 'disp_income_real' },
+    defaultCompare: 'PT',
+    explain: [],
+    cannot: [
+      { text: 'Spain’s official rent index covers rents on all existing contracts, so it rises much more slowly than the rents new tenants are offered; it can show real rents falling while new rents soar.', only: ['rent_real', 'rent_nominal', 'price_to_rent'] },
+      { text: 'National averages hide large regional differences: Madrid, Barcelona, the Balearics and the Canaries have moved very differently from the rest of Spain.' },
+      { text: 'Price-to-income compares house prices with average disposable income per person, not with what first-time buyers earn or can borrow.', only: ['price_to_income'] },
+      { text: 'The housing-cost overburden rate counts all households, including outright owners with no housing costs, so it understates pressure on renters and young buyers.', only: ['housing_overburden'] },
+      correlation,
+    ],
+  },
+  {
     id: 'immigration-crime',
     question: 'Does immigration increase crime?',
     shortQuestion: 'Immigration ↔ Crime',

@@ -66,4 +66,6 @@ export interface Relationship {
   explain: Claim[]
   cannot: Claim[]
   defaultCompare?: string
+  /** Which side is the outcome being explained (default right). */
+  outcome?: 'left' | 'right'
 }

@@ -448,7 +448,27 @@ const IMM_EMPLOYMENT: TopicEvidence = {
   gap: 'Only one verified study of Spain is shown, and it covers the 2000s; none covers the period since the 2008 crisis.',
 }
 
+const AFFORDABILITY: TopicEvidence = {
+  findings: [
+    { lead: 'Loose lending fed Spain’s 2000s price boom.', text: 'During the boom, banks charged non-employed borrowers the same mortgage spreads as employed ones, and appraisals appear to have been inflated to meet loan-to-value limits.', refs: ['akin2014'] },
+    { lead: 'Tourist rentals raised rents in Barcelona, most in hotspots.', text: 'Airbnb raised rents by about 2% in the average neighbourhood and about 7% in the tenth of neighbourhoods with the most listings.', refs: ['garcialopez2020'] },
+    { lead: 'Renting grew where incomes are low and supply is rigid.', text: 'Rental demand rose among young households, immigrants and temporary workers, concentrated in Madrid, Catalonia and the islands, where supply responds slowly.', refs: ['lopezrodriguez2019'] },
+  ],
+  international: [
+    { id: 'glaeser2008', relevance: 'indirect', note: 'US cities; on why supply flexibility matters.' },
+  ],
+  spain: [
+    { id: 'akin2014', relevance: 'direct', note: 'Spain, 2000s credit boom.' },
+    { id: 'garcialopez2020', relevance: 'direct', note: 'Barcelona only.' },
+    { id: 'lopezrodriguez2019', relevance: 'direct', note: 'Spain, mid-2010s; descriptive.' },
+    { id: 'monras2023', relevance: 'direct', note: 'Catalonia; working paper.' },
+    { id: 'gonzalez2013', relevance: 'direct', note: 'Spain, 2000–2010; immigration’s share of the boom.' },
+  ],
+  gap: 'No verified study measures how much credit, supply, tourism, immigration and incomes each contributed to Spain’s price and rent rises since 2015.',
+}
+
 export const TOPIC: Record<string, TopicEvidence> = {
+  'housing-affordability': AFFORDABILITY,
   'immigration-housing': IMM_HOUSING,
   'immigration-employment': IMM_EMPLOYMENT,
   'europe-us': EUROPE_US,

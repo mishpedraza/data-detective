@@ -199,8 +199,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
       }
     : null
   const cmpEv = profile && compare && compare !== 'EU27_2020' && crimeInd ? countryEvidence(crimeInd.id, compare, COUNTRIES[compare].name, profile.noun) : null
+  const T = rel.outcome === 'left' ? A : B
   const tp = (() => {
-    const pts = inRange(series(B.id, 'ES'), from, to)
+    const pts = inRange(series(T.id, 'ES'), from, to)
     if (pts.length < 4) return null
     const hi = pts.reduce((m, p) => (p.value > m.value ? p : m)), lo = pts.reduce((m, p) => (p.value < m.value ? p : m))
     // Percentages are meaningless when a series is zero or negative, so use absolute changes there.
@@ -213,10 +214,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     }
     const interior = (p: Point) => p.year !== pts[0].year && p.year !== pts[pts.length - 1].year
     const parts: string[] = []
-    if (interior(hi)) parts.push(`peak ${hi.year} (${formatValue(hi.value, B.format)})`)
-    if (interior(lo)) parts.push(`low ${lo.year} (${formatValue(lo.value, B.format)})`)
-    if (big) parts.push(`largest one-year change ${big.pct > 0 ? '+' : '−'}${useAbs ? formatValue(Math.abs(big.pct), B.format === 'pct1' ? 'decimal1' : B.format) : `${Math.abs(big.pct).toFixed(0)}%`} in ${big.year - 1}–${big.year}${B.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
-    return parts.length ? `${uc(nm(B))}: ${parts.join(' · ')}.` : null
+    if (interior(hi)) parts.push(`peak ${hi.year} (${formatValue(hi.value, T.format)})`)
+    if (interior(lo)) parts.push(`low ${lo.year} (${formatValue(lo.value, T.format)})`)
+    if (big) parts.push(`largest one-year change ${big.pct > 0 ? '+' : '−'}${useAbs ? formatValue(Math.abs(big.pct), T.format === 'pct1' ? 'decimal1' : T.format) : `${Math.abs(big.pct).toFixed(0)}%`} in ${big.year - 1}–${big.year}${T.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
+    return parts.length ? `${uc(nm(T))}: ${parts.join(' · ')}.` : null
   })()
   // An explanation applies only if the selection has observations both before its end year and from its start year on.
   const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
@@ -248,6 +249,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   }
   const citeOf = (id: string) => {
     const st = studyById(id)
+    if (st?.cite) return `${st.cite} (${st.year})`
     if (st) {
       const names = st.authors.split(/, | & /)
       return `${names.length > 2 || /et al/.test(st.authors) ? `${last(names[0])} et al.` : names.map(last).join(' & ')} (${st.year})`

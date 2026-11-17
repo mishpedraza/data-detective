@@ -32,7 +32,7 @@ function Line({ id, tone }: { id: string; tone: 'a' | 'b' }) {
 
 type Featured = { q: string; a: string; b: string; rel?: string; note?: string }
 const FEATURED: Featured[] = [
-  { q: 'Why has housing become so unaffordable?', a: 'house_price_real', b: 'disp_income_real', note: 'Investigation in preparation' },
+  { q: 'Why has housing become so unaffordable?', a: 'house_price_real', b: 'disp_income_real', rel: 'housing-affordability' },
   { q: 'Does immigration increase crime?', a: 'foreign_born_share', b: 'crime_homicide_long', rel: 'immigration-crime' },
   { q: 'Is the economy growing while ordinary people get poorer?', a: 'gdp_pc_real', b: 'real_wage', rel: 'growth-wages' },
 ]
