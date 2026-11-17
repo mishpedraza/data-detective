@@ -213,16 +213,19 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     const pts = inRange(series(B.id, 'ES'), from, to)
     if (pts.length < 4) return null
     const hi = pts.reduce((m, p) => (p.value > m.value ? p : m)), lo = pts.reduce((m, p) => (p.value < m.value ? p : m))
+    // Percentages are meaningless when a series is zero or negative, so use absolute changes there.
+    const useAbs = pts.some((p) => p.value <= 0)
     let big: { year: number; pct: number } | null = null
     for (let k = 1; k < pts.length; k++) if (pts[k].year === pts[k - 1].year + 1) {
-      const pct = ((pts[k].value - pts[k - 1].value) / pts[k - 1].value) * 100
+      const d = pts[k].value - pts[k - 1].value
+      const pct = useAbs ? d : (d / pts[k - 1].value) * 100
       if (!big || Math.abs(pct) > Math.abs(big.pct)) big = { year: pts[k].year, pct }
     }
     const interior = (p: Point) => p.year !== pts[0].year && p.year !== pts[pts.length - 1].year
     const parts: string[] = []
     if (interior(hi)) parts.push(`peaked in ${hi.year} (${formatValue(hi.value, B.format)})`)
     if (interior(lo)) parts.push(`was lowest in ${lo.year} (${formatValue(lo.value, B.format)})`)
-    if (big) parts.push(`its largest one-year change was ${big.pct > 0 ? '+' : '−'}${Math.abs(big.pct).toFixed(0)}% in ${big.year - 1}–${big.year}${B.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
+    if (big) parts.push(`its largest one-year change was ${big.pct > 0 ? '+' : '−'}${useAbs ? formatValue(Math.abs(big.pct), B.format === 'pct1' ? 'decimal1' : B.format) : `${Math.abs(big.pct).toFixed(0)}%`} in ${big.year - 1}–${big.year}${B.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
     return parts.length ? `Within these years, ${nm(B)} ${parts.join('; ')}.` : null
   })()
   const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
