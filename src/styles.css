@@ -279,6 +279,7 @@ main { min-height: 70vh; }
   .nav nav { gap: 14px; }
   .nav nav a { font-size: 13px; }
   .brand { white-space: nowrap; }
+  .nav { gap: 12px; }
   .questions li a, .questions li.coming > div { grid-template-columns: 30px 1fr 20px; gap: 12px; padding: 20px 0; }
   .q-sparks { grid-column: 2 / 3; grid-row: 2; }
   .q-go { grid-row: 1; grid-column: 3; }
@@ -454,3 +455,8 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .expl-head { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; font-size: 15px; color: var(--ink); padding: 0; }
 .expl-head span { color: var(--muted); }
 .expl-text { margin: 6px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+
+@media (max-width: 400px) {
+  .brand { font-size: 15px; gap: 6px; }
+  .nav nav { gap: 10px; }
+}
