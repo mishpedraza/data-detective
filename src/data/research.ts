@@ -1,4 +1,4 @@
-export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending' | 'wages' | 'laborshare' | 'housing' | 'employment' | 'credit' | 'rents'
+export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending' | 'wages' | 'laborshare' | 'housing' | 'employment' | 'credit' | 'rents' | 'gdp'
 export type Status = 'peer-reviewed' | 'review' | 'working-paper' | 'official'
 export type Design = 'causal' | 'association' | 'model' | 'descriptive' | 'review'
 
@@ -46,6 +46,7 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   reoffending: 'Reoffending by immigrants',
   wages: 'Wages and compensation',
   laborshare: 'Labour share of income',
+  gdp: 'GDP and productivity',
   housing: 'House prices and rents',
   employment: 'Employment of native-born workers',
   credit: 'Mortgage lending',
@@ -1087,7 +1088,7 @@ export const TREND_STUDIES: Study[] = [
     place: 'Spain',
     period: '2006–2007, 2008–2013, 2014–2019 and 2022–2024',
     years: [2006, 2024],
-    outcomes: ['employment'],
+    outcomes: ['gdp'],
     headline: 'The foreign population added to Spain’s growth in GDP per person in upswings and subtracted from it in the 2008–2013 slump, mainly through employment.',
     finding: 'In a mechanical decomposition, the foreign population contributed 0.4–0.7 percentage points a year to GDP per capita growth of 2.9% a year in 2022–2024, similar in relative terms to earlier upswings (0.2–0.5 points in 2014–2019). In 2008–2013 its contribution was about −0.9 points of a −1.8% annual fall, mostly through the employment rate. Recent contributions reflect the assimilation of immigrants who arrived in the early 2000s and the higher education of recent arrivals.',
     method: 'Accounting decomposition of GDP per capita into demographic factor, employment rate, hours per worker and output per hour, using labour force survey and earnings data.',
@@ -1129,7 +1130,7 @@ export const TREND_STUDIES: Study[] = [
     place: 'EU as a whole and the United States',
     period: 'Since 2000',
     years: [2000, 2023],
-    outcomes: ['wages'],
+    outcomes: ['gdp'],
     headline: 'Since 2000 a wide GDP gap has opened between the EU and the US, mainly because European productivity slowed more.',
     finding: 'The GDP gap between the EU and the US widened mainly because productivity growth slowed more in Europe; the productivity gap is largely explained by the tech sector. Real disposable income per person grew almost twice as much in the US as in the EU since 2000.',
     method: 'Report commissioned by the European Commission, drawing on official statistics.',
