@@ -42,3 +42,17 @@ export function StoryEvidence({ answer }: { answer: ReviewedAnswer }) {
     </figure>
   )
 }
+
+export function StoryExplanation({ answer }: { answer: ReviewedAnswer }) {
+  return (
+    <>
+      <h2>{answer.explanationTitle}</h2>
+      {answer.explanation.map(({ text, refs }) => (
+        <div className="story-paragraph" key={text}>
+          <p>{text}</p>
+          <StorySources refs={refs} />
+        </div>
+      ))}
+    </>
+  )
+}

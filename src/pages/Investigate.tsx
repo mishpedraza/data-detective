@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
 import { InvestigationStory } from '../components/InvestigationStory'
-import { StoryEvidence, StorySources } from '../components/StoryEvidence'
+import { StoryEvidence, StoryExplanation } from '../components/StoryEvidence'
 import { ImmigrationResearchComparison } from '../components/ImmigrationResearchComparison'
 import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
@@ -211,17 +211,7 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
       {reviewed ? (
         <InvestigationStory
           evidence={<StoryEvidence answer={reviewed} />}
-          explanation={
-            <>
-              <h2>{reviewed.explanationTitle}</h2>
-              {reviewed.explanation.map(({ text, refs }) => (
-                <div className="story-paragraph" key={text}>
-                  <p>{text}</p>
-                  <StorySources refs={refs} />
-                </div>
-              ))}
-            </>
-          }
+          explanation={<StoryExplanation answer={reviewed} />}
           exploration={
             <>
               <p className="tell-text">These charts describe the selected measures. Trends and correlations alone cannot establish cause.</p>

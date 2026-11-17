@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Nav } from './components/Nav'
 import { Discover } from './pages/Discover'
 import { editorialQuestionById, DEFAULT_INVESTIGATION } from './data/editorial'
-import { InvestigationPreview } from './pages/InvestigationPreview'
+import { EditorialInvestigation } from './pages/EditorialInvestigation'
 import { Investigate } from './pages/Investigate'
 import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
@@ -36,7 +36,7 @@ export default function App() {
         <motion.main key={route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           {route === 'discover' && <Discover navigate={navigate} />}
           {route === 'investigate' && (
-            entry?.status === 'preview' ? <InvestigationPreview entry={entry} /> :
+            entry?.status === 'research' ? <EditorialInvestigation key={entry.id} id={entry.id} /> :
               investigationId === 'surgery-waits' ? <SurgeryWaits /> :
                 <Investigate key={investigationId} params={params} relationshipId={entry?.relationship ?? investigationId} />
           )}
@@ -45,7 +45,7 @@ export default function App() {
       </AnimatePresence>
       <footer className="footer">
         <p>
-          Data Detective is a prototype. All figures come from official statistics (Eurostat, OECD, World Bank/UNODC, originally from INE and Spain’s Ministries of the Interior and Health); see “About the data” on each investigation. No simulated data is used.
+          Data Detective is a prototype. Figures come from official statistics and cited research. Sources are linked in each investigation. No simulated data is used.
         </p>
         <p>
           <a href="https://app.devin.ai/sessions/8f5abb24434b448fbfe89dd972b66385" target="_blank" rel="noreferrer">Request changes</a>
