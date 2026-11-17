@@ -11,7 +11,9 @@ export interface Study {
   url: string
   status: Status
   design: Design
-  scope: 'Spain' | 'Europe' | 'Review'
+  scope: 'Spain' | 'Europe' | 'United States' | 'Review'
+  /** Countries the data covers (ISO codes as used for comparison countries). */
+  geo?: string[]
   place: string
   period: string
   /** First and last year of data analysed, where the paper states it. */
@@ -66,6 +68,7 @@ export const SYNTHESIS: { lead: string; text: string }[] = [
 export const STUDIES: Study[] = [
   {
     id: 'alonso2012',
+    geo: ['ES'],
     authors: 'César Alonso-Borrego, Nuno Garoupa & Pablo Vázquez',
     year: 2012,
     title: 'Does Immigration Cause Crime? Evidence from Spain',
@@ -85,6 +88,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'buonanno2008',
+    geo: ['ES'],
     authors: 'Paolo Buonanno & Daniel Montolio',
     year: 2008,
     title: 'Identifying the socio-economic and demographic determinants of crime across Spanish provinces',
@@ -105,6 +109,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'bianchi2012',
+    geo: ['IT'],
     authors: 'Milo Bianchi, Paolo Buonanno & Paolo Pinotti',
     year: 2012,
     title: 'Do Immigrants Cause Crime?',
@@ -124,6 +129,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'bell2013',
+    geo: ['UK'],
     authors: 'Brian Bell, Francesco Fasani & Stephen Machin',
     year: 2013,
     title: 'Crime and Immigration: Evidence from Large Immigrant Waves',
@@ -161,6 +167,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'mastrobuoni2015',
+    geo: ['IT'],
     authors: 'Giovanni Mastrobuoni & Paolo Pinotti',
     year: 2015,
     title: 'Legal Status and the Criminal Activity of Immigrants',
@@ -181,6 +188,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'pinotti2017',
+    geo: ['IT'],
     authors: 'Paolo Pinotti',
     year: 2017,
     title: 'Clicking on Heaven’s Door: The Effect of Immigrant Legalization on Crime',
@@ -200,6 +208,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'lange2024',
+    geo: ['DE'],
     authors: 'Martin Lange & Katrin Sommerfeld',
     year: 2024,
     title: 'Do refugees impact crime? Causal evidence from large-scale refugee immigration to Germany',
@@ -219,6 +228,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'huang2026',
+    geo: ['DE'],
     authors: 'Yue Huang & Michael Kvasnicka',
     year: 2026,
     title: 'Immigration and crimes against natives: the 2015 refugee crisis in Germany',
@@ -239,6 +249,7 @@ export const STUDIES: Study[] = [
   },
   {
     id: 'dehos2021',
+    geo: ['DE'],
     authors: 'Fabian T. Dehos',
     year: 2021,
     title: 'The refugee wave to Germany and its impact on crime',
@@ -292,6 +303,90 @@ export const STUDIES: Study[] = [
     finding: 'Combining results from many studies, the average association between immigration and crime is negative but very weak, with large variation depending on how studies measured crime, the places studied and the time frame.',
     method: 'Narrative review plus meta-analysis, a statistical pooling of results across studies.',
     limitations: 'Pools mostly associational studies rather than cause-and-effect designs. An average across very different settings may not describe any one country.',
+  },
+  {
+    id: 'martinez2010',
+    geo: ['US'],
+    authors: 'Ramiro Martínez Jr., Jacob I. Stowell & Matthew T. Lee',
+    year: 2010,
+    title: 'Immigration and Crime in an Era of Transformation: A Longitudinal Analysis of Homicides in San Diego Neighborhoods, 1980–2000',
+    outlet: 'Criminology 48(3): 797–829',
+    url: doi('10.1111/j.1745-9125.2010.00202.x'),
+    status: 'peer-reviewed',
+    design: 'association',
+    scope: 'United States',
+    place: 'San Diego neighbourhoods',
+    period: '1980–2000',
+    years: [1980, 2000],
+    measure: 'Foreign-born share of neighbourhood residents',
+    outcomes: ['homicide'],
+    headline: 'Neighbourhoods with more immigrants had fewer homicide victims over time.',
+    finding: 'In San Diego neighbourhoods across three censuses, a larger foreign-born population was associated with fewer total, non-Latino White and Latino homicide victims.',
+    method: 'Longitudinal models of neighbourhood homicide victim counts and census indicators for 1980, 1990 and 2000.',
+    limitations: 'One city and three census years. Associational: it controls for neighbourhood conditions but cannot rule out that immigrants chose neighbourhoods where violence was already falling.',
+  },
+  {
+    id: 'lightmiller2018',
+    geo: ['US'],
+    authors: 'Michael T. Light & Ty Miller',
+    year: 2018,
+    title: 'Does Undocumented Immigration Increase Violent Crime?',
+    outlet: 'Criminology 56(2): 370–401',
+    url: doi('10.1111/1745-9125.12175'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'United States',
+    place: 'All 50 states and Washington DC',
+    period: '1990–2014',
+    years: [1990, 2014],
+    measure: 'Estimated undocumented immigrant population',
+    outcomes: ['violent'],
+    headline: 'Undocumented immigration did not increase violent crime across US states.',
+    finding: 'State fixed-effects models find no increase in violence; the relationship is generally negative, though not significant in every specification. Victimisation data and instrumental-variable checks give little sign that lower reporting or selective migration explain this.',
+    method: 'State panel with fixed effects, supplemented by victimisation data and instrumental variables.',
+    limitations: 'Undocumented population is estimated. Reports violent crime as a group; state-level averages may hide local effects.',
+  },
+  {
+    id: 'light2020',
+    geo: ['US'],
+    authors: 'Michael T. Light, Jingying He & Jason P. Robey',
+    year: 2020,
+    title: 'Comparing crime rates between undocumented immigrants, legal immigrants, and native-born US citizens in Texas',
+    outlet: 'Proceedings of the National Academy of Sciences 117(51): 32340–32347',
+    url: doi('10.1073/pnas.2014704117'),
+    status: 'peer-reviewed',
+    design: 'descriptive',
+    scope: 'United States',
+    place: 'Texas',
+    period: '2012–2018',
+    years: [2012, 2018],
+    measure: 'Undocumented immigrants, legal immigrants and US-born citizens arrested in Texas',
+    outcomes: ['violent', 'property', 'drugs'],
+    headline: 'Undocumented immigrants in Texas had lower felony arrest rates than US-born citizens.',
+    finding: 'US-born citizens were over twice as likely as undocumented immigrants to be arrested for violent crimes, 2.5 times for drug crimes and over 4 times for property crimes.',
+    method: 'Arrest records from the Texas Department of Public Safety, which checks immigration status at arrest, divided by population estimates for each group.',
+    limitations: 'Measures arrests, not offences, and depends on estimates of the undocumented population. One state. Compares groups rather than measuring the effect of immigration on total crime.',
+  },
+  {
+    id: 'miles2014',
+    geo: ['US'],
+    authors: 'Thomas J. Miles & Adam B. Cox',
+    year: 2014,
+    title: 'Does Immigration Enforcement Reduce Crime? Evidence from Secure Communities',
+    outlet: 'Journal of Law and Economics 57(4): 937–973',
+    url: doi('10.1086/680935'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'United States',
+    place: 'US counties',
+    period: 'Secure Communities roll-out, 2008–2013',
+    years: [2008, 2013],
+    measure: 'Immigrants detained after arrest for deportation',
+    outcomes: ['total'],
+    headline: 'A large deportation programme had no observable effect on crime.',
+    finding: 'The staggered county roll-out of Secure Communities, which led to about a quarter of a million detentions, had no observable effect on the overall crime rate.',
+    method: 'Difference-in-differences using the staggered roll-out across counties, plus county-month counts of detainees.',
+    limitations: 'Tests whether removing arrested immigrants reduced crime, not whether immigration raised it. Reports overall crime.',
   },
 ]
 
@@ -448,6 +543,7 @@ export const TREND_STUDIES: Study[] = [
   },
   {
     id: 'kemp2020',
+    geo: ['ES'],
     authors: 'Steven Kemp, Fernando Miró-Llinares & Asier Moneva',
     year: 2020,
     title: 'The Dark Figure and the Cyber Fraud Rise in Europe: Evidence from Spain',

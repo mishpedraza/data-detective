@@ -25,6 +25,10 @@ export interface Indicator {
   notes?: string
   source: Source
   breaks: SeriesBreak[]
+  /** Years Eurostat flags as a break in series for countries other than Spain. */
+  geoBreaks?: Record<string, number[]>
+  /** Where a country's figures come from a different source than the indicator's main one. */
+  geoSources?: Record<string, { org: string; dataset: string; url: string; note: string }>
   derived?: boolean
   parts?: { label: string; code: string; data: Record<string, number> }[]
   retrieved: string

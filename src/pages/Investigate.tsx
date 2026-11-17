@@ -7,7 +7,7 @@ import { InlinePicker } from '../components/InlinePicker'
 import { RangeBrush } from '../components/RangeBrush'
 import { ScatterChart } from '../components/ScatterChart'
 import { TimeChart } from '../components/TimeChart'
-import { COMPARE_OPTIONS, COUNTRIES } from '../data/countries'
+import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
 import { DIMENSIONS, INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { RELATIONSHIPS, relationshipById } from '../data/relationships'
@@ -89,10 +89,14 @@ export function Investigate({ params }: { params: URLSearchParams }) {
 
   const A = INDICATORS[a]
   const B = INDICATORS[b]
-  const cmp = compare === 'none' ? null : compare
   const leftOpts = (rel.left.options.length ? rel.left.options : Object.keys(INDICATORS)).filter((id) => rel.id !== 'custom' || INDICATORS[id].dimension === A.dimension)
   const rightOpts = (rel.right.options.length ? rel.right.options : Object.keys(INDICATORS)).filter((id) => rel.id !== 'custom' || INDICATORS[id].dimension === B.dimension)
-  const compareOpts = COMPARE_OPTIONS.filter((g) => g === 'none' || (A.data[g] && B.data[g])).map((g) => ({ value: g, label: g === 'none' ? 'nothing else' : COUNTRIES[g].name, hint: g === 'none' ? 'Spain only' : undefined }))
+  const compareOpts = COMPARE_OPTIONS.filter((g) => g === 'none' || (A.data[g] && B.data[g] && comparability(A, g).ok && comparability(B, g).ok)).map((g) => ({ value: g, label: g === 'none' ? 'nothing else' : COUNTRIES[g].name, hint: g === 'none' ? 'Spain only' : undefined }))
+  const cmp = compare !== 'none' && compareOpts.some((o) => o.value === compare) ? compare : null
+  const cmpNote = cmp ? [A, B].filter((x) => x.dimension === 'crime').map((x) => comparability(x, cmp).note).filter(Boolean).join(' ') : ''
+  const cmpBlocked = compare !== 'none' && !cmp && COUNTRIES[compare]
+    ? [A, B].map((x) => (x.data[compare] ? comparability(x, compare) : { ok: false, note: `No data for ${COUNTRIES[compare].name} on ${x.short.toLowerCase()}.` })).find((c) => !c.ok)?.note
+    : undefined
   const sparkA = useMemo(() => series(a, 'ES'), [a])
   const sparkB = useMemo(() => series(b, 'ES'), [b])
   const events = EVENTS.filter((e) => e.end >= from && e.start <= to && (!e.only || e.only.includes(A.dimension) || e.only.includes(B.dimension)))
@@ -135,7 +139,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
             with{' '}
             <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
             in Spain, alongside{' '}
-            <InlinePicker label="Comparison" value={compare} onChange={setCompare} options={compareOpts} display={compare === 'none' ? 'nothing else' : COUNTRIES[compare].name} />
+            <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'nothing else'} />
             , from {from} to {to}.
           </div>
         </motion.section>
@@ -171,7 +175,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
           <motion.div key="time" className="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
             <div className="year-strip" aria-live="polite">
               {hoverYear == null ? (
-                <span>Hover, tap or drag across either chart to compare the same year in both.</span>
+                <span>{cmpBlocked ? `${COUNTRIES[compare].name.replace(/^the/, 'The')} is not shown. ${cmpBlocked}` : cmpNote || 'Hover, tap or drag across either chart to compare the same year in both.'}</span>
               ) : (
                 <>
                   <span className="year-strip-year">{hoverYear}</span>

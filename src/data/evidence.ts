@@ -358,6 +358,26 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
 }
 RELATIONSHIP['immigration->crime_homicide_long'] = RELATIONSHIP['immigration->crime_homicide']
 
+import { STUDIES, type Outcome } from './research'
+
+export interface CountryEvidence {
+  /** Studies of this country that report this offence. */
+  direct: StudyLink[]
+  /** Studies of this country on broader crime categories: context only. */
+  context: StudyLink[]
+  gap: string | null
+}
+
+/** Research on one country, split by whether it reports the selected offence. */
+export const countryEvidence = (outcomeId: string, geo: string, countryName: string, noun: string): CountryEvidence => {
+  const outcome = outcomeId.replace('crime_', '').replace('_long', '') as Outcome
+  const mine = STUDIES.filter((s) => s.geo?.includes(geo))
+  const direct = mine.filter((s) => s.outcomes.includes(outcome)).map((s) => ({ id: s.id, relevance: 'direct' as const, note: `${s.place}; reports ${noun}.` }))
+  const context = mine.filter((s) => !s.outcomes.includes(outcome)).map((s) => ({ id: s.id, relevance: 'indirect' as const, note: `${s.place}; does not report ${noun} separately, so it is context only.` }))
+  const gap = direct.length ? null : mine.length ? `No verified study of ${countryName} reports immigration and ${noun} separately.` : `No verified study of immigration and crime in ${countryName} was found.`
+  return { direct, context, gap }
+}
+
 export const trendEvidence = (indicatorId: string, geo = 'ES'): TrendEvidence | null => {
   const t = TREND[indicatorId]
   return t && t.geo === geo ? t : null

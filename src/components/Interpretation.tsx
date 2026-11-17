@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { COUNTRIES } from '../data/countries'
+import { COUNTRIES, comparability } from '../data/countries'
 import { DIMENSIONS, INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, studyById, type Study } from '../data/research'
-import { BROADER, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
+import { BROADER, countryEvidence, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
@@ -194,8 +194,11 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     const bs = ind.breaks.filter((x) => x.year > from && x.year <= to)
     if (bs.length) whyItems.push({ text: `${ind.short}: the series has ${bs.length === 1 ? 'a break' : `${bs.length} breaks`} in this period (${bs.map((x) => x.year).join(', ')}), so values on either side are not fully comparable.`, refs: [`data:${ind.id}`] })
   }
-  if (compare && [A, B].some((x) => x.dimension === 'crime'))
-    whyItems.push({ text: `Crime levels in Spain and ${COUNTRIES[compare].name} are not directly comparable because legal definitions and recording practices differ. Compare the direction of trends, not the levels.`, refs: ['eurostatCrime'] })
+  if (compare)
+    for (const x of [A, B]) {
+      const c = comparability(x, compare)
+      if (c.note) whyItems.push({ text: c.note, refs: x.dimension === 'crime' && x.id !== 'crime_homicide_long' ? ['eurostatCrime'] : undefined })
+    }
 
   const crimeInd = B.dimension === 'crime' ? B : A.dimension === 'crime' ? A : null
   const immInd = A.dimension === 'immigration' ? A : B.dimension === 'immigration' ? B : null
@@ -211,6 +214,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
         gap: relEv.gap, causal: relEv.causal, uncertain: relEv.uncertain, summary: trend.summaryDir === 'any' || trend.summaryDir === crimeDir ? trend.summary : `No verified explanation covers this ${crimeDir === 'stable' ? 'flat trend' : crimeDir ?? 'movement'} in the selected years. ${trend.gap}`, trendGap: trend.gap,
       }
     : null
+  const cmpEv = profile && compare && compare !== 'EU27_2020' && crimeInd ? countryEvidence(crimeInd.id, compare, COUNTRIES[compare].name, profile.noun) : null
   const tp = (() => {
     const pts = inRange(series(B.id, 'ES'), from, to)
     if (pts.length < 4) return null
@@ -520,6 +524,19 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                 {broad ? '− Hide broader studies' : `+ Broader studies that do not isolate ${profile.noun} (${profile.broader.length})`}
               </button>
               {broad && <ul className="studies">{studyCards(profile.broader)}</ul>}
+              {cmpEv && compare && (
+                <>
+                  <h4>Research on {COUNTRIES[compare].name}</h4>
+                  {cmpEv.direct.length > 0 && <ul className="studies">{studyCards(cmpEv.direct)}</ul>}
+                  {cmpEv.gap && <p className="synthesis-note"><strong>Research gap:</strong> {cmpEv.gap}</p>}
+                  {cmpEv.context.length > 0 && (
+                    <>
+                      <p className="ti-sub">Broader context: studies of {COUNTRIES[compare].name} that do not isolate {profile.noun}</p>
+                      <ul className="studies">{studyCards(cmpEv.context)}</ul>
+                    </>
+                  )}
+                </>
+              )}
               <p className="tell-fine">
                 Studies were checked against the original publication or its official abstract. Results apply to the country, period, offences and migrant group each study covers, not to Spain today unless stated.
               </p>

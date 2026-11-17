@@ -3,6 +3,7 @@
 Run: python3 scripts/fetch_data.py  ->  writes src/data/generated/indicators.json
 No API keys are needed. Every series keeps its source, dataset code and retrieval date.
 """
+import time
 import json, datetime, pathlib, csv, io, sys
 import requests
 
@@ -45,13 +46,20 @@ def eurostat(dataset, **filters):
     return out
 
 
-def worldbank(indicator):
+def worldbank(indicator, extra=None, only_extra=False):
     out = {}
-    for g, iso3 in GEOS.items():
+    for g, iso3 in (({} if only_extra else GEOS) | (extra or {})).items():
         if not iso3:
             continue
-        r = S.get(f"https://api.worldbank.org/v2/country/{iso3}/indicator/{indicator}",
-                  params={"format": "json", "per_page": 200, "date": f"{START}:{END}"}, timeout=60).json()
+        for attempt in range(4):
+            try:
+                r = S.get(f"https://api.worldbank.org/v2/country/{iso3}/indicator/{indicator}",
+                          params={"format": "json", "per_page": 200, "date": f"{START}:{END}"}, timeout=120).json()
+                break
+            except (requests.RequestException, ValueError):
+                if attempt == 3:
+                    raise
+                time.sleep(20)
         for row in r[1] or []:
             if row["value"] is not None:
                 out.setdefault(g, {})[int(row["date"])] = float(row["value"])
@@ -80,6 +88,11 @@ def combine(a, b, fn):
             w = b.get(g, {}).get(y)
             if w not in (None, 0):
                 out.setdefault(g, {})[y] = fn(v, w)
+    out = Series(out)
+    out.flags = {}
+    for src in (a, b):
+        for g, ys in getattr(src, "flags", {}).items():
+            out.flags.setdefault(g, set()).update(ys)
     return out
 
 
@@ -111,6 +124,9 @@ def add(id, dimension, data, **meta):
     if es_years:
         breaks[:] = [b for b in breaks if min(es_years) < b["year"] <= max(es_years)]
     breaks.sort(key=lambda b: b["year"])
+    other = {g: sorted(y for y in ys & set(data.get(g, {})) if y >= meta.get("keep_from", 0) and y > min(data[g])) for g, ys in flags.items() if g != "ES"}
+    if any(other.values()):
+        meta["geoBreaks"] = {g: ys for g, ys in other.items() if ys}
     keep_from = meta.pop("keep_from", None)
     if keep_from:
         data = {g: {y: v for y, v in s.items() if y >= keep_from} for g, s in data.items()}
@@ -147,7 +163,21 @@ def main():
         definition="Resident population on 1 January born outside the reporting country, regardless of current citizenship. Includes Spanish citizens born abroad.",
         notes="Spain's population register (Padrón) also records many migrants without legal residence, because registering gives access to healthcare and schooling, so coverage of irregular migrants is better than in most countries.",
         **fb_meta)
-    add("foreign_born_share", "immigration", combine(fb, tot, lambda a, b: a / b * 100),
+    fbs = combine(fb, tot, lambda a, b: a / b * 100)
+    us_fb = {}
+    txt = S.get("https://sdmx.oecd.org/public/rest/data/OECD.ELS.IMD,DSD_MIG_F@DF_MIG_POPF,/USA.W.......?startPeriod=" + str(START),
+                headers={"Accept": "application/vnd.sdmx.data+csv"}, timeout=180).text
+    for row in csv.DictReader(io.StringIO(txt)):
+        if row["MEASURE"] == "B14" and row["SEX"] == "_T" and row["OBS_VALUE"]:
+            us_fb[int(row["TIME_PERIOD"][:4])] = float(row["OBS_VALUE"])
+    us_pop = worldbank("SP.POP.TOTL", extra={"US": "USA"}, only_extra=True).get("US", {})
+    if not us_fb or not us_pop:
+        raise RuntimeError("US foreign-born share: OECD or World Bank returned nothing")
+    fbs["US"] = {y: v / us_pop[y] * 100 for y, v in us_fb.items() if y in us_pop and START <= y <= END}
+    add("foreign_born_share", "immigration", fbs,
+        geoSources={"US": {"org": "OECD International Migration Database ÷ World Bank population", "dataset": "DF_MIG_POPF (B14) ÷ SP.POP.TOTL",
+                           "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_MIG_F%40DF_MIG_POPF&df[ag]=OECD.ELS.IMD",
+                           "note": "US figures come from the Census Bureau's surveys via the OECD. The US counts people who were not US citizens at birth, so people born abroad to US-citizen parents are excluded; Eurostat counts everyone born abroad. The difference is small but means levels are not exactly comparable."}},
         label="Share of the population born abroad", short="Foreign-born share", unit="% of population", format="pct1",
         definition="Foreign-born residents as a percentage of the total resident population on 1 January (our calculation).",
         notes="Spain's population register (Padrón) also records many migrants without legal residence.", derived=True, **fb_meta)
@@ -180,7 +210,7 @@ def main():
                               for c, lab in (("ICCS03011", "Rape"), ("ICCS03012", "Sexual assault"))]
         add(id, data=eurostat("crim_off_cat", iccs=code, unit="P_HTHAB"), label=f"{label} recorded by police", short=short,
             definition=definition, breaks=breaks, **crime_meta, **extra)
-    add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5"), label="Intentional homicide (long series)", short="Homicide (UNODC)",
+    add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5", extra={"US": "USA"}), label="Intentional homicide (long series)", short="Homicide (UNODC)",
         unit="per 100,000 residents", format="decimal2",
         definition="Intentional homicides per 100,000 people, compiled by UNODC from national criminal justice and public-health sources.",
         source={"org": "UNODC via World Bank", "dataset": "VC.IHR.PSRC.P5", "url": "https://data.worldbank.org/indicator/VC.IHR.PSRC.P5"},
