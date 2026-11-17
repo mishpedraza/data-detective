@@ -279,7 +279,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
     ],
     studies: [{ id: 'huang2026', relevance: 'indirect', note: 'Germany; bodily injury, robbery and sex crimes, not homicide.', broader: true }, BELL, ...BROAD],
     gap: 'No causal study of immigration and homicide in Spain or elsewhere in Europe was found.',
-    causal: 'No causal study isolates homicide, so research cannot tell us whether immigration affected Spain’s homicide rate in either direction.',
+    causal: 'No causal study isolates homicide: research cannot say whether immigration affected Spain’s homicide rate either way.',
     uncertain: [NATIONAL],
   },
   'immigration->crime_assault': {
@@ -320,7 +320,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
     synthesis: PROPERTY_SYNTH,
     studies: [...PROPERTY_LINKS, ...without(['alonso2012', 'bianchi2012', 'lange2024'])],
     gap: 'No study reports burglary separately; the closest evidence is for property crime as a group.',
-    causal: 'Causal studies of property crime find modest increases for some migrant groups and none or decreases for others. None reports burglary separately or covers Spain after 2009.',
+    causal: 'Causal studies of property crime are mixed: some find modest increases for particular migrant groups, others none or decreases. None reports burglary separately or covers Spain after 2009.',
     uncertain: [NATIONAL],
   },
   'immigration->crime_theft': {
@@ -328,7 +328,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
     synthesis: PROPERTY_SYNTH,
     studies: [{ id: 'dehos2021', relevance: 'indirect', note: 'Germany: theft reported separately.' }, ...PROPERTY_LINKS.filter((s) => s.id !== 'dehos2021'), ...without(['alonso2012', 'bianchi2012', 'lange2024'])],
     gap: NO_SPAIN_RECENT,
-    causal: 'Causal studies of property crime and theft find modest increases for some migrant groups and none or decreases for others. None covers Spain after 2009.',
+    causal: 'Causal studies of property crime and theft are mixed: some find modest increases for particular migrant groups, others none or decreases. None covers Spain after 2009.',
     uncertain: [NATIONAL],
   },
   'immigration->crime_fraud': {
@@ -336,7 +336,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
     synthesis: [{ lead: 'Almost no research.', text: 'Only one causal study reports fraud separately: in Germany up to 2015, recognised refugees were associated with more non-violent offences including fraud, while asylum seekers were not. Much fraud is committed remotely, so local migrant populations are a poor proxy for who commits it.' }],
     studies: [{ id: 'dehos2021', relevance: 'indirect', note: 'Germany: fraud reported separately.' }, BELL, ...BROAD],
     gap: 'No study of immigration and fraud in Spain was found.',
-    causal: 'Only one German study reports fraud separately, and it describes its positive result as an association. No study covers Spain.',
+    causal: 'Only one study, from Germany, reports fraud separately: it finds a positive association, not proof of cause. No study covers Spain.',
     uncertain: [NATIONAL],
   },
   'immigration->crime_cyber': {
@@ -388,7 +388,8 @@ export const relationshipEvidence = (driverDimension: string, outcomeId: string)
 /** Research for investigations outside crime, keyed by relationship id. */
 export interface TopicEvidence {
   /** Findings as reported by researchers, each tied to a source. */
-  findings: (Note & { lead: string })[]
+  /** `years` marks the period a finding covers; findings covering the selected years come first. */
+  findings: (Note & { lead: string; years?: [number, number] })[]
   international: StudyLink[]
   spain: StudyLink[]
   gap: string
@@ -403,10 +404,12 @@ export interface TopicEvidence {
 /** A phase of a trend, e.g. a boom, and the research explaining it. `span` runs from the year before the phase to its last year. */
 export interface Phase {
   span: [number, number]
-  /** Explanation when this is the only phase selected. */
+  /** Explanation when this is the only phase selected, followed by `context`. */
   lead: string
+  context: string
   /** Part of a combined sentence when several phases are selected, e.g. "the boom before 2008 to cheap credit". */
   clause: string
+  /** Supporting sentence in the combined paragraph when several phases are selected. */
   summary: string
   refs: string[]
   findings: (Note & { lead: string })[]
@@ -415,7 +418,7 @@ export interface Phase {
 
 const DECOUPLING: TopicEvidence = {
   findings: [
-    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over roughly two decades, real median compensation grew more slowly than productivity in most OECD countries, because labour’s share of income fell and median wages fell behind average wages.', refs: ['oecd2018', 'schwellnus2017'] },
+    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over about two decades, workers’ share of income fell and middle earners lost ground to the average.', refs: ['oecd2018', 'schwellnus2017'] },
     { lead: 'The size of the gap depends on the measures.', text: 'Comparing productivity with average pay deflated by the same price index shows a small gap; comparing it with median wages deflated by consumer prices shows a much larger one.', refs: ['pessoa2013'] },
     { lead: 'The link has weakened, not vanished (US evidence).', text: 'In the United States, faster productivity growth still went with faster pay growth, but other factors held typical pay down.', refs: ['stansbury2017'] },
   ],
@@ -426,12 +429,12 @@ const DECOUPLING: TopicEvidence = {
     { id: 'autor2020', relevance: 'indirect', note: 'United States; one explanation for falling labour shares.' },
   ],
   spain: [],
-  gap: 'No verified peer-reviewed study of Spain’s wage–productivity gap since 2000 was found. Spain is included in the OECD comparisons, but country results are not reported separately here.',
+  gap: 'No verified study explains Spain’s wage–productivity gap since 2000; the OECD studies include Spain but do not report it separately.',
 }
 
 const EUROPE_US: TopicEvidence = {
   findings: [
-    { lead: 'Europe chose more leisure.', text: 'By the early 2000s European productivity per hour was close to the US level; Europeans took more of the gains as shorter working hours rather than higher incomes.', refs: ['blanchard2004'] },
+    { lead: 'Europe chose more leisure.', text: 'By the early 2000s output per hour was close to US levels; Europeans took more of the gains as shorter hours than as higher incomes.', refs: ['blanchard2004'] },
     { lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe.', refs: ['prescott2004'] },
     { lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does.', refs: ['jonesklenow2016'] },
   ],
@@ -446,7 +449,7 @@ const EUROPE_US: TopicEvidence = {
 
 const IMM_HOUSING: TopicEvidence = {
   findings: [
-    { lead: 'In Spain’s 2000s boom, immigration accounted for about a quarter of the house-price rise.', text: 'Estimates for 2000–2010 attribute about 2% a year of price growth, and about half of new construction, to population growth from immigration.', refs: ['gonzalez2013'] },
+    { lead: 'In Spain’s 2000s boom, immigration accounted for about a quarter of the house-price rise.', text: 'It added about 2% a year to prices and about half of new construction.', refs: ['gonzalez2013'], years: [2000, 2010] },
     { lead: 'In US cities, rents rose with immigrant inflows.', text: 'An inflow equal to 1% of a city’s population went with roughly 1% higher average rents and house values.', refs: ['saiz2007'] },
     { lead: 'In the UK, local prices fell instead.', text: 'House prices fell where immigrants arrived, because higher-earning residents moved away.', refs: ['sa2015'] },
   ],
@@ -460,11 +463,11 @@ const IMM_HOUSING: TopicEvidence = {
 
 const IMM_EMPLOYMENT: TopicEvidence = {
   findings: [
-    { lead: 'In Spain, immigrant and native workers were not perfect substitutes.', text: 'Immigration appears to have changed the tasks native workers specialise in, with effects differing by sex.', refs: ['amuedo2011'] },
+    { lead: 'In Spain, immigrant and native workers were not perfect substitutes.', text: 'Native workers appear to have shifted to different tasks, with effects differing by sex.', refs: ['amuedo2011'], years: [1999, 2008] },
   ],
   international: [],
   spain: [{ id: 'amuedo2011', relevance: 'direct', note: 'Spain, 2000s.' }],
-  gap: 'Only one verified study of Spain is shown, and it covers the 2000s; none covers the period since the 2008 crisis.',
+  gap: 'The only verified Spanish study covers the 2000s; none covers the years since the 2008 crisis.',
 }
 
 const AFFORDABILITY: TopicEvidence = {
@@ -473,8 +476,9 @@ const AFFORDABILITY: TopicEvidence = {
     {
       span: [1995, 2007],
       lead: 'Cheaper credit and looser borrowing limits fuelled the boom.',
-      clause: 'the boom before 2008 to cheap credit',
-      summary: 'Before 2008, credit from abroad became cheaper, borrowing limits looser and investors accepted lower returns on Spanish housing.',
+      clause: 'the boom to cheap credit',
+      summary: 'Foreign capital made borrowing cheap and limits loose.',
+      context: 'Capital flowed in from the rest of the euro area, and investors accepted lower returns on Spanish housing.',
       refs: ['intveld2014'],
       findings: [
         { lead: 'Banks lent loosely during the boom.', text: 'Banks charged non-employed borrowers the same mortgage spreads as employed ones, and appraisals appear to have been inflated to meet loan-to-value limits.', refs: ['akin2014'] },
@@ -486,7 +490,8 @@ const AFFORDABILITY: TopicEvidence = {
       span: [2007, 2013],
       lead: 'Credit tightened sharply as prices fell.',
       clause: 'the 2008–2013 fall to a credit crunch',
-      summary: 'After 2008, borrowing limits tightened as house prices fell, and the credit crunch hit households hardest.',
+      summary: 'After 2008, banks cut lending, to households most.',
+      context: 'Borrowing limits tightened as prices fell, and households were hit hardest.',
       refs: ['intveld2014'],
       findings: [
         { lead: 'Banks lent more cautiously after the boom.', text: 'A study of individual Spanish mortgages finds lending standards were softer in the boom than in the bust.', refs: ['akin2014'] },
@@ -497,14 +502,15 @@ const AFFORDABILITY: TopicEvidence = {
       span: [2013, 2025],
       lead: 'Since 2014, demand has outpaced a slow-growing supply of homes.',
       clause: 'the rise since 2014 to demand outpacing supply',
-      summary: 'Since 2014, population growth, mostly from immigration, and buyers from abroad have met a supply of new homes held back by labour shortages, rising costs and little building land.',
+      summary: 'Since 2014, population growth, mostly from immigration, and foreign buyers have met a supply held back by labour shortages, costs and scarce land.',
+      context: 'Population growth, mostly from immigration, and foreign buyers raised demand; labour shortages, rising costs and scarce land held back building.',
       refs: ['bde2024'],
       findings: [
         { lead: 'Unlike before 2008, banks kept lending prudently.', text: 'Lower-income households who could not get a mortgage turned to a small rental market, where rents are high relative to prices.', refs: ['bde2024'] },
         { lead: 'Tourist rentals raised rents in Barcelona, most in hotspots.', text: 'Airbnb raised rents by about 2% in the average neighbourhood and about 7% in the tenth of neighbourhoods with the most listings.', refs: ['garcialopez2020'] },
         { lead: 'Renting grew where incomes are low and supply is rigid.', text: 'Rental demand rose among young households, immigrants and temporary workers, concentrated in Madrid, Catalonia and the islands, where supply responds slowly.', refs: ['lopezrodriguez2019'] },
       ],
-      gap: 'No verified study measures how much immigration, buyers from abroad, limited building, tourism and incomes each contributed to Spain’s price and rent rises since 2014.',
+      gap: 'No study measures how much immigration, foreign buyers, limited building, tourism and incomes each added to prices and rents since 2014.',
     },
   ],
   cmpGap: 'No verified study in Data Detective explains house prices there in these years.',
@@ -544,7 +550,7 @@ const AFFORDABILITY: TopicEvidence = {
 
 const GROWTH_WAGES: TopicEvidence = {
   findings: [
-    { lead: 'In Spain, wages respond little to booms and busts.', text: 'Records of Spanish workers for 1987–2013 show real wages moving only weakly with the economy, even less in recessions; new hires’ pay moved most, long-tenured workers’ least.', refs: ['font2015'] },
+    { lead: 'In Spain, wages respond little to booms and busts.', text: 'Real pay barely tracked the economy, least in recessions; new hires’ pay moved most, long-serving workers’ least.', refs: ['font2015'], years: [1987, 2013] },
   ],
   international: DECOUPLING.international,
   spain: [
@@ -571,18 +577,18 @@ export const TOPIC: Record<string, TopicEvidence> = {
 
 /** Research on whether a non-immigration driver affects a given offence, shown first in 02. */
 export interface DriverFinding { lead: string; text: string; refs: string[]; outcomes: string[]; design: 'causal' | 'association' }
-export const DRIVER_RESEARCH: Record<string, { findings: DriverFinding[]; none: (noun: string) => string }> = {
+export const DRIVER_RESEARCH: Record<string, { findings: DriverFinding[]; none: (noun: string) => { lead: string; text: string } }> = {
   'unemployment-crime': {
     findings: [
-      { outcomes: ['crime_burglary', 'crime_theft'], design: 'causal', lead: 'Higher unemployment raised property crime in US states.', text: 'Using changes in unemployment driven by defence spending and oil prices, the study finds significant effects on property crime; the evidence for violent crime is much weaker.', refs: ['raphael2001'] },
+      { outcomes: ['crime_burglary', 'crime_theft'], design: 'causal', lead: 'Higher unemployment raised property crime in US states.', text: 'The study isolates job losses caused by defence spending and oil prices; effects on violent crime are much weaker.', refs: ['raphael2001'] },
       { outcomes: ['crime_burglary', 'crime_theft'], design: 'causal', lead: 'In Sweden’s 1990s crisis, unemployment raised burglary and car theft.', text: 'Across Swedish municipalities, unemployment affected burglary and car theft, but not most other offences.', refs: ['oster2007'] },
     ],
-    none: (n) => `No verified study shows whether unemployment affects ${n}. The causal studies we checked find effects on property crime such as burglary and theft, and much weaker evidence for violent crime.`,
+    none: (n) => ({ lead: `No study shows whether unemployment affects ${n}.`, text: 'Causal studies find effects on property crime such as burglary and theft, and much weaker ones on violent crime.' }),
   },
   'inequality-crime': {
     findings: [
-      { outcomes: ['crime_homicide', 'crime_homicide_long', 'crime_robbery'], design: 'association', lead: 'Across countries, more unequal societies have more homicide and robbery.', text: 'A cross-country study finds that higher income inequality goes with higher homicide and robbery rates, even after accounting for other factors. It compares countries; it does not test changes within Spain.', refs: ['fajnzylber2002'] },
+      { outcomes: ['crime_homicide', 'crime_homicide_long', 'crime_robbery'], design: 'association', lead: 'Across countries, more unequal societies have more homicide and robbery.', text: 'The link holds after accounting for other factors, but it compares countries and does not test changes within Spain.', refs: ['fajnzylber2002'] },
     ],
-    none: (n) => `No verified study shows whether inequality affects ${n}. The evidence we checked covers homicide and robbery only.`,
+    none: (n) => ({ lead: `No study shows whether inequality affects ${n}.`, text: 'The research we checked covers only homicide and robbery.' }),
   },
 }
