@@ -16,7 +16,7 @@ export interface Change {
 }
 
 /** Shares and rates are compared in points, not %. */
-export const usesPoints = (ind: Indicator) => ind.format === 'pct1' || /rate|share|%|per 1,000|= 100/i.test(ind.unit)
+export const usesPoints = (ind: Indicator) => ind.format === 'pct1' || /rate|share|%|per 1,000|(United States|EU average) = 100/i.test(ind.unit)
 
 export function change(ind: Indicator, geo: string, from: number, to: number): Change | null {
   const pts = inRange(series(ind.id, geo), from, to)

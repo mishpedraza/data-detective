@@ -40,7 +40,7 @@ const fp = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`
 
 const moved = (ind: Indicator, c: NonNullable<PairComparison['a']>) => {
   const v = c.pct ?? c.abs
-  const by = c.pct != null ? `${Math.abs(c.pct).toFixed(1)}%` : `by ${Math.abs(c.abs).toFixed(1)} ${ind.format === 'pct1' || /= 100/.test(ind.unit) ? 'points' : ind.unit}`
+  const by = c.pct != null ? `${Math.abs(c.pct).toFixed(1)}%` : `by ${Math.abs(c.abs).toFixed(1)} ${ind.format === 'pct1' || /(United States|EU average) = 100/.test(ind.unit) ? 'points' : ind.unit}`
   return `${nm(ind)} ${v > 0 ? 'rose' : v < 0 ? 'fell' : 'was unchanged'}${v ? ` ${by}` : ''}`
 }
 const pts = (v: number) => `${Math.abs(v).toFixed(1)} percentage points`
