@@ -620,3 +620,31 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .immigration-research tbody th span, .immigration-research tbody th a { font-size: 11px; }
   .immigration-research th:last-child, .immigration-research td:last-child { padding-right: 0; }
 }
+
+.investigation-story { display: grid; gap: 22px; max-width: 700px; padding: 12px 0 26px; }
+.investigation-story section + section { border-top: 1px solid var(--rule); padding-top: 18px; }
+.investigation-story h2, .investigation-further h2 { font: 450 clamp(22px, 3vw, 30px)/1.2 var(--serif); margin: 0 0 10px; }
+.investigation-story p { margin: 0; line-height: 1.55; }
+.story-evidence-copy { font: 450 clamp(18px, 2.4vw, 22px)/1.45 var(--serif); }
+.story-paragraph + .story-paragraph { margin-top: 14px; }
+.story-sources { display: flex; flex-wrap: wrap; gap: 3px 14px; list-style: none; margin: 6px 0 0; padding: 0; color: var(--ink-2); font-size: 12px; }
+.story-sources a { text-underline-offset: 3px; }
+.story-comparison { max-width: 570px; margin: 0; }
+.story-comparison figcaption { color: var(--ink-2); font-size: 13px; }
+.story-bars { margin: 10px 0; padding: 0; list-style: none; }
+.story-bars li { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 4px 0; font-size: 14px; }
+.story-comparison strong { font-variant-numeric: tabular-nums; }
+.story-bar { grid-column: 1 / -1; display: block; height: 7px; background: var(--paper-2); }
+.story-bar > span { display: block; height: 100%; background: var(--a); }
+.story-comparison .tell-text { font-size: 14px; }
+.investigation-further { border-top: 1px solid var(--rule); margin-bottom: 48px; padding-top: 18px; }
+.investigation-further > details { border-bottom: 1px solid var(--rule); }
+.investigation-further > details > summary, .story-study-comparison > summary { cursor: pointer; padding: 10px 0; }
+.investigation-further-content { padding: 6px 0 18px; }
+.investigation-further .tell { margin-top: 12px; padding-top: 0; border-top: 0; }
+.story-study-comparison { max-width: 100%; overflow: auto; }
+.story-study-comparison table { min-width: 470px; }
+@media (max-width: 360px) {
+  .nav { gap: 4px 12px; flex-wrap: wrap; }
+  .nav nav { max-width: 100%; }
+}

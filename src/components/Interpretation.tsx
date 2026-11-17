@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { COUNTRIES } from '../data/countries'
 import { INDICATORS, formatValue, series } from '../data/indicators'
@@ -20,7 +20,6 @@ interface Props {
   from: number
   to: number
   reviewed?: ReviewedAnswer
-  secondaryExploration?: ReactNode
 }
 
 
@@ -134,7 +133,7 @@ function StudyCard({ s, note, period, open, onToggle }: { s: Study; note?: strin
   )
 }
 
-export function Interpretation({ rel, a, b, compare, from, to, reviewed, secondaryExploration }: Props) {
+export function Interpretation({ rel, a, b, compare, from, to, reviewed }: Props) {
   const [why, setWhy] = useState(false)
   const [stats, setStats] = useState(false)
   const [caveats, setCaveats] = useState(false)
@@ -162,6 +161,11 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed, seconda
     })
 
   const { crimeInd, immInd, trend, profile, cmpEv, explanations, confounders, findings, kindLabel, periodLabel, topic, cmpTopic, ans, keyStats, meaning, showCmp, shownLimits, moreLimits } = explain(rel, a, b, compare, from, to)
+  if (reviewed) {
+    for (const id of [...reviewed.finding.refs, ...reviewed.explanation.flatMap(({ refs }) => refs)]) {
+      if (!footOrder.includes(id)) footOrder.push(id)
+    }
+  }
   const moreFindings = reviewed ? findings : findings.slice(1)
   const additionalLimits = reviewed ? [...shownLimits, ...moreLimits] : moreLimits
   const T = rel.outcome === 'left' ? A : B
@@ -225,11 +229,10 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed, seconda
 
       <div className="tell-part">
         <div className="tell-label">
-          <span className="evidence-num">01</span>
-          <h3>The findings</h3>
+          {!reviewed && <span className="evidence-num">01</span>}
+          <h3>{reviewed ? 'Chart details' : 'The findings'}</h3>
         </div>
         <div className="tell-body">
-          {reviewed && <p className="tell-lead">{reviewed.finding.text}{fn(reviewed.finding.refs)}</p>}
           {keyStats.length > 0 && (
             <>
               {ans?.period && <p className="stat-cap">{reviewed ? 'Chart comparison · ' : ''}Spain, {ans.period}{ans.period !== `${from}–${to}` && ` · the years with data in your ${from}–${to} selection`}</p>}
@@ -315,15 +318,11 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed, seconda
 
       <div className="tell-part">
         <div className="tell-label">
-          <span className="evidence-num">02</span>
-          <h3>The explanation</h3>
+          {!reviewed && <span className="evidence-num">02</span>}
+          <h3>{reviewed ? 'Study details' : 'The explanation'}</h3>
         </div>
         <div className="tell-body">
-          {reviewed ? (
-            <div className="reviewed-explanation">
-              {reviewed.explanation.map((claim) => <p className="finding-body" key={claim.text}>{claim.text}{fn(claim.refs)}</p>)}
-            </div>
-          ) : findings.length ? (
+          {!reviewed && (findings.length ? (
             <ul className="findings">
               {findings.slice(0, 1).map((f) => (
                 <li key={f.lead}>
@@ -335,11 +334,13 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed, seconda
             </ul>
           ) : (
             <p className="tell-text">We have not yet verified research on this question, so no findings are shown.</p>
+          ))}
+          {!reviewed && (
+            <button className="tell-more" onClick={() => setWhy((v) => !v)} aria-expanded={why}>
+              {why ? '− Hide the research' : findings.length ? '+ Explore the research' : `+ Background notes, not yet verified study by study (${rel.explain.length})`}
+            </button>
           )}
-          <button className="tell-more" onClick={() => setWhy((v) => !v)} aria-expanded={why}>
-            {why ? '− Hide the research' : reviewed || findings.length ? '+ Explore the research' : `+ Background notes, not yet verified study by study (${rel.explain.length})`}
-          </button>
-          {why && (
+          {(reviewed || why) && (
             <div className="research-more">
               {moreFindings.length > 0 && (
                 <ul className="findings">
@@ -435,11 +436,9 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed, seconda
         </div>
       </div>
 
-      {secondaryExploration}
-
       <div className="tell-part">
         <div className="tell-label">
-          <span className="evidence-num">03</span>
+          {!reviewed && <span className="evidence-num">03</span>}
           <h3>The limitations</h3>
         </div>
         <div className="tell-body">

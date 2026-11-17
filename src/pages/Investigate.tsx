@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
+import { InvestigationStory } from '../components/InvestigationStory'
+import { StoryEvidence, StorySources } from '../components/StoryEvidence'
 import { ImmigrationResearchComparison } from '../components/ImmigrationResearchComparison'
 import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
@@ -99,7 +101,6 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
     setHoverYear(y)
   }
 
-  const showImmigrationResearch = rel.id === 'immigration-crime'
   const indicatorControls = (
     <details className="investigation-controls">
       <summary className="tell-more">Change indicators or country</summary>
@@ -205,19 +206,49 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
         headline={reviewed?.headline ?? answer?.headline ?? 'There are too few overlapping years to compare these measures.'}
         note={reviewed?.scope ?? answer?.dek}
       >
-        {!showImmigrationResearch && indicatorControls}
+        {!reviewed && indicatorControls}
       </InvestigationIntro>
-      {showImmigrationResearch ? <ImmigrationResearchComparison /> : charts}
-
-      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} reviewed={reviewed} secondaryExploration={showImmigrationResearch && (
-        <section className="immigration-descriptive" aria-labelledby="immigration-descriptive-title">
-          <h2 id="immigration-descriptive-title">Explore the trends in Spain</h2>
-          <p className="tell-text">These charts describe how the selected measures changed over time. They cannot tell us what effect immigration had on crime.</p>
-          {indicatorControls}
+      {reviewed ? (
+        <InvestigationStory
+          evidence={<StoryEvidence answer={reviewed} />}
+          explanation={
+            <>
+              <h2>{reviewed.explanationTitle}</h2>
+              {reviewed.explanation.map(({ text, refs }) => (
+                <div className="story-paragraph" key={text}>
+                  <p>{text}</p>
+                  <StorySources refs={refs} />
+                </div>
+              ))}
+            </>
+          }
+          exploration={
+            <>
+              <p className="tell-text">These charts describe the selected measures. Trends and correlations alone cannot establish cause.</p>
+              {indicatorControls}
+              {charts}
+            </>
+          }
+          research={
+            <>
+              {rel.id === 'immigration-crime' && (
+                <details className="story-study-comparison">
+                  <summary>Compare the immigration and crime studies</summary>
+                  <ImmigrationResearchComparison />
+                </details>
+              )}
+              <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} reviewed={reviewed} />
+              <DataNotes ids={[a, b]} />
+            </>
+          }
+        />
+      ) : (
+        <>
           {charts}
-        </section>
-      )} />
-      <DataNotes ids={[a, b]} />
+          <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
+          <DataNotes ids={[a, b]} />
+        </>
+      )}
     </div>
   )
 }
