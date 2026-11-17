@@ -1,9 +1,6 @@
 import { INDICATORS, series } from './indicators'
-import { surgeryQuestion, surgerySource, surgeryTrend } from './surgeryWaits'
 
-type EndpointComparison =
-  | { kind: 'series'; indicator: string; from: number; to: number; subject: string; precision: number; benchmark?: string }
-  | { kind: 'surgery'; from: string; to: string }
+type EndpointComparison = { indicator: string; from: number; to: number; subject: string; precision: number; benchmark?: string }
 
 const directionOptions = ['Higher', 'Lower', 'About the same'] as const
 const yesNoOptions = ['Yes', 'No', 'About the same'] as const
@@ -11,7 +8,7 @@ export type Prediction = typeof directionOptions[number] | typeof yesNoOptions[n
 
 export function predictionOptions(discovery: Discovery) {
   const comparison = discovery.comparison
-  return comparison.kind === 'surgery' || comparison.benchmark ? yesNoOptions : directionOptions
+  return comparison.benchmark ? yesNoOptions : directionOptions
 }
 
 function answerFor(change: number, options: readonly Prediction[]): Prediction {
@@ -33,22 +30,15 @@ export const featuredDiscoveries: Discovery[] = [
     id: 'housing-affordability',
     question: 'Why has housing become so unaffordable?',
     prompt: 'In Spain, were home prices higher or lower in 2025 than in 2007, after inflation?',
-    comparison: { kind: 'series', indicator: 'house_price_real', from: 2007, to: 2025, subject: 'home prices', precision: 0 },
+    comparison: { indicator: 'house_price_real', from: 2007, to: 2025, subject: 'home prices', precision: 0 },
     context: 'The 2007 boom is a high bar. Whether a home is affordable today also depends on income, mortgage rates and where you live.',
   },
   {
     id: 'growth-wages',
     question: 'Has pay kept up with Spain’s economy?',
     prompt: 'From 2006 to 2022, did typical hourly pay in Spain grow faster than GDP per person, after inflation?',
-    comparison: { kind: 'series', indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1, benchmark: 'gdp_pc_real' },
+    comparison: { indicator: 'median_earnings_real', from: 2006, to: 2022, subject: 'median hourly pay', precision: 1, benchmark: 'gdp_pc_real' },
     context: 'Typical hourly pay bought a little more. What a household can afford also depends on hours worked and other sources of income.',
-  },
-  {
-    id: 'surgery-waits',
-    question: surgeryQuestion,
-    prompt: 'Had people on Spain’s planned surgery list waited longer in December 2025 than in December 2022? Pick “About the same” for a difference under a week.',
-    comparison: { kind: 'surgery', from: 'Dec 2022', to: 'Dec 2025' },
-    context: 'The national average barely changed across those three years. Where you live matters more: in December 2025, the average ranged from 50 days in Madrid to 173 in Andalusia.',
   },
 ]
 
@@ -63,17 +53,6 @@ export const collection = [
 export function discoveryEvidence(discovery: Discovery) {
   const comparison = discovery.comparison
   const options = predictionOptions(discovery)
-  if (comparison.kind === 'surgery') {
-    const first = surgeryTrend.find(({ date }) => date === comparison.from)
-    const last = surgeryTrend.find(({ date }) => date === comparison.to)
-    if (!first || !last) return null
-    return {
-      result: `The average was ${first.days} days in December 2022 and ${last.days} days in December 2025.`,
-      answer: answerFor(Math.abs(last.days - first.days) < 7 ? 0 : last.days - first.days, options),
-      source: surgerySource,
-      publisher: 'Spain’s Ministry of Health',
-    }
-  }
   const { from, to, precision } = comparison
   const changeFor = (id: string) => {
     const indicator = INDICATORS[id]

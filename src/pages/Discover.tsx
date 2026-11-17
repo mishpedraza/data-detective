@@ -8,9 +8,7 @@ type Featured = typeof featuredDiscoveries[number]
 
 function investigationHref(discovery: Featured) {
   const comparison = discovery.comparison
-  return hrefFor('investigate', comparison.kind === 'series'
-    ? { r: discovery.id, from: comparison.from, to: comparison.to }
-    : { r: discovery.id })
+  return hrefFor('investigate', { r: discovery.id, from: comparison.from, to: comparison.to })
 }
 
 function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate: (href: string) => void }) {

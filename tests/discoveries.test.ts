@@ -5,7 +5,7 @@ import { RELATIONSHIPS } from '../src/data/relationships'
 import { explain } from '../src/lib/explain'
 
 test('featured predictions have scoped evidence and open actual investigations', () => {
-  const ids = new Set([...RELATIONSHIPS.map(({ id }) => id), 'surgery-waits'])
+  const ids = new Set(RELATIONSHIPS.map(({ id }) => id))
   const cards = [...featuredDiscoveries, ...collection]
   assert.equal(new Set(cards.map(({ question }) => question)).size, cards.length)
   for (const card of cards) assert.ok(ids.has(card.id), card.id)
@@ -16,10 +16,9 @@ test('featured predictions have scoped evidence and open actual investigations',
   }
   assert.match(discoveryEvidence(featuredDiscoveries[0])!.result, /13% below/)
   assert.match(discoveryEvidence(featuredDiscoveries[1])!.result, /1\.6%.*4\.8%/)
-  assert.match(discoveryEvidence(featuredDiscoveries[2])!.result, /120.*122/)
   assert.deepEqual(predictionOptions(featuredDiscoveries[0]), ['Higher', 'Lower', 'About the same'])
   for (const discovery of featuredDiscoveries.slice(1)) assert.deepEqual(predictionOptions(discovery), ['Yes', 'No', 'About the same'])
-  assert.deepEqual(featuredDiscoveries.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No', 'About the same'])
+  assert.deepEqual(featuredDiscoveries.map((discovery) => discoveryEvidence(discovery)?.answer), ['Lower', 'No'])
 })
 
 test('a recent immigration and housing gap cites the closest study period', () => {
