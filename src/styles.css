@@ -535,3 +535,10 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .question.finding { font-size: clamp(28px, 4.4vw, 54px); line-height: 1.08; max-width: 22ch; text-wrap: balance; }
 .finding-dek { font-size: 16px; line-height: 1.5; color: var(--ink-2); margin: -6px 0 18px; max-width: 60ch; }
 @media (max-width: 640px) { .question.finding { font-size: 27px; max-width: none; } .finding-dek { font-size: 15px; } }
+
+.stat-cap { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.stats { list-style: none; padding: 0; margin: 0 0 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px 20px; }
+.stats li { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid var(--rule-strong); padding-top: 8px; }
+.stat-v { font-family: var(--serif); font-size: clamp(26px, 3vw, 34px); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
+.stat-l { font-size: 13px; line-height: 1.35; color: var(--ink-2); }
+@media (max-width: 640px) { .stats { grid-template-columns: 1fr 1fr; gap: 10px 14px; } .stat-v { font-size: 24px; } .stat-l { font-size: 12.5px; } }

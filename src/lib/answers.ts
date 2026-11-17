@@ -1,15 +1,26 @@
 import { COUNTRIES } from '../data/countries'
 import { INDICATORS, series } from '../data/indicators'
-import { change, comparePair } from './compare'
+import { change, comparePair, type Change } from './compare'
 import { inRange } from './stats'
+
+export interface Stat {
+  value: string
+  label: string
+}
 
 export interface Answer {
   /** Short finding shown as the page headline. */
   headline: string
   /** Optional line under the headline, e.g. what the figures cannot show. */
   dek?: string
-  /** The figures behind the finding, with their interpretation. */
-  text: string
+  /** Years the key statistics cover. */
+  period?: string
+  /** Two to four key statistics behind the headline. */
+  stats: Stat[]
+  /** One sentence on what the statistics mean. */
+  meaning: string
+  /** Secondary figures, shown on request. */
+  detail: string[]
   /** Indicators the answer already quantifies. */
   covered: string[]
 }
@@ -17,6 +28,8 @@ export interface Answer {
 const place = (geo: string) => (geo === 'ES' ? 'Spain' : COUNTRIES[geo]?.name ?? geo)
 const moved = (v: number) => (Math.abs(v) < 0.05 ? 'was unchanged' : `${v > 0 ? 'rose' : 'fell'} ${Math.abs(v).toFixed(1)}%`)
 const pts = (v: number) => `${Math.abs(v).toFixed(1)} percentage points`
+const signed = (v: number, unit = '%') => `${Math.abs(v) < 0.05 ? '' : v > 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}${unit}`
+const span = (w: [number, number]) => `${w[0]}–${w[1]}`
 
 /** First and last year in [from, to] where every series has data. */
 function window(ids: string[], geo: string, from: number, to: number): [number, number] | null {
@@ -25,13 +38,15 @@ function window(ids: string[], geo: string, from: number, to: number): [number, 
   return years.length >= 2 ? [years[0], years[years.length - 1]] : null
 }
 const pct = (id: string, geo: string, w: [number, number]) => change(INDICATORS[id], geo, w[0], w[1])?.pct ?? null
-
-type Built = { headline: string; text: string } | null
 const cagr = (id: string, geo: string, w: [number, number]) => change(INDICATORS[id], geo, w[0], w[1])?.cagr ?? null
 /** Below 0.2% a year either way counts as barely changed. */
 const FLAT = 0.2
 
-function growthWages(geo: string, from: number, to: number, short: boolean): Built {
+type Built = { headline: string; period?: string; stats: Stat[]; meaning: string; detail: string[] }
+type Short = string
+type Fn = { (geo: string, from: number, to: number, short: true): Short | null; (geo: string, from: number, to: number, short: false): Built | null }
+
+function growthWages(geo: string, from: number, to: number, short: boolean): Built | Short | null {
   const w = window(['gdp_pc_real', 'median_earnings_real'], geo, from, to)
   if (!w) {
     if (short) return null
@@ -40,7 +55,9 @@ function growthWages(geo: string, from: number, to: number, short: boolean): Bui
     const g = wa ? pct('gdp_pc_real', geo, wa) : null
     return {
       headline: `The available data cannot establish whether typical workers in ${place(geo)} became poorer in ${from}–${to}`,
-      text: `Median pay, the best measure of the typical worker, is only surveyed in 2006, 2010, 2014, 2018 and 2022, and this period does not include two of those years.${wa && a != null && g != null ? ` For context only: real GDP per person ${moved(g)} and real average wages, which high earners pull up, ${moved(a)} over ${wa[0]}–${wa[1]}.` : ''}`,
+      stats: [],
+      meaning: 'Median pay, the measure of the typical worker, is surveyed only in 2006, 2010, 2014, 2018 and 2022, and this period includes fewer than two of those years.',
+      detail: wa && a != null && g != null ? [`For context only, not the typical worker: real GDP per person ${moved(g)} and real average wages, which high earners pull up, ${moved(a)} over ${span(wa)}.`] : [],
     }
   }
   const g = pct('gdp_pc_real', geo, w)
@@ -48,7 +65,7 @@ function growthWages(geo: string, from: number, to: number, short: boolean): Bui
   const gy = cagr('gdp_pc_real', geo, w)
   const py = cagr('median_earnings_real', geo, w)
   if (g == null || p == null || gy == null || py == null) return null
-  if (short) return { headline: '', text: `In ${place(geo)} over the same years, real GDP per person ${moved(g)} and real median hourly pay ${moved(p)}.` }
+  if (short) return `In ${place(geo)} over the same years, real GDP per person ${moved(g)} and real median hourly pay ${moved(p)}.`
   const gap = g - p
   const econ = gy > FLAT ? 'grew' : gy < -FLAT ? 'shrank' : 'stalled'
   const pay = py > FLAT ? 'rose' : py < -FLAT ? 'fell' : 'barely changed'
@@ -61,49 +78,65 @@ function growthWages(geo: string, from: number, to: number, short: boolean): Bui
       : econ === 'grew'
         ? `${P}’s economy grew, but typical workers’ real pay ${pay}`
         : `${P}’s economy ${econ} and typical workers’ real pay ${pay}`
+  const avg = pct('real_wage', geo, w)
   const meaning =
     pay === 'fell'
-      ? 'Typical workers lost wage purchasing power.'
+      ? `Typical workers lost purchasing power${econ === 'grew' ? ', a real decline, not just a smaller share of growth' : ''}.`
       : pay === 'barely changed'
-        ? `Typical workers neither gained nor lost much wage purchasing power${econ === 'grew' ? ', while the economy grew' : ''}.`
-        : gap > 2 ? 'Typical workers gained wage purchasing power, but less than the economy grew.' : 'Typical workers gained wage purchasing power.'
-  const yr = (v: number) => `about ${Math.abs(v) < 0.05 ? '0' : `${v > 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}`}% a year`
-  const out = [`Between ${w[0]} and ${w[1]}, real GDP per person ${moved(g)} (${yr(gy)}) and real median hourly pay ${moved(p)} (${yr(py)}). ${meaning}`]
-  const avg = pct('real_wage', geo, w)
-  if (avg != null) out.push(`Average wages, which high earners pull up, ${moved(avg)}${avg - p > 2 ? ', so pay in the middle grew more slowly than the average' : avg - p < -2 ? ', so pay in the middle grew faster than the average' : ''}.`)
-  if (w[0] > from || w[1] < to) out.push(`Median pay is surveyed every four years, so the comparison uses ${w[0]}–${w[1]}.`)
-  return { headline, text: out.join(' ') }
+        ? `Typical workers did not become poorer${econ === 'grew' ? ', but the growth did not reach their pay' : ''}.`
+        : gap > 2 ? 'Typical workers became better off, but by less than the economy grew.' : 'Typical workers became better off.'
+  const yr = (v: number) => `${signed(v)} a year`
+  const detail = [`Per year: GDP per person ${yr(gy)}, median pay ${yr(py)}.`]
+  if (avg != null && Math.abs(avg - p) > 2) detail.push(`Average wages, which high earners pull up, changed ${signed(avg)} against ${signed(p)} for median pay, so pay ${avg > p ? 'at the top did better than in the middle' : 'in the middle did better than the average'}.`)
+  if (w[0] > from || w[1] < to) detail.push(`Median pay is surveyed every four years, so these figures cover ${span(w)}.`)
+  const stats = [
+    { value: signed(g), label: 'real GDP per person' },
+    { value: signed(p), label: 'real median hourly pay' },
+    ...(avg != null ? [{ value: signed(avg), label: 'real average wages' }] : []),
+  ]
+  return { headline, period: span(w), stats, meaning, detail }
 }
 
-function productivityWages(geo: string, from: number, to: number, short: boolean): Built {
+function productivityWages(geo: string, from: number, to: number, short: boolean): Built | Short | null {
   const w = window(['productivity', 'real_wage'], geo, from, to)
   if (!w) return null
   const q = pct('productivity', geo, w)
   const p = pct('real_wage', geo, w)
   if (q == null || p == null) return null
-  if (short) return { headline: '', text: `In ${place(geo)} over the same years, output per hour ${moved(q)} and real average wages ${moved(p)}.` }
+  if (short) return `In ${place(geo)} over the same years, output per hour ${moved(q)} and real average wages ${moved(p)}.`
   const gap = q - p
   const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, average wages kept pace with productivity` : gap > 0 ? `In ${place(geo)}, average wages fell behind productivity` : `In ${place(geo)}, average wages grew faster than productivity`
-  return { headline, text: `Between ${w[0]} and ${w[1]}, output per hour worked ${moved(q)} and real average wages ${moved(p)}${Math.abs(gap) > 2 ? `, a gap of ${pts(gap)}` : ''}. Output per hour is not GDP per person, and average wages are not what the typical worker earns.` }
+  const meaning = Math.abs(gap) <= 2
+    ? 'Average pay changed about as much as the output of an hour’s work.'
+    : `The change in average pay was ${pts(gap)} ${gap > 0 ? 'below' : 'above'} the change in output per hour${p < 0 ? ', and pay fell after inflation' : ''}.`
+  return {
+    headline, period: span(w), meaning,
+    stats: [{ value: signed(q), label: 'output per hour worked' }, { value: signed(p), label: 'real average wages' }],
+    detail: ['Output per hour is not GDP per person, and average wages are not what the typical worker earns.'],
+  }
 }
 
-function affordability(geo: string, from: number, to: number, short: boolean): Built {
+function affordability(geo: string, from: number, to: number, short: boolean): Built | Short | null {
   const w = window(['house_price_real', 'disp_income_real'], geo, from, to)
   if (!w) return null
   const h = pct('house_price_real', geo, w)
   const i = pct('disp_income_real', geo, w)
   if (h == null || i == null) return null
-  if (short) return { headline: '', text: `In ${place(geo)} over the same years, real house prices ${moved(h)} and real household income ${moved(i)}.` }
+  if (short) return `In ${place(geo)} over the same years, real house prices ${moved(h)} and real household income ${moved(i)}.`
   const gap = h - i
   const rel = gap > 0
     ? h > 0 ? `house prices rose ${i > 0 ? 'faster than incomes' : 'while incomes fell'}` : 'incomes fell more than house prices'
     : i > 0 ? `incomes ${h > 0 ? 'grew faster than house prices' : 'rose while house prices fell'}` : 'house prices fell more than incomes'
   const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, house prices and incomes moved roughly together` : `In ${place(geo)}, ${rel}`
   const meaning = Math.abs(gap) <= 2 ? 'Affordability relative to incomes barely changed.' : `Buying a home became ${gap > 0 ? 'less' : 'more'} affordable relative to incomes.`
-  return { headline, text: `Between ${w[0]} and ${w[1]}, real house prices ${moved(h)} and real household income per person ${moved(i)}${Math.abs(gap) > 2 ? `, a gap of ${pts(gap)}` : ''}. ${meaning}` }
+  return {
+    headline, period: span(w), meaning,
+    stats: [{ value: signed(h), label: 'real house prices' }, { value: signed(i), label: 'real household income per person' }],
+    detail: [],
+  }
 }
 
-function europeUs(geo: string, from: number, to: number, short: boolean): Built {
+function europeUs(geo: string, from: number, to: number, short: boolean): Built | Short | null {
   const lvl = (id: string) => {
     const s = inRange(series(id, geo), from, to)
     return s.length >= 2 ? { a: s[0], b: s[s.length - 1] } : null
@@ -111,8 +144,7 @@ function europeUs(geo: string, from: number, to: number, short: boolean): Built 
   const g = lvl('gdp_pc_vs_us'), c = lvl('aic_vs_us'), wg = lvl('wage_vs_us')
   if (!g && !c && !wg) return null
   const items = ([[g, 'GDP per person'], [c, 'consumption per person'], [wg, 'average wages']] as const).filter(([x]) => x)
-  const parts = items.map(([x, what], k) => (k === 0 ? `${what} went from ${x!.a.value.toFixed(0)}% of the US level in ${x!.a.year} to ${x!.b.value.toFixed(0)}% in ${x!.b.year}` : `${what} from ${x!.a.value.toFixed(0)}% to ${x!.b.value.toFixed(0)}% (${x!.a.year}–${x!.b.year})`))
-  if (short) return { headline: '', text: `In ${place(geo)}, ${parts.join('; ')}.` }
+  if (short) return `In ${place(geo)}, ${items.map(([x, what]) => `${what} went from ${x!.a.value.toFixed(0)}% to ${x!.b.value.toFixed(0)}% of the US level (${x!.a.year}–${x!.b.year})`).join('; ')}.`
   const d = (x: ReturnType<typeof lvl>) => (x ? x.b.value - x.a.value : 0)
   const behind = items.filter(([x]) => d(x) < -1).map(([, w]) => w)
   const ahead = items.filter(([x]) => d(x) > 1).map(([, w]) => w)
@@ -124,13 +156,13 @@ function europeUs(geo: string, from: number, to: number, short: boolean): Built 
       : ahead.length
         ? `${place(geo)} caught up with the US in ${list(ahead)}`
         : `${place(geo)}’s position relative to the US barely changed`
-  const out = [`In ${place(geo)}, ${parts.join('; ')}.`]
+  const stats = items.map(([x, what]) => ({ value: `${x!.a.value.toFixed(0)} → ${x!.b.value.toFixed(0)}`, label: `${what}, US = 100 (${x!.a.year}–${x!.b.year})` }))
   const wa = window(['gdp_pc_real', 'real_wage'], geo, from, to)
-  if (wa) {
-    const a = pct('gdp_pc_real', geo, wa), b = pct('real_wage', geo, wa)
-    if (a != null && b != null) out.push(`Falling behind is not the same as getting poorer: in absolute terms, real GDP per person ${moved(a)} and real average wages ${moved(b)} over ${wa[0]}–${wa[1]}.`)
-  }
-  return { headline, text: out.join(' ') }
+  const a = wa ? pct('gdp_pc_real', geo, wa) : null, b = wa ? pct('real_wage', geo, wa) : null
+  const meaning = wa && a != null && b != null
+    ? `Falling behind is not getting poorer: in absolute terms, real GDP per person ${moved(a)} and real average wages ${moved(b)} over ${span(wa)}.`
+    : 'Falling behind the US is not the same as getting poorer.'
+  return { headline, stats, meaning, detail: [] }
 }
 
 const DRIVER_Q: Record<string, string> = {
@@ -142,29 +174,35 @@ const DRIVER_Q: Record<string, string> = {
   'inequality-crime': 'inequality increased crime',
 }
 
-const BUILT: Record<string, { fn: (geo: string, from: number, to: number, short: boolean) => Built; covered: string[]; none: [string, string] }> = {
-  'growth-wages': { fn: growthWages, covered: ['gdp_pc_real', 'median_earnings_real', 'real_wage'], none: ['The available data cannot establish whether typical workers became poorer in these years', 'There is not enough GDP and wage data. Widen the period.'] },
-  'productivity-wages': { fn: productivityWages, covered: ['productivity', 'real_wage'], none: ['Not enough data to compare productivity and wages in these years', 'Widen the period.'] },
-  'housing-affordability': { fn: affordability, covered: ['house_price_real', 'disp_income_real'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
-  'europe-us': { fn: europeUs, covered: ['gdp_pc_vs_us', 'aic_vs_us', 'wage_vs_us'], none: ['Not enough data to compare with the US in these years', 'Widen the period.'] },
+const BUILT: Record<string, { fn: Fn; covered: string[]; none: [string, string] }> = {
+  'growth-wages': { fn: growthWages as Fn, covered: ['gdp_pc_real', 'median_earnings_real', 'real_wage'], none: ['The available data cannot establish whether typical workers became poorer in these years', 'There is not enough GDP and wage data. Widen the period.'] },
+  'productivity-wages': { fn: productivityWages as Fn, covered: ['productivity', 'real_wage'], none: ['Not enough data to compare productivity and wages in these years', 'Widen the period.'] },
+  'housing-affordability': { fn: affordability as Fn, covered: ['house_price_real', 'disp_income_real'], none: ['Not enough data to compare house prices and incomes in these years', 'Widen the period.'] },
+  'europe-us': { fn: europeUs as Fn, covered: ['gdp_pc_vs_us', 'aic_vs_us', 'wage_vs_us'], none: ['Not enough data to compare with the US in these years', 'Widen the period.'] },
 }
 
 const lc = (s: string) => (/^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
+const plain = (id: string) => lc(INDICATORS[id].short.replace(/\s*\(.*?\)/g, ''))
+
+/** One indicator's change as a key statistic. */
+export function statFor(id: string, c: Change, withYears = false): Stat {
+  const ind = INDICATORS[id]
+  const value = c.pct != null ? signed(c.pct) : signed(c.abs, ind.format === 'pct1' ? ' pts' : '')
+  const unit = c.pct == null && ind.format !== 'pct1' ? `, ${ind.unit}` : ''
+  const label = `${ind.dimension === 'crime' ? 'recorded ' : ''}${plain(id)}${unit}${withYears ? `, ${c.first.year}–${c.last.year}` : ''}${c.breaks.length ? ' (series break)' : ''}`
+  return { value, label }
+}
 
 /** Which way two selected indicators moved over the years both cover, e.g. "the foreign-born share rose while recorded robbery fell, 2008–2024". */
-function describePair(a: string, b: string, from: number, to: number): string | null {
+function describePair(a: string, b: string, from: number, to: number) {
   const p = comparePair(INDICATORS[a], INDICATORS[b], 'ES', from, to)
   if (!p.window || !p.a || !p.b) return null
-  const name = (id: string) => {
-    const ind = INDICATORS[id]
-    const short = lc(ind.short.replace(/\s*\(.*?\)/g, ''))
-    return `${/(share|rate)$/.test(short) ? 'the ' : ''}${ind.dimension === 'crime' ? 'recorded ' : ''}${short}`
-  }
-  const dir = (c: NonNullable<typeof p.a>) => ((c.pct != null ? Math.abs(c.pct) < 2 : Math.abs(c.abs) < 0.2) ? 'was little changed' : (c.pct ?? c.abs) > 0 ? 'rose' : 'fell')
+  const name = (id: string) => `${/(share|rate)$/.test(plain(id)) ? 'the ' : ''}${INDICATORS[id].dimension === 'crime' ? 'recorded ' : ''}${plain(id)}`
+  const dir = (c: Change) => ((c.pct != null ? Math.abs(c.pct) < 2 : Math.abs(c.abs) < 0.2) ? 'was little changed' : (c.pct ?? c.abs) > 0 ? 'rose' : 'fell')
   const da = dir(p.a), db = dir(p.b)
-  const years = `${p.window[0]}–${p.window[1]}`
-  if (da === db && da !== 'was little changed') return `${name(a)} and ${name(b)} both ${da}, ${years}`
-  return `${name(a)} ${da} while ${name(b)} ${db}, ${years}`
+  const years = span(p.window)
+  const text = da === db && da !== 'was little changed' ? `${name(a)} and ${name(b)} both ${da}, ${years}` : `${name(a)} ${da} while ${name(b)} ${db}, ${years}`
+  return { text, period: years, stats: [statFor(a, p.a), statFor(b, p.b)] }
 }
 
 /** A direct, data-based finding for the investigation, or a statement that the data cannot give one. */
@@ -172,14 +210,16 @@ export function answerFor(relId: string, a: string, b: string, compare: string |
   const bt = BUILT[relId]
   if (bt) {
     const main = bt.fn('ES', from, to, false)
-    if (!main) return { headline: bt.none[0], text: bt.none[1], covered: [] }
+    if (!main) return { headline: bt.none[0], stats: [], meaning: bt.none[1], detail: [], covered: [] }
     const other = compare && compare !== 'none' ? bt.fn(compare, from, to, true) : null
-    return { headline: main.headline, text: other ? `${main.text} ${other.text}` : main.text, covered: bt.covered }
+    return { ...main, detail: other ? [...main.detail, other] : main.detail, covered: bt.covered }
   }
   const d = describePair(a, b, from, to)
   const q = DRIVER_Q[relId]
-  if (!d) return q ? { headline: `Too little overlapping data in ${from}–${to}`, dek: `Even with more data, national figures alone could not show whether ${q}.`, text: '', covered: [] } : null
-  const headline = `In Spain, ${d}`
-  return q ? { headline, dek: `These figures alone cannot show whether ${q}; the research below weighs the evidence.`, text: '', covered: [] } : { headline, text: '', covered: [] }
+  const dek = q ? `These figures alone cannot show whether ${q}; the research below weighs the evidence.` : undefined
+  if (!d) return q ? { headline: `Too little overlapping data in ${from}–${to}`, dek: `Even with more data, national figures alone could not show whether ${q}.`, stats: [], meaning: '', detail: [], covered: [] } : null
+  return { headline: `In Spain, ${d.text}`, dek, period: d.period, stats: d.stats, meaning: '', detail: [], covered: [a, b] }
 }
+
 export const isDriverQuestion = (relId: string) => relId in DRIVER_Q
+export const isBuiltAnswer = (relId: string) => relId in BUILT
