@@ -410,7 +410,23 @@ const DECOUPLING: TopicEvidence = {
   gap: 'No verified peer-reviewed study of Spain’s wage–productivity gap since 2000 was found. Spain is included in the OECD comparisons, but country results are not reported separately here.',
 }
 
+const EUROPE_US: TopicEvidence = {
+  findings: [
+    { lead: 'Europe chose more leisure.', text: 'By the early 2000s European productivity per hour was close to the US level; Europeans took more of the gains as shorter working hours rather than higher incomes (Blanchard 2004).' },
+    { lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe (Prescott 2004).' },
+    { lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does (Jones & Klenow 2016).' },
+  ],
+  international: [
+    { id: 'jonesklenow2016', relevance: 'indirect', note: 'Includes Spain, France, Germany, Italy and the US; data end in the 2000s.' },
+    { id: 'blanchard2004', relevance: 'indirect', note: 'EU as a whole; written before the 2008 crisis.' },
+    { id: 'prescott2004', relevance: 'indirect', note: 'G-7 countries; Spain and Portugal not included.' },
+  ],
+  spain: [],
+  gap: 'No verified peer-reviewed study explains why Spain’s GDP per person and wages fell further behind the US level after 2008.',
+}
+
 export const TOPIC: Record<string, TopicEvidence> = {
+  'europe-us': EUROPE_US,
   'growth-wages': DECOUPLING,
   'productivity-wages': DECOUPLING,
 }

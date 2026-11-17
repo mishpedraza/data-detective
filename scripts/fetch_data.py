@@ -20,8 +20,8 @@ class Series(dict):
     flags: dict
 
 
-def eurostat(dataset, **filters):
-    params = [("format", "JSON"), ("lang", "EN")] + [("geo", g) for g in GEOS]
+def eurostat(dataset, extra_geos=(), **filters):
+    params = [("format", "JSON"), ("lang", "EN")] + [("geo", g) for g in list(GEOS) + list(extra_geos)]
     params += [(k, v) for k, v in filters.items()]
     d = S.get(ESTAT + dataset, params=params, timeout=120).json()
     if "error" in d:
@@ -66,12 +66,13 @@ def worldbank(indicator, extra=None, only_extra=False):
     return out
 
 
-def oecd(flow, key_tpl):
+def oecd(flow, key_tpl, extra=None):
     out = {}
-    keys = "+".join(v for v in GEOS.values() if v)
+    geos = GEOS | (extra or {})
+    keys = "+".join(v for v in geos.values() if v)
     url = f"https://sdmx.oecd.org/public/rest/data/{flow}/{key_tpl.format(geo=keys)}?startPeriod={START}"
     txt = S.get(url, headers={"Accept": "application/vnd.sdmx.data+csv"}, timeout=120).text
-    inv = {v: k for k, v in GEOS.items() if v}
+    inv = {v: k for k, v in geos.items() if v}
     for row in csv.DictReader(io.StringIO(txt)):
         yr = int(row["TIME_PERIOD"][:4])
         if START <= yr <= END and row["OBS_VALUE"]:
@@ -316,6 +317,23 @@ def main():
         label="Typical (median) hourly pay after inflation", short="Median hourly pay", unit="€ per hour, 2015 prices", format="eur2",
         definition="Median gross hourly earnings of all employees in firms with 10 or more employees, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation). Excludes apprentices and the smallest firms.",
         source={"org": EUROSTAT_SRC, "dataset": "earn_ses_pub2s ÷ prc_hicp_aind", "url": LINK("earn_ses_pub2s"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}, derived=True)
+
+    def vs_us(src):
+        us = src.get("US", {})
+        return {g: {y: v / us[y] * 100 for y, v in ys.items() if us.get(y)} for g, ys in src.items() if g != "US"}
+    PPP_NOTE = "Purchasing power parities convert each country's prices to a common basis; they are estimates and are revised, so small differences between countries are not meaningful."
+    add("gdp_pc_vs_us", "economy", vs_us(eurostat("prc_ppp_ind", extra_geos=["US"], na_item="VI_PPS_EU27_2020_HAB", ppp_cat="GDP")),
+        label="GDP per person compared with the United States", short="GDP per person vs US", unit="United States = 100", format="index",
+        definition="GDP per person in purchasing power standards, as a share of the US level (US = 100). Our calculation from Eurostat's volume indices, which include the US. " + PPP_NOTE,
+        source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind (GDP)", "url": LINK("prc_ppp_ind")}, derived=True)
+    add("aic_vs_us", "living", vs_us(eurostat("prc_ppp_ind", extra_geos=["US"], na_item="VI_PPS_EU27_2020_HAB", ppp_cat="A01")),
+        label="Consumption per person compared with the United States", short="Consumption vs US", unit="United States = 100", format="index",
+        definition="Actual individual consumption per person (goods and services households use, including those paid for by government, such as health and education) in purchasing power standards, as a share of the US level (US = 100). Our calculation from Eurostat. " + PPP_NOTE,
+        source={"org": EUROSTAT_SRC, "dataset": "prc_ppp_ind (A01)", "url": LINK("prc_ppp_ind")}, derived=True)
+    add("wage_vs_us", "living", vs_us(oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.USD_PPP.A.Q...", extra={"US": "USA"})),
+        label="Average wage compared with the United States", short="Average wage vs US", unit="United States = 100", format="index",
+        definition="Average annual wage per full-time-equivalent employee in US dollars at purchasing power parity and constant prices, as a share of the US level (US = 100). Our calculation from OECD data. Averages are pulled up by high earners, more so in the US. " + PPP_NOTE,
+        source={"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE), USD PPP", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE"}, derived=True)
 
     OUT.write_text(json.dumps({"generated": TODAY, "indicators": INDICATORS}, ensure_ascii=False, separators=(",", ":")))
     print("wrote", OUT, OUT.stat().st_size, "bytes", file=sys.stderr)

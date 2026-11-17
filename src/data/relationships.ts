@@ -154,7 +154,23 @@ export const RELATIONSHIPS: Relationship[] = [
       correlation,
       { text: 'Spain’s Gini coefficient moves within a narrow band. Small changes in a survey measure are hard to link to crime trends.' },
     ],
+  },  {
+    id: 'europe-us',
+    question: 'Are Europeans becoming poorer relative to Americans?',
+    shortQuestion: 'Europe ↔ United States',
+    kicker: 'Living standards across the Atlantic',
+    left: { dimension: 'economy', options: ['gdp_pc_vs_us'], default: 'gdp_pc_vs_us' },
+    right: { dimension: 'living', options: ['wage_vs_us', 'aic_vs_us'], default: 'wage_vs_us' },
+    defaultCompare: 'DE',
+    explain: [],
+    cannot: [
+      { text: 'GDP per person, consumption and wages give different answers: GDP includes profits and investment, consumption counts public services, and average wages are pulled up by top earners, more so in the US.' },
+      { text: 'Comparisons in purchasing power depend on price estimates that are revised; small gaps between countries are within their margin of error.' },
+      { text: 'These measures leave out working hours, leisure, life expectancy and inequality, which researchers find narrow the gap between Western Europe and the US.' },
+      { text: 'A falling share of the US level can mean Europe grew slowly or the US grew fast; it does not by itself mean Europeans became poorer in absolute terms.' },
+    ],
   },
+
 ]
 
 export const CUSTOM_RELATIONSHIP: Relationship = {
