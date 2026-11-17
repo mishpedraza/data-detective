@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { DISCOVER_TEASERS } from '../src/data/discoverEdition'
+import { studyById } from '../src/data/research'
 import { REFERENCES } from '../src/data/references'
 import { INDICATORS } from '../src/data/indicators'
 import { discoveryEvidence, predictions, predictionOptions } from '../src/data/discoveries'
@@ -56,9 +57,9 @@ test('Discover has one sourced teaser per existing question and grades only defi
   for (const [id, teaser] of Object.entries(DISCOVER_TEASERS)) {
     assert.ok(teaser?.hook, id)
     const interaction = teaser.interaction
-    if (!interaction) continue
+    assert.ok(interaction, id)
     for (const ref of interaction.reveal.refs) {
-      const source = ref.startsWith('data:') ? INDICATORS[ref.slice(5)]?.source : REFERENCES[ref]
+      const source = ref.startsWith('data:') ? INDICATORS[ref.slice(5)]?.source : studyById(ref) ?? REFERENCES[ref]
       assert.match(source?.url ?? '', /^https:\/\//, ref)
     }
     if (interaction.kind === 'prediction' && interaction.answer) assert.ok(interaction.choices.includes(interaction.answer), id)
@@ -68,4 +69,8 @@ test('Discover has one sourced teaser per existing question and grades only defi
   const housing = DISCOVER_TEASERS['housing-affordability']!.interaction
   assert.ok(housing?.kind === 'prediction' && housing.answer === 'Lower')
   assert.match(housing.reveal.finding, /13% below/)
+  const crime = DISCOVER_TEASERS['crime-perceptions']!.interaction
+  assert.ok(crime?.kind === 'prediction' && crime.answer === 'It fell')
+  assert.match(crime.reveal.facts?.[0].value ?? '', /49% lower/)
+  assert.match(crime.reveal.facts?.[1].value ?? '', /23 of 27/)
 })
