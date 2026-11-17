@@ -4,7 +4,7 @@ import { COUNTRIES } from '../data/countries'
 import { DIMENSIONS, INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, studyById, type Study } from '../data/research'
-import { crimeProfile, type CrimeProfile, type ExplStatus, type StudyLink } from '../data/crimeEvidence'
+import { BROADER, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
@@ -67,7 +67,7 @@ function Tag({ kind }: { kind: 'descriptive' | 'association' | 'causal' }) {
   return <span className={`ti-tag ti-tag-${kind}`}>{label}</span>
 }
 
-const EXPL_LABEL: Record<ExplStatus, string> = { documented: 'Documented change', evidence: 'Supported by evidence', method: 'How the figures work', hypothesis: 'Hypothesis, not tested here' }
+const EXPL_LABEL: Record<ExplStatus, string> = { evidence: 'Supported by research', documented: 'Documented change', method: 'How the figures work', hypothesis: 'Plausible, not established', insufficient: 'Evidence insufficient or conflicting' }
 
 function periodNote(s: Study, from: number, to: number) {
   if (!s.years) return null
@@ -199,12 +199,37 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
 
   const crimeInd = B.dimension === 'crime' ? B : A.dimension === 'crime' ? A : null
   const immInd = A.dimension === 'immigration' ? A : B.dimension === 'immigration' ? B : null
-  const profile: CrimeProfile | null = isImmCrime && crimeInd && immInd ? crimeProfile(crimeInd.id) : null
+  const trend = B.dimension === 'crime' ? trendEvidence(B.id) : null
+  const relEv = isImmCrime && crimeInd && immInd ? relationshipEvidence(immInd.dimension, crimeInd.id) : null
+  const profile = trend && relEv
+    ? {
+        noun: trend.noun, recorded: trend.measurement, explanations: trend.explanations, trend: trend.studies,
+        confounders: relEv.confounders, periods: relEv.periods, synthesis: relEv.synthesis,
+        direct: relEv.studies.filter((x) => !BROADER.has(x)), broader: relEv.studies.filter((x) => BROADER.has(x)),
+        gap: relEv.gap, causal: relEv.causal, uncertain: relEv.uncertain, summary: trend.summary, trendGap: trend.gap,
+      }
+    : null
+  const tp = (() => {
+    const pts = inRange(series(B.id, 'ES'), from, to)
+    if (pts.length < 4) return null
+    const hi = pts.reduce((m, p) => (p.value > m.value ? p : m)), lo = pts.reduce((m, p) => (p.value < m.value ? p : m))
+    let big: { year: number; pct: number } | null = null
+    for (let k = 1; k < pts.length; k++) if (pts[k].year === pts[k - 1].year + 1) {
+      const pct = ((pts[k].value - pts[k - 1].value) / pts[k - 1].value) * 100
+      if (!big || Math.abs(pct) > Math.abs(big.pct)) big = { year: pts[k].year, pct }
+    }
+    const interior = (p: Point) => p.year !== pts[0].year && p.year !== pts[pts.length - 1].year
+    const parts: string[] = []
+    if (interior(hi)) parts.push(`peaked in ${hi.year} (${formatValue(hi.value, B.format)})`)
+    if (interior(lo)) parts.push(`was lowest in ${lo.year} (${formatValue(lo.value, B.format)})`)
+    if (big) parts.push(`its largest one-year change was ${big.pct > 0 ? '+' : '−'}${Math.abs(big.pct).toFixed(0)}% in ${big.year - 1}–${big.year}${B.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
+    return parts.length ? `Within these years, ${nm(B)} ${parts.join('; ')}.` : null
+  })()
   const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
   const crimeDir = sc ? (sc.dir === 'rose' ? 'rise' : sc.dir === 'fell' ? 'fall' : 'stable') : null
   // An explanation applies only if the selection has observations both before its end year and from its start year on.
   const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
-  const explanations = profile && crimeDir ? profile.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
+  const explanations = trend && crimeDir ? trend.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
   const confounders = profile ? profile.confounders.filter((c) => overlaps(c.years)) : []
   const sameAmountQ = profile && sc
     ? sc.dir === 'stable' ? `Does that mean ${profile.noun} stayed the same?` : `Does that mean ${profile.noun} ${sc.dir === 'rose' ? 'increased' : 'decreased'} by the same amount?`
@@ -315,6 +340,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
               </article>
             ))}
           </div>
+          {tp && <p className="ti-counts">{tp}</p>}
           {profile && crimeInd && (
             <p className="ti-counts">
               <strong>What the crime figures count:</strong> {crimeInd.definition}
@@ -363,10 +389,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <div className="tell-part">
             <div className="tell-label">
               <span className="evidence-num">02</span>
-              <h3>{sameAmountQ}</h3>
-              <Tag kind="descriptive" />
+              <h3>Why might it have happened?</h3>
             </div>
             <div className="tell-body">
+              <h4 className="ti-sub">{sameAmountQ}</h4>
               <ul className="synthesis">
                 {profile.recorded.map((c, i) => (
                   <li key={i}>
@@ -400,19 +426,20 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                   )}
                 </>
               )}
-              {crimeDir === 'rise' && profile.trend && profile.trend.length > 0 && (
+              {profile.trend.length > 0 && (
                 <div className="study-group">
                   <h4>Research on why recorded {profile.noun} changes</h4>
                   <ul className="studies">{studyCards(profile.trend)}</ul>
                 </div>
               )}
+              <p className="synthesis-note"><strong>What is missing:</strong> {profile.trendGap}</p>
             </div>
           </div>
 
           <div className="tell-part">
             <div className="tell-label">
               <span className="evidence-num">03</span>
-              <h3>Did immigration contribute?</h3>
+              <h3>Is there a connection?</h3>
               <Tag kind="association" />
             </div>
             <div className="tell-body">
@@ -470,7 +497,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <div className="tell-part">
             <div className="tell-label">
               <span className="evidence-num">04</span>
-              <h3>What does the research actually say?</h3>
+              <h3>Did immigration contribute? What research says</h3>
               <Tag kind="causal" />
             </div>
             <div className="tell-body">
@@ -517,6 +544,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                 </dd>
                 <dt><Tag kind="causal" /></dt>
                 <dd>{profile.causal}</dd>
+                <dt><span className="ti-tag">Why it changed</span></dt>
+                <dd>{profile.summary}</dd>
               </dl>
               <h4 className="ti-sub">What remains uncertain</h4>
               <ul className="tell-list">
@@ -549,6 +578,38 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             </div>
           </div>
         </>
+      )}
+
+      {!profile && trend && sc && (
+        <div className="tell-part">
+          <div className="tell-label">
+            <h3>Why might {nm(B)} have changed?</h3>
+          </div>
+          <div className="tell-body">
+            <ul className="synthesis">
+              {trend.measurement.map((c, i) => (
+                <li key={i}>
+                  {c.text}
+                  {fn(c.refs)}
+                </li>
+              ))}
+            </ul>
+            {explanations.length ? (
+              <ul className="expl">
+                {explanations.map((e) => (
+                  <li key={e.lead}>
+                    <span className={`expl-tag expl-tag-${e.status}`}>{EXPL_LABEL[e.status]}</span>
+                    <strong>{e.lead}</strong> {e.text}
+                    {fn(e.refs)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="tell-text">No verified explanation is available for this movement in the selected years.</p>
+            )}
+            <p className="synthesis-note"><strong>What is missing:</strong> {trend.gap}</p>
+          </div>
+        </div>
       )}
 
       {!profile && (
@@ -671,7 +732,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                 </li>
               )
             }
-            const ref = REFERENCES[r]
+            const st = REFERENCES[r] ? null : studyById(r)
+            const ref = REFERENCES[r] ?? { authors: st!.authors, year: st!.year, url: st!.url, title: st!.title, outlet: st!.outlet }
             return (
               <li key={r} id={`ref-${i + 1}`}>
                 <span className="fn-num">{i + 1}</span>
