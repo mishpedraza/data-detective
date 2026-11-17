@@ -400,6 +400,12 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                   )}
                 </>
               )}
+              {crimeDir === 'rise' && profile.trend && profile.trend.length > 0 && (
+                <div className="study-group">
+                  <h4>Research on why recorded {profile.noun} changes</h4>
+                  <ul className="studies">{studyCards(profile.trend)}</ul>
+                </div>
+              )}
             </div>
           </div>
 

@@ -289,4 +289,44 @@ export const STUDIES: Study[] = [
   },
 ]
 
-export const studyById = (id: string) => STUDIES.find((s) => s.id === id)
+// Research on why recorded sex crimes change, independent of immigration.
+export const TREND_STUDIES: Study[] = [
+  {
+    id: 'levy2026',
+    authors: 'Ro’ee Levy & Martin Mattsson',
+    year: 2026,
+    title: 'The Effects of Social Movements: Evidence from #MeToo',
+    outlet: 'Review of Economics and Statistics (published online 2026)',
+    url: doi('10.1162/rest.a.1830'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'Europe',
+    place: '31 OECD countries, including Spain; detailed US data',
+    period: 'Before and after #MeToo (October 2017); Spain’s data 2010–2018',
+    outcomes: ['sexual'],
+    headline: 'The #MeToo movement led more victims to report sex crimes to police; the authors find no sign of more offences.',
+    finding: 'Reported sex crimes rose by roughly 8–10% after the movement began, and the increase lasted to the end of the data, 15–27 months later. Additional survey and crime data indicate the rise reflected a higher propensity to report rather than more offences.',
+    method: 'Compares sex crimes with other crimes before and after October 2017, and countries with strong and weak #MeToo movements, using quarterly police data harmonised across 31 countries.',
+    limitations: 'The main estimate is an average across countries; we did not find a separate estimate for Spain. The data end about two years after the movement, before the post-2019 rise and Spain’s 2022 law.',
+  },
+  {
+    id: 'chen2024',
+    authors: 'Feng Chen & Wei Long',
+    year: 2024,
+    title: 'Silence breaking: sex crime reporting in the MeToo era',
+    outlet: 'Journal of Population Economics 37',
+    url: doi('10.1007/s00148-024-01014-x'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'Europe',
+    place: 'United States',
+    period: 'Before and after #MeToo (2017)',
+    outcomes: ['sexual'],
+    headline: 'Where #MeToo drew more attention, reported sex crimes rose, mainly because more victims reported.',
+    finding: 'Reported sex crimes rose more after #MeToo in US areas with lower measured sexism, where the movement drew more attention. The authors find the rise came mainly from changes in reporting rather than in actual incidents.',
+    method: 'Builds a local index of attitudes toward women from Google searches and compares areas with different pre-#MeToo attitudes.',
+    limitations: 'United States only. The sexism index is constructed by the authors, and how far the findings transfer to Spain is unknown.',
+  },
+]
+
+export const studyById = (id: string) => STUDIES.find((s) => s.id === id) ?? TREND_STUDIES.find((s) => s.id === id)

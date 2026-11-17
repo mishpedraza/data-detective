@@ -28,6 +28,8 @@ export interface CrimeProfile {
   /** Why recorded figures may differ from actual incidence. */
   recorded: { text: string; refs?: string[] }[]
   explanations: Explanation[]
+  /** Research on why the recorded series itself changes, independent of immigration. */
+  trend?: StudyLink[]
   /** `years` limits a factor to selections that span those years. */
   confounders: { text: string; refs?: string[]; years?: [number, number] }[]
   synthesis: { lead: string; text: string }[]
@@ -72,12 +74,17 @@ export const CRIME_PROFILES: Record<string, CrimeProfile> = {
       { text: 'These figures cannot separate changes in reporting, changes in the law and changes in actual incidence.' },
     ],
     explanations: [
-      { lead: 'The legal definition changed in October 2022.', text: 'Organic Law 10/2022 removed the distinction between sexual “abuse” and sexual “aggression”: every non-consensual sexual act became aggression. Offences previously recorded under abuse can now fall under sexual assault or rape, which can raise these categories without any change in behaviour. The data cannot show how much of any change this explains.', status: 'documented', explains: 'any', years: [2022, 2100], refs: ['lo2022'] },
-      { lead: 'The age of consent rose to 16 in 2015.', text: 'The 2015 Criminal Code reform raised the age of sexual consent to 16, so acts that were previously legal became offences. This can add recorded offences; its size in these figures is unknown.', status: 'documented', explains: 'rise', years: [2015, 2100], refs: ['lo2015'] },
-      { lead: 'Reporting may have increased.', text: 'Greater public attention to sexual violence may have led more victims to report. This is a common explanation, but we found no Spanish evidence measuring a change in reporting rates over this period, so it remains a hypothesis.', status: 'hypothesis', explains: 'rise' },
-      { lead: 'Actual incidence may have changed.', text: 'Some of the change could reflect more, or less, sexual violence. Police records cannot show this; repeated victimisation surveys using the same questions would be needed.', status: 'hypothesis', explains: 'any' },
+      { lead: 'The legal definition changed in October 2022.', text: 'Organic Law 10/2022 removed the distinction between sexual “abuse” and sexual “aggression”: every non-consensual sexual act became aggression. Offences previously recorded under abuse can now fall under sexual assault or rape, which can raise these categories without any change in behaviour. The data cannot show how much of any change this explains.', status: 'documented', explains: 'any', years: [2022, 2022], refs: ['lo2022'] },
+      { lead: 'The age of consent rose to 16 in 2015.', text: 'The 2015 Criminal Code reform raised the age of sexual consent to 16, so acts that were previously legal became offences. This can add recorded offences; its size in these figures is unknown.', status: 'documented', explains: 'rise', years: [2015, 2015], refs: ['lo2015'] },
+      { lead: 'More victims reported after #MeToo.', text: 'A causal study of 31 countries, including Spain, finds that the #MeToo movement, from October 2017, raised the number of sex crimes reported to police by roughly 8–10%, and that this reflected more reporting rather than more offences. A US study reaches the same conclusion. Neither gives a separate estimate for Spain, and neither covers the years after 2019.', status: 'evidence', explains: 'rise', years: [2017, 2100], refs: ['levy2026', 'chen2024'] },
+      { lead: 'Spain’s victim survey shows no rise from 2015 to 2019.', text: 'In Spain’s national survey of women, 0.57% reported non-partner sexual violence in the previous 12 months in 2015 and 0.51% in 2019, a difference within the margin of error. Over the same years police-recorded sexual violence rose by about 70%. The survey changed some questions and its sampling between editions and covers only women aged 16 and over, so the comparison is approximate.', status: 'evidence', explains: 'rise', years: [2015, 2019], refs: ['macro2019'] },
+      { lead: 'Actual incidence may have changed.', text: 'Some of the change could still reflect more, or less, sexual violence, particularly in years not covered by the survey comparison. Police records alone cannot show this.', status: 'hypothesis', explains: 'any' },
       { lead: 'Population growth alone does not explain it.', text: 'The figures are rates per 100,000 residents, so a larger population does not by itself raise them.', status: 'method', explains: 'rise' },
       { lead: 'No verified explanation for the fall.', text: 'We found no study explaining the decline in recorded sexual violence before 2015. Changes in reporting or recording are possible but untested.', status: 'hypothesis', explains: 'fall' },
+    ],
+    trend: [
+      { id: 'levy2026', note: 'Includes Spain; reporting, not incidence.' },
+      { id: 'chen2024', note: 'United States; reporting, not incidence.' },
     ],
     confounders: [
       { text: 'Reporting and awareness: if willingness to report rose during years when immigration also rose, the two would move together without one causing the other.' },
