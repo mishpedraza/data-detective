@@ -200,3 +200,31 @@ test('series sanity: no gaps hidden inside answer windows and real series are po
     if (/_real$/.test(id)) for (const p of pts) assert.ok(p.value > 0, `${id} ${geo} ${p.year} not positive`)
   }
 })
+
+test('the explanation adds something the headline and statistics do not', () => {
+  for (const { rel, a, b, c, from, to } of selections()) {
+    const ex = explain(rel, a, b, c, from, to)
+    const first = ex.findings[0]
+    if (!first || !ex.ans) continue
+    const text = `${first.lead} ${first.body ?? ''}`
+    for (const s of ex.ans.stats) assert.ok(!text.includes(s.value), `${rel.id} ${a}/${b} ${from}–${to}: 02 repeats ${s.value} (${s.label})`)
+    assert.notEqual(first.lead, ex.ans.headline, `${rel.id}: 02 repeats the headline`)
+    assert.doesNotMatch(text, /rose [−-]|fell [+−-]/, `${rel.id} ${from}–${to}: garbled direction in "${text}"`)
+  }
+})
+
+test('data insights appear when the pattern is in the data, and are sourced', () => {
+  const R = (id: string) => RELATIONSHIPS.find((r) => r.id === id)!
+  const wages = explain(R('growth-wages'), 'gdp_pc_real', 'real_wage', null, 2000, 2025)
+  assert.match(wages.findings[0].lead, /measured differently/)
+  assert.match(wages.findings[0].body!, /low end/)
+  assert.ok(wages.ans!.stats.some((s) => s.label === 'real average wages'), 'average wages must be visible when the insight explains them')
+  const prod = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2000, 2025).findings[0]
+  assert.match(prod.lead, /jobs were disappearing/)
+  assert.match(prod.body!, /^In 2008–2013/)
+  const pop = explain(R('immigration-growth'), 'foreign_born_share', 'gdp_real', null, 2000, 2025).findings[0]
+  assert.match(pop.lead, /more people/)
+  for (const f of [wages.findings[0], prod, pop]) for (const id of f.refs) assert.ok(REFERENCES[id], id)
+  const flat = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2014, 2025).findings[0]
+  assert.doesNotMatch(flat.lead, /jobs were disappearing/, 'no job-loss insight when employment grew')
+})

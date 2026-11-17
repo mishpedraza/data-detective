@@ -437,6 +437,24 @@ def main():
         definition="Median gross hourly earnings of all employees in firms with 10 or more employees, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation). Excludes apprentices and the smallest firms.",
         source={"org": EUROSTAT_SRC, "dataset": "earn_ses_pub2s ÷ prc_hicp_aind", "url": LINK("earn_ses_pub2s"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}, derived=True)
 
+    ses_dist = {}
+    for code, lab in (("MEAN_E_EUR", "mean"), ("D1_E_EUR", "d1"), ("D9_E_EUR", "d9")):
+        raw = eurostat("earn_ses_hourly", sex="T", nace_r2="B-S_X_O", isco08="TOTAL", age="TOTAL", worktime="TOTAL", indic_se=code)
+        ses_dist[lab] = combine({g: {y: v for y, v in ys.items() if y >= 2006} for g, ys in raw.items()}, hicp15, lambda a, b: a / b * 100)
+    ses_src = {"org": EUROSTAT_SRC, "dataset": "earn_ses_hourly ÷ prc_hicp_aind", "url": LINK("earn_ses_hourly"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}
+    ses_def = " gross hourly earnings of employees in firms with 10 or more employees, excluding public administration, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation)."
+    add("mean_earnings_real", "living", ses_dist["mean"], label="Average hourly pay after inflation (earnings survey)", short="Average hourly pay (survey)",
+        unit="€ per hour, 2015 prices", format="eur2", definition="Mean" + ses_def, source=ses_src, derived=True)
+    add("d1_earnings_real", "living", ses_dist["d1"], label="Hourly pay at the 10th percentile after inflation", short="Low-end hourly pay (10th percentile)",
+        unit="€ per hour, 2015 prices", format="eur2", definition="First-decile" + ses_def + " 10% of employees earn less.", source=ses_src, derived=True)
+    add("d9_earnings_real", "living", ses_dist["d9"], label="Hourly pay at the 90th percentile after inflation", short="High-end hourly pay (90th percentile)",
+        unit="€ per hour, 2015 prices", format="eur2", definition="Ninth-decile" + ses_def + " 10% of employees earn more.", source=ses_src, derived=True)
+    wn = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.EUR.A.V...")
+    add("wage_cpi_real", "living", combine(wn, hicp15, lambda a, b: a / b * 100), label="Average annual wage deflated by consumer prices", short="Real wages (consumer prices)",
+        unit="€ per year, 2015 prices", format="eur",
+        definition="OECD average annual wages per full-time-equivalent employee in current euros, deflated by the HICP (our calculation). The OECD's own constant-price series uses the private consumption deflator instead.",
+        source={"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE), current prices ÷ Eurostat prc_hicp_aind", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE"}, derived=True)
+
     def vs_us(src):
         us = src.get("US", {})
         return {g: {y: v / us[y] * 100 for y, v in ys.items() if us.get(y)} for g, ys in src.items() if g != "US"}
