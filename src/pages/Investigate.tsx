@@ -113,12 +113,6 @@ export function Investigate({ params }: { params: URLSearchParams }) {
 
   return (
     <div className="investigate">
-      <section className="inv-hero">
-        <p className="eyebrow">Investigation · Spain, {MIN}–{MAX}</p>
-        <h1 className="inv-title">Spain: What’s really happening?</h1>
-        <p className="inv-sub">Explore how immigration, crime, economic growth, housing and living standards have evolved over the last 25 years.</p>
-      </section>
-
       <nav className="rel-tabs" aria-label="Relationships">
         <div className="rel-tabs-inner" ref={tabsRef}>
           {RELATIONSHIPS.map((r) => (
