@@ -262,7 +262,7 @@ export const STUDIES: Study[] = [
     period: '2010–2015',
     years: [2010, 2015],
     measure: 'Asylum seekers and recognised refugees, analysed separately',
-    outcomes: ['total', 'property', 'robbery', 'violent', 'sexual', 'fraud', 'drugs'],
+    outcomes: ['total', 'property', 'theft', 'robbery', 'violent', 'sexual', 'fraud', 'drugs'],
     headline: 'Asylum seekers did not raise crime; recognised refugees were linked to more non-violent property crime.',
     finding: 'Asylum seekers, who are placed by dispersal rules, had no effect on crime apart from migration-specific offences. A higher share of recognised refugees was associated with more crime, driven by non-violent offences such as theft and fraud. For sexual abuse, a police category that includes rape, a zero effect could not be ruled out, and the estimate changed sign across specifications.',
     method: 'For asylum seekers, uses dispersal policies and residence restrictions. For recognised refugees, who can choose where to live, uses where earlier compatriots had settled. Outcomes are police-recorded suspects across German counties.',
