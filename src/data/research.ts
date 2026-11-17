@@ -1,5 +1,5 @@
-export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending' | 'wages' | 'laborshare' | 'housing' | 'employment'
-export type Status = 'peer-reviewed' | 'review' | 'working-paper'
+export type Outcome = 'total' | 'property' | 'violent' | 'homicide' | 'assault' | 'robbery' | 'burglary' | 'theft' | 'sexual' | 'fraud' | 'cyber' | 'drugs' | 'victimisation' | 'reoffending' | 'wages' | 'laborshare' | 'housing' | 'employment' | 'credit' | 'rents'
+export type Status = 'peer-reviewed' | 'review' | 'working-paper' | 'official'
 export type Design = 'causal' | 'association' | 'descriptive' | 'review'
 
 export interface Study {
@@ -15,6 +15,8 @@ export interface Study {
   /** Countries the data covers (ISO codes as used for comparison countries). */
   geo?: string[]
   place: string
+  /** Short citation when surnames can't be derived from `authors`. */
+  cite?: string
   period: string
   /** First and last year of data analysed, where the paper states it. */
   years?: [number, number]
@@ -46,12 +48,15 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   laborshare: 'Labour share of income',
   housing: 'House prices and rents',
   employment: 'Employment of native-born workers',
+  credit: 'Mortgage lending',
+  rents: 'Rents',
 }
 
 export const STATUS_LABEL: Record<Status, string> = {
   'peer-reviewed': 'Peer-reviewed article',
   review: 'Invited review article',
   'working-paper': 'Working paper (not peer-reviewed)',
+  official: 'Central bank analysis (not peer-reviewed)',
 }
 
 export const DESIGN_LABEL: Record<Design, string> = {
@@ -789,6 +794,102 @@ export const TREND_STUDIES: Study[] = [
     finding: 'Immigration appears to have changed the tasks natives specialise in, with effects concentrated among native workers of the same sex as the immigrants, and with significant gender differences.',
     method: 'Spanish labour-market data on native task supply and employment by sex and nativity.',
     limitations: 'Covers the 2000s immigration boom; does not cover the period since the 2008 crisis.',
+  },
+  {
+    id: 'akin2014',
+    authors: 'Özlem Akin, José García Montalvo, Jaume García Villar, José-Luis Peydró & Josep Maria Raya',
+    year: 2014,
+    title: 'The real estate and credit bubble: evidence from Spain',
+    outlet: 'SERIEs 5(2–3): 223–243',
+    url: doi('10.1007/s13209-014-0115-9'),
+    status: 'peer-reviewed',
+    design: 'association',
+    scope: 'Spain',
+    geo: ['ES'],
+    place: 'Spain, matched mortgage loans',
+    period: 'The 2000s credit boom and the bust that followed',
+    outcomes: ['credit', 'housing'],
+    headline: 'Spanish banks lent too loosely during the housing boom.',
+    finding: 'Lending standards were softer in the boom than in the bust; mortgage spreads for non-employed borrowers were identical to those for employed borrowers. Appraisal values appear to have been biased upward so that loans met loan-to-value limits.',
+    method: 'Borrower–lender matched data on individual Spanish mortgages: loan terms, appraisal and market prices, borrower income and job status.',
+    limitations: 'Covers the 2000s boom; it explains lending behaviour, not how much credit raised prices.',
+  },
+  {
+    id: 'garcialopez2020',
+    authors: 'Miquel-Àngel Garcia-López, Jordi Jofre-Monseny, Rodrigo Martínez-Mazza & Mariona Segú',
+    year: 2020,
+    title: 'Do short-term rental platforms affect housing markets? Evidence from Airbnb in Barcelona',
+    outlet: 'Journal of Urban Economics 119: 103278',
+    url: doi('10.1016/j.jue.2020.103278'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'Spain',
+    geo: ['ES'],
+    place: 'Barcelona neighbourhoods',
+    period: 'The years of Airbnb’s growth in Barcelona',
+    outcomes: ['rents', 'housing'],
+    headline: 'Airbnb raised rents in Barcelona modestly on average, and much more in tourist hotspots.',
+    finding: 'For the average neighbourhood, Airbnb activity increased rents by 1.9%, transaction prices by 4.6% and posted prices by 3.7%. In the top tenth of neighbourhoods by Airbnb activity, rents rose by an estimated 7% and transaction prices by 17%.',
+    method: 'Panel fixed effects, a shift-share instrument (tourist amenities and Google searches), event studies and a case study of the Sagrada Família area.',
+    limitations: 'One city; effects elsewhere in Spain may be smaller or larger.',
+  },
+  {
+    id: 'lopezrodriguez2019',
+    authors: 'David López Rodríguez & María de los Llanos Matea',
+    cite: 'López Rodríguez & Matea',
+    year: 2019,
+    title: 'Recent developments in the rental housing market in Spain',
+    outlet: 'Banco de España, Economic Bulletin 3/2019',
+    url: 'https://www.bde.es/f/webbde/SES/Secciones/Publicaciones/InformesBoletinesRevistas/ArticulosAnaliticos/19/T3/descargar/Files/be1903-art25e.pdf',
+    status: 'official',
+    design: 'descriptive',
+    scope: 'Spain',
+    geo: ['ES'],
+    place: 'Spain',
+    period: 'Mid-2010s',
+    outcomes: ['rents'],
+    headline: 'Rental demand rose among young, immigrant and temporary workers, against a rigid supply.',
+    finding: 'Rental demand grew mainly among young households, immigrants and temporary workers, and in Madrid, Catalonia, the Balearics and the Canaries. Low incomes, short job contracts, lower loan-to-value ratios on new mortgages and economic activity concentrated where supply is rigid pushed people towards renting; holiday rentals emerged as an alternative use of housing.',
+    method: 'Descriptive analysis of rental-market data by a central bank.',
+    limitations: 'Descriptive; the authors note that municipal-level rent data would be needed for a fuller analysis.',
+  },
+  {
+    id: 'glaeser2008',
+    authors: 'Edward L. Glaeser, Joseph Gyourko & Albert Saiz',
+    year: 2008,
+    title: 'Housing supply and housing bubbles',
+    outlet: 'Journal of Urban Economics 64(2): 198–217',
+    url: doi('10.1016/j.jue.2008.07.007'),
+    status: 'peer-reviewed',
+    design: 'association',
+    scope: 'United States',
+    geo: ['US'],
+    place: 'US cities',
+    period: '1980s and early 2000s',
+    outcomes: ['housing'],
+    headline: 'Where housing supply is more flexible, price booms are smaller and shorter.',
+    finding: 'A model and US data show that places with more elastic housing supply have fewer and shorter bubbles with smaller price increases; the 1980s price run-ups happened almost only where supply was inelastic.',
+    method: 'Model of housing bubbles tested against US metropolitan price and construction data.',
+    limitations: 'US cities; Spanish planning and land supply work differently.',
+  },
+  {
+    id: 'monras2023',
+    authors: 'Joan Monràs & José García Montalvo',
+    year: 2023,
+    title: 'The Effect of Second-Generation Rent Controls: New Evidence from Catalonia',
+    outlet: 'Federal Reserve Bank of San Francisco Working Paper 2023-28',
+    url: doi('10.24148/wp2023-28'),
+    status: 'working-paper',
+    design: 'causal',
+    scope: 'Spain',
+    geo: ['ES'],
+    place: 'Catalonia',
+    period: 'Catalonia’s 2020 rent cap',
+    outcomes: ['rents'],
+    headline: 'Catalonia’s rent cap lowered rents but also reduced the supply of rental homes.',
+    finding: 'The cap reduced rents as intended, with increases at the bottom and declines at the top of the price distribution. Supply fell at the top without being replaced at the bottom.',
+    method: 'Compares capped and uncapped municipalities and units, with a model of rental-unit quality.',
+    limitations: 'Working paper; one region and one policy design.',
   },
 ]
 
