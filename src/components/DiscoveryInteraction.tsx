@@ -9,8 +9,14 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
   const [pick, setPick] = useState('')
   const [opened, setOpened] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
+  const trigger = useRef<HTMLButtonElement>(null)
+  const returning = useRef(false)
   useEffect(() => {
     if (opened) panel.current?.focus({ preventScroll: true })
+    else if (returning.current) {
+      trigger.current?.focus()
+      returning.current = false
+    }
   }, [opened])
 
   if (!opened) return (
@@ -19,19 +25,19 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
         <fieldset className="discovery-prediction">
           <legend>{interaction.label}</legend>
           <div className="discovery-options">
-            {interaction.choices.map((choice) => (
-              <button key={choice} type="button" onClick={() => { setPick(choice); setOpened(true) }}>{choice}</button>
+            {interaction.choices.map((choice, index) => (
+              <button key={choice} ref={index === 0 ? trigger : undefined} type="button" onClick={() => { setPick(choice); setOpened(true) }}>{choice}</button>
             ))}
           </div>
         </fieldset>
       ) : (
-        <button className="discovery-clue" type="button" onClick={() => setOpened(true)}>{interaction.label} <span aria-hidden="true">↓</span></button>
+        <button ref={trigger} className="discovery-clue" type="button" onClick={() => setOpened(true)}>{interaction.label} <span aria-hidden="true">↓</span></button>
       )}
       {evidenceLink()}
     </>
   )
 
-  const { finding, comparison, note, next, refs } = interaction.reveal
+  const { finding, comparison, facts, note, next, refs } = interaction.reveal
   const answer = interaction.kind === 'prediction' ? interaction.answer : undefined
   const largest = comparison && Math.max(...comparison.map(({ amount }) => amount))
   return (
@@ -48,9 +54,19 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
           ))}
         </ul>
       )}
+      {facts && <dl className="discovery-facts">
+        {facts.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+      </dl>}
       <p className="discovery-note">{note}</p>
       <StorySources refs={refs} />
-      {evidenceLink(next)}
+      <div className="discovery-reveal-actions">
+        {evidenceLink(next)}
+        <button type="button" className="discovery-clue" onClick={() => {
+          returning.current = true
+          setPick('')
+          setOpened(false)
+        }}>Close reveal</button>
+      </div>
     </div>
   )
 }
