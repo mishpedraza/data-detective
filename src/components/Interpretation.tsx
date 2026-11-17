@@ -4,7 +4,7 @@ import { COUNTRIES, comparability } from '../data/countries'
 import { INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, studyById, type Study } from '../data/research'
-import { BROADER, TOPIC, countryEvidence, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
+import { BROADER, DRIVER_RESEARCH, TOPIC, countryEvidence, relationshipEvidence, trendEvidence, type ExplStatus, type StudyLink } from '../data/evidence'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
@@ -259,16 +259,29 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     return ref ? `${ref.authors} (${ref.year})` : ''
   }
   const firstSentence = (t: string) => t.split(/(?<=[.!?])\s+(?=[A-Z“"])/)[0]
-  type Finding = { lead: string; body?: string; refs: string[] }
+  type Finding = { lead: string; body?: string; refs: string[]; kind?: string }
   const findings: Finding[] = []
+  const kindLabel = (f: Finding) => {
+    const ds = (f.kind ? [f.kind] : f.refs.map((id) => studyById(id)?.design)).filter((d) => d && d !== 'descriptive')
+    if (!ds.length) return ''
+    if (ds.every((d) => d === 'causal')) return 'causal evidence'
+    if (ds.every((d) => d === 'review')) return 'review of studies'
+    if (ds.some((d) => d === 'causal')) return 'causal and correlational studies'
+    return 'correlation, not proof of cause'
+  }
   const cmpDirect = cmpEv?.direct.length ? cmpEv.direct[0] : null
-  if (trend) {
+  const driverRes = crimeInd ? DRIVER_RESEARCH[rel.id] : undefined
+  if (driverRes && crimeInd) {
+    const fs = driverRes.findings.filter((f) => f.outcomes.includes(crimeInd.id))
+    for (const f of fs) findings.push({ lead: f.lead, body: f.text, refs: f.refs, kind: f.design })
+    if (!fs.length) findings.push({ lead: 'No research directly answers this question.', body: driverRes.none(trend?.noun ?? nm(crimeInd)), refs: [] })
+  }
+  if (trend && !profile && !driverRes) {
     const ev = explanations.filter((e) => e.status === 'evidence')
     const doc = explanations.filter((e) => e.status === 'documented')
-    const pick = [ev[0], doc[0] ?? ev[1]].filter(Boolean).slice(0, profile && cmpDirect ? 1 : 2)
-    for (const e of pick) findings.push({ lead: e.lead, body: firstSentence(e.text), refs: e.refs ?? [] })
+    for (const e of [ev[0], doc[0] ?? ev[1]].filter(Boolean)) findings.push({ lead: e.lead, body: firstSentence(e.text), refs: e.refs ?? [] })
   }
-  if (profile && relEv && profile.direct.length) {
+  if (profile && relEv) {
     const first = firstSentence(relEv.causal)
     const k = first.indexOf(':')
     const lead = k > 0 ? `${first.slice(0, k)}.` : first
@@ -279,6 +292,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     const st = studyById(cmpDirect.id)
     if (st) findings.push({ lead: `In ${COUNTRIES[compare].name}: ${/^[A-Z][a-z ]/.test(st.headline) ? st.headline.charAt(0).toLowerCase() + st.headline.slice(1) : st.headline}`, refs: [st.id] })
   }
+  if (cmpEv && !cmpDirect && compare && cmpEv.gap) findings.push({ lead: `In ${COUNTRIES[compare].name}: no study answers this for ${profile?.noun ?? 'this offence'}.`, body: cmpEv.gap, refs: [] })
   const topic = TOPIC[rel.id]
   if (!trend && topic) for (const f of topic.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
   const cmpTopic = topic && compare ? topic.byCountry?.[compare] : undefined
@@ -419,7 +433,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                 <li key={f.lead}>
                   <p className="finding-lead">{f.lead}</p>
                   {f.body && <p className="finding-body">{f.body}</p>}
-                  {f.refs.length > 0 && <p className="finding-src">{f.refs.map(citeOf).filter(Boolean).join('; ')} {fn(f.refs)}</p>}
+                  {f.refs.length > 0 && <p className="finding-src">{f.refs.map(citeOf).filter(Boolean).join('; ')} {fn(f.refs)}{kindLabel(f) && ` · ${kindLabel(f)}`}</p>}
                 </li>
               ))}
             </ul>
@@ -437,7 +451,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                     <li key={f.lead}>
                       <p className="finding-lead">{f.lead}</p>
                       {f.body && <p className="finding-body">{f.body}</p>}
-                      {f.refs.length > 0 && <p className="finding-src">{f.refs.map(citeOf).filter(Boolean).join('; ')} {fn(f.refs)}</p>}
+                      {f.refs.length > 0 && <p className="finding-src">{f.refs.map(citeOf).filter(Boolean).join('; ')} {fn(f.refs)}{kindLabel(f) && ` · ${kindLabel(f)}`}</p>}
                     </li>
                   ))}
                 </ul>

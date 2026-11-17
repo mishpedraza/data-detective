@@ -508,3 +508,21 @@ export const TOPIC: Record<string, TopicEvidence> = {
   'growth-wages': GROWTH_WAGES,
   'productivity-wages': DECOUPLING,
 }
+
+/** Research on whether a non-immigration driver affects a given offence, shown first in 02. */
+export interface DriverFinding { lead: string; text: string; refs: string[]; outcomes: string[]; design: 'causal' | 'association' }
+export const DRIVER_RESEARCH: Record<string, { findings: DriverFinding[]; none: (noun: string) => string }> = {
+  'unemployment-crime': {
+    findings: [
+      { outcomes: ['crime_burglary', 'crime_theft'], design: 'causal', lead: 'Higher unemployment raised property crime in US states.', text: 'Using changes in unemployment driven by defence spending and oil prices, the study finds significant effects on property crime; the evidence for violent crime is much weaker.', refs: ['raphael2001'] },
+      { outcomes: ['crime_burglary', 'crime_theft'], design: 'causal', lead: 'In Sweden’s 1990s crisis, unemployment raised burglary and car theft.', text: 'Across Swedish municipalities, unemployment affected burglary and car theft, but not most other offences.', refs: ['oster2007'] },
+    ],
+    none: (n) => `No verified study shows whether unemployment affects ${n}. The causal studies we checked find effects on property crime such as burglary and theft, and much weaker evidence for violent crime.`,
+  },
+  'inequality-crime': {
+    findings: [
+      { outcomes: ['crime_homicide', 'crime_homicide_long', 'crime_robbery'], design: 'association', lead: 'Across countries, more unequal societies have more homicide and robbery.', text: 'A cross-country study finds that higher income inequality goes with higher homicide and robbery rates, even after accounting for other factors. It compares countries; it does not test changes within Spain.', refs: ['fajnzylber2002'] },
+    ],
+    none: (n) => `No verified study shows whether inequality affects ${n}. The evidence we checked covers homicide and robbery only.`,
+  },
+}
