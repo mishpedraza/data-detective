@@ -290,8 +290,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     ? [...(trendGapText ? [{ text: trendGapText }] : []), { text: `${profile.gap} ${moveTogether}` }, ...breakItems].slice(0, 3)
     : trend
       ? [...(trendGapText ? [{ text: trendGapText }] : []), ...relevantCannot.slice(0, 1), ...breakItems].slice(0, 3)
-      : [...(topic ? [{ text: topic.gap }] : []), ...relevantCannot, ...breakItems].slice(0, 3)
-  const moreLimits: Claim[] = [...(profile ? profile.uncertain : []), ...relevantCannot].filter((c) => !uncertain.some((u) => u.text === c.text))
+      : [...(topic ? [{ text: topic.gap }] : []), ...breakItems, ...relevantCannot].slice(0, 3)
+  const moreLimits: Claim[] = [...(profile ? profile.uncertain : []), ...relevantCannot, ...breakItems].filter((c) => !uncertain.some((u) => u.text === c.text))
 
   return (
     <section className="tell" aria-labelledby="tell-title">
