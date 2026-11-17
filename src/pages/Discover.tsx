@@ -1,3 +1,5 @@
+import { surgeryQuestion } from '../data/surgeryWaits'
+import { SurgeryTrendChart } from './SurgeryWaits'
 import { motion } from 'framer-motion'
 import * as d3 from 'd3'
 import { hrefFor } from '../lib/route'
@@ -30,11 +32,11 @@ function Line({ id, tone }: { id: string; tone: 'a' | 'b' }) {
   )
 }
 
-type Featured = { q: string; a: string; b: string; rel?: string; note?: string }
+type Featured = { q: string; a?: string; b?: string; rel?: string; note?: string }
 const FEATURED: Featured[] = [
   { q: 'Why has housing become so unaffordable?', a: 'house_price_real', b: 'disp_income_real', rel: 'housing-affordability' },
-  { q: 'Does immigration increase crime?', a: 'foreign_born_share', b: 'crime_homicide_long', rel: 'immigration-crime' },
-  { q: 'Is the economy growing while ordinary people get poorer?', a: 'gdp_pc_real', b: 'real_wage', rel: 'growth-wages' },
+  { q: 'Has pay kept up with Spain’s economy?', a: 'gdp_pc_real', b: 'real_wage', rel: 'growth-wages' },
+  { q: surgeryQuestion, rel: 'surgery-waits', note: '122 days on average in December 2025' },
 ]
 const COMING = ['Are younger generations economically worse off than their parents?']
 
@@ -63,8 +65,9 @@ export function Discover({ navigate }: { navigate: (h: string) => void }) {
                   {f.note && <span className="feat-note">{f.note}</span>}
                 </span>
                 <span className="feat-viz">
-                  <Line id={f.a} tone="a" />
-                  <Line id={f.b} tone="b" />
+                  {f.a && <Line id={f.a} tone="a" />}
+                  {f.b && <Line id={f.b} tone="b" />}
+                  {f.rel === 'surgery-waits' && <SurgeryTrendChart compact />}
                 </span>
                 {f.rel && <span className="q-go" aria-hidden>→</span>}
               </>

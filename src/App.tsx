@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Nav } from './components/Nav'
 import { Discover } from './pages/Discover'
 import { Investigate } from './pages/Investigate'
+import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
 import { hrefFor, type Route } from './lib/route'
 
@@ -30,13 +31,13 @@ export default function App() {
       <AnimatePresence mode="wait">
         <motion.main key={route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           {route === 'discover' && <Discover navigate={navigate} />}
-          {route === 'investigate' && <Investigate params={params} />}
+          {route === 'investigate' && (params.get('r') === 'surgery-waits' ? <SurgeryWaits /> : <Investigate params={params} />)}
           {route === 'explore' && <Explore navigate={navigate} />}
         </motion.main>
       </AnimatePresence>
       <footer className="footer">
         <p>
-          Data Detective is a prototype. All figures come from official statistics (Eurostat, OECD, World Bank/UNODC, originally from INE and Spain’s Ministry of the Interior); see “About the data” on each investigation. No simulated data is used.
+          Data Detective is a prototype. All figures come from official statistics (Eurostat, OECD, World Bank/UNODC, originally from INE and Spain’s Ministries of the Interior and Health); see “About the data” on each investigation. No simulated data is used.
         </p>
         <p>
           <a href="https://app.devin.ai/sessions/8f5abb24434b448fbfe89dd972b66385" target="_blank" rel="noreferrer">Request changes</a>

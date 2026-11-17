@@ -105,7 +105,7 @@ export const RELATIONSHIPS: Relationship[] = [
   },
   {
     id: 'growth-wages',
-    question: 'Is the economy growing while ordinary people get poorer?',
+    question: 'Has pay kept up with Spain’s economy?',
     shortQuestion: 'Economic growth ↔ Real wages',
     kicker: 'Growth and living standards',
     left: { dimension: 'economy', options: ['gdp_pc_real', 'gdp_real', 'productivity'], default: 'gdp_pc_real' },

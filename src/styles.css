@@ -542,3 +542,15 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .stat-v { font-family: var(--serif); font-size: clamp(26px, 3vw, 34px); line-height: 1.05; color: var(--ink); font-variant-numeric: tabular-nums; }
 .stat-l { font-size: 13px; line-height: 1.35; color: var(--ink-2); }
 @media (max-width: 640px) { .stats { grid-template-columns: 1fr 1fr; gap: 10px 14px; } .stat-v { font-size: 24px; } .stat-l { font-size: 12.5px; } }
+
+.surgery-story { padding-bottom: 48px; }
+.surgery-story figure { max-width: 600px; margin: 0 0 28px; }
+.surgery-story figcaption { font-size: 14px; color: var(--ink-2); }
+.surgery-story details { max-width: 600px; margin-top: 16px; }
+.surgery-story summary { cursor: pointer; }
+.surgery-story select { font: inherit; margin: 8px; max-width: 100%; }
+.surgery-chart { display: block; max-width: 100%; height: auto; overflow: visible; }
+.surgery-chart text { fill: var(--muted); font-size: 9px; }
+.surgery-chart line { stroke: var(--rule); }
+.surgery-chart polyline { fill: none; stroke: var(--b); stroke-width: 2; }
+.surgery-chart circle { fill: var(--b); }
