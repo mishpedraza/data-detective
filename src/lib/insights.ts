@@ -95,6 +95,11 @@ function populationGrowth(geo: string, from: number, to: number, a?: string): Fi
     const dFb = at('foreign_born', geo, wf[1])! - at('foreign_born', geo, wf[0])!
     if (dPop > 0 && dFb > 0) fb = ` In ${span(wf)}, the number of foreign-born residents rose by ${(dFb / 1e6).toFixed(1)} million, ${dFb >= dPop ? 'more than the whole population increase' : `about ${Math.round((dFb / dPop) * 100 / 5) * 5}% of that increase`}.`
   }
+  if (gp <= 0.05) return {
+    lead: `All of ${place(geo)}’s economic growth came from having more people; output per person ${gp < -0.05 ? 'fell' : 'did not grow'}.`,
+    body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, while output per person ${moved(gp)}.${fb} Whether immigration affected output per person is a question no verified study answers for ${place(geo)}.`,
+    refs: ['eurostatNA'], years: w, kind: 'descriptive',
+  }
   return {
     lead: share >= 55 ? `Most of ${place(geo)}’s economic growth came from having more people, not more output per person.` : share >= 45 ? `About half of ${place(geo)}’s economic growth came from having more people, not more output per person.` : `About ${Math.round(share / 5) * 5}% of ${place(geo)}’s economic growth came from having more people.`,
     body: `The population grew ${pop.toFixed(1)}% over ${span(w)}, so output per person rose much less than total output.${fb} Whether immigrants raised output per person is a separate question that no verified study answers for ${place(geo)}.`,
