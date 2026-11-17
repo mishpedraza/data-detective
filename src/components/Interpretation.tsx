@@ -293,7 +293,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   })
   const breakItems: Claim[] = breakParts.length ? [{ text: `Series breaks: ${breakParts.join('; ')}. Figures either side are not fully comparable.`, refs: [A, B].filter((ind) => ind.breaks.some((x) => x.year > from && x.year <= to)).map((ind) => `data:${ind.id}`) }] : []
   const trendGapText = trend && crimeDir ? (trend.summaryDir === 'any' || trend.summaryDir === crimeDir ? trend.gap : `No verified study explains this ${crimeDir === 'stable' ? 'flat trend' : crimeDir} in recorded ${trend.noun} in the selected years.`) : null
-  const ans = answerFor(rel.id, compare, from, to)
+  const ans = answerFor(rel.id, a, b, compare, from, to)
   const driver = isDriverQuestion(rel.id)
   const showChange = !ans || !(ans.covered.includes(a) && ans.covered.includes(b))
   const relevantCannot = rel.cannot.filter((c) => (!c.only || c.only.includes(a) || c.only.includes(b)) && !(driver && c.text.startsWith('Two lines moving together')))
@@ -305,17 +305,15 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const moreLimits: Claim[] = [...(profile ? profile.uncertain : []), ...relevantCannot, ...breakItems].filter((c) => !uncertain.some((u) => u.text === c.text))
 
   return (
-    <section className="tell" aria-labelledby="tell-title">
-      <h2 id="tell-title">What does this actually tell us?</h2>
+    <section className="tell" aria-label="The evidence">
 
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">01</span>
-          <h3>What happened?</h3>
+          <h3>The findings</h3>
         </div>
         <div className="tell-body">
-          {ans && <p className="ti-verdict">{ans.verdict}</p>}
-          {ans && !driver && ans.text && <p className="ti-answer">{ans.text}</p>}
+          {ans?.text && <p className="ti-answer">{ans.text}</p>}
           {showChange && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
           {tp && <p className="ti-counts">{tp}</p>}
           {trend && <p className="ti-note">{firstSentence(trend.measurement[0].text)}</p>}
@@ -386,7 +384,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">02</span>
-          <h3>What does the research say?</h3>
+          <h3>The explanation</h3>
         </div>
         <div className="tell-body">
           {findings.length ? (
@@ -487,7 +485,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">03</span>
-          <h3>What remains uncertain?</h3>
+          <h3>The limitations</h3>
         </div>
         <div className="tell-body">
           <ul className="uncertain">
