@@ -67,7 +67,7 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
       headline: `The available data cannot establish whether typical workers or households in ${P} became poorer in ${from}–${to}`,
       stats: [],
       meaning: 'Median pay is surveyed only in 2006, 2010, 2014, 2018 and 2022, and median household income only from 2004; this period includes fewer than two years of either.',
-      detail: wa && a != null && g != null ? [`For context only, not the typical person: real GDP per person ${moved(g)} and real average wages, which high earners pull up, ${moved(a)} over ${span(wa)}.`] : [],
+      detail: wa && a != null && g != null ? [`For context only, not the typical person: real GDP per person ${moved(g)} and real average wages, which are not what the typical worker earns, ${moved(a)} over ${span(wa)}.`] : [],
       covered: [],
     }
   }
@@ -81,9 +81,11 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
   if (short) return `In ${P} in ${span(w)}, real GDP per person ${moved(g)} and ${T.label(geo)} ${moved(p)}.`
   const gap = g - p
   const econ = gy > FLAT ? 'grew' : gy < -FLAT ? 'shrank' : 'stalled'
-  const pay = py > FLAT ? 'rose' : py < -FLAT ? 'fell' : 'barely changed'
+  const pay = py > FLAT ? 'rose' : py < -FLAT ? 'fell' : p >= 0.5 ? 'rose slightly' : p <= -0.5 ? 'fell slightly' : 'barely changed'
   const headline =
-    pay === 'rose'
+    pay === 'rose slightly' && econ === 'grew'
+      ? `${uc1(T.what)} rose slightly in ${P}, ${gap > 0.5 ? 'but less than' : 'about as much as'} GDP per person`
+      : pay === 'rose'
       ? econ === 'grew'
         ? gap > 2 ? `${uc1(T.what)} rose in ${P}, but less than the economy` : gap < -2 ? `${uc1(T.what)} in ${P} grew faster than the economy` : `${P}’s economy and ${T.what} grew together`
         : `${uc1(T.what)} rose in ${P} while the economy ${econ}`
@@ -93,8 +95,12 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
   const meaning =
     pay === 'fell'
       ? `${uc1(T.who)} lost purchasing power${econ === 'grew' ? ', a real decline, not just a smaller share of growth' : ''}.`
-      : pay === 'barely changed'
-        ? `${uc1(T.who)} did not become poorer${econ === 'grew' ? ', but the growth did not reach them' : ''}.`
+      : pay === 'rose slightly'
+        ? `${uc1(T.who)} did not become poorer, but gained ${econ === 'grew' && gap > 0.5 ? 'less than the economy grew' : 'only a little'}.`
+        : pay === 'fell slightly'
+        ? `${uc1(T.who)} lost a little purchasing power${econ === 'grew' ? ' while the economy grew' : ''}.`
+        : pay === 'barely changed'
+        ? `${uc1(T.who)} did not become poorer${econ === 'grew' ? ', but gained little from the growth' : ''}.`
         : gap > 2 ? `${uc1(T.who)} became better off, but by less than the economy grew.` : `${uc1(T.who)} became better off.`
   const other = order.find((id) => id !== m)!
   const spans = (id: string) => w.every((y) => series(id, geo).some((x) => x.year === y))
@@ -104,7 +110,7 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
   const detail = [`Per year: GDP per person ${yr(gy)}, ${T.label(geo).replace(/^real /, '')} ${yr(py)}.`]
   if (m !== order[0]) detail.push(`${uc1(TYPICAL[order[0]].label(geo))} has fewer than two observations in these years, so the answer uses ${T.label(geo)}.`)
   if (m === 'median_income_real' || (po != null && other === 'median_income_real')) detail.push('Median household income is income after taxes and benefits, adjusted for household size, from the EU-SILC survey; each survey year reports the previous year’s income.')
-  if (avg != null && Math.abs(avg - p) > 2 && m === 'median_earnings_real') detail.push(`Average wages, which high earners pull up, changed ${signed(avg)} against ${signed(p)} for median pay, so pay ${avg > p ? 'at the top did better than in the middle' : 'in the middle did better than the average'}.`)
+  if (avg != null && Math.abs(avg - p) > 2 && m === 'median_earnings_real') detail.push(`Average wages changed ${signed(avg)} against ${signed(p)} for median pay. They come from national accounts and count pay per full-time job a year, so they are not directly comparable with median hourly pay; + Explore the research shows what the gap reflects.`)
   if (w[0] > from || w[1] < to) detail.push(`These figures cover ${span(w)}, the years within your selection with data for both measures.`)
   const stats = [
     { value: signed(g), label: 'real GDP per person' },
