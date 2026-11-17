@@ -39,7 +39,7 @@ export function describeSeries(id: string, geo: string, from: number, to: number
 
 export function changeMode(id: string): 'pct' | 'abs' {
   const f = INDICATORS[id].format
-  return f === 'pct1' || id === 'net_migration_rate' ? 'abs' : 'pct'
+  return f === 'pct1' || id === 'net_migration_rate' || INDICATORS[id].unit === '% a year' ? 'abs' : 'pct'
 }
 
 export function correlations(a: string, b: string, geo: string, from: number, to: number) {

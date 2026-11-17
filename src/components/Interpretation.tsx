@@ -266,6 +266,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     if (!ds.length) return ''
     if (ds.every((d) => d === 'causal')) return 'causal evidence'
     if (ds.every((d) => d === 'review')) return 'review of studies'
+    if (ds.every((d) => d === 'model')) return f.refs.some((id) => studyById(id)?.design === 'descriptive') ? 'model and descriptive analysis, not proof of cause' : 'estimated model, not proof of cause'
     if (ds.some((d) => d === 'causal')) return 'causal and correlational studies'
     return 'correlation, not proof of cause'
   }
@@ -294,9 +295,21 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   }
   if (cmpEv && !cmpDirect && compare && cmpEv.gap) findings.push({ lead: `In ${COUNTRIES[compare].name}: no study answers this for ${profile?.noun ?? 'this offence'}.`, body: cmpEv.gap, refs: [] })
   const topic = TOPIC[rel.id]
+  const inYears = (s: [number, number]) => Math.max(from, s[0]) < Math.min(to, s[1])
+  const phases = topic?.phases?.filter((p) => inYears(p.span)) ?? []
+  if (!trend && phases.length) {
+    const join = (xs: string[]) => (xs.length > 1 ? `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}` : xs[0])
+    findings.push(phases.length === 1
+      ? { lead: phases[0].lead, body: phases[0].summary, refs: phases[0].refs }
+      : { lead: `Research links ${join(phases.map((p) => p.clause))}.`, body: phases.map((p) => p.summary).join(' '), refs: [...new Set(phases.flatMap((p) => p.refs))] })
+    for (const p of phases) for (const f of p.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
+  }
   if (!trend && topic) for (const f of topic.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
   const cmpTopic = topic && compare ? topic.byCountry?.[compare] : undefined
-  if (!trend && cmpTopic) for (const f of cmpTopic.findings) findings.push({ lead: `In ${COUNTRIES[compare!].name}: ${f.lead.charAt(0).toLowerCase()}${f.lead.slice(1)}`, body: f.text, refs: f.refs ?? [] })
+  const cmpFindings = cmpTopic?.findings.filter((f) => !f.years || inYears(f.years)) ?? []
+  if (!trend) for (const f of cmpFindings) findings.push({ lead: `In ${COUNTRIES[compare!].name}: ${f.lead.charAt(0).toLowerCase()}${f.lead.slice(1)}`, body: f.text, refs: f.refs ?? [] })
+  if (!trend && topic?.cmpGap && compare && compare !== 'none' && !cmpFindings.length && COUNTRIES[compare]) findings.push({ lead: `In ${COUNTRIES[compare].name}: no study explains these years.`, body: topic.cmpGap, refs: [] })
+  const topicGap = phases.length ? phases[phases.length - 1].gap : topic?.gap
 
   const yearList = (ys: number[]) => (ys.length > 1 ? `${ys.slice(0, -1).join(', ')} and ${ys[ys.length - 1]}` : `${ys[0]}`)
   const breakParts = [A, B].flatMap((ind) => {
@@ -326,7 +339,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     ? [...(trendGapText ? [{ text: trendGapText }] : []), { text: profile.gap }, ...breakItems].slice(0, 3)
     : trend
       ? [...(trendGapText ? [{ text: trendGapText }] : []), ...relevantCannot.slice(0, 1), ...breakItems].slice(0, 3)
-      : [...(topic ? [{ text: topic.gap }] : []), ...breakItems, ...relevantCannot].slice(0, 3)
+      : [...(topicGap ? [{ text: topicGap }] : []), ...breakItems, ...relevantCannot].slice(0, 3)
   const shownLimits = uncertain.slice(0, 1)
   const moreLimits: Claim[] = [...uncertain.slice(1), ...(profile ? profile.uncertain : []), ...relevantCannot, ...breakItems].filter((c, i, all) => !shownLimits.some((u) => u.text === c.text) && all.findIndex((x) => x.text === c.text) === i)
 

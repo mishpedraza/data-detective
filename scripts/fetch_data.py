@@ -99,6 +99,24 @@ def fred(sid):
     return out
 
 
+def ecb_mortgage_rate():
+    """Annual average of the ECB's monthly rate on new loans to households for house purchase, by euro-area country."""
+    out = {}
+    for g in GEOS:
+        if g == "EU27_2020":
+            continue
+        txt = S.get(f"https://data-api.ecb.europa.eu/service/data/MIR/M.{g}.B.A2C.A.R.A.2250.EUR.N",
+                    params={"format": "csvdata", "startPeriod": f"{START}-01"}, timeout=120).text
+        months = {}
+        for row in csv.DictReader(io.StringIO(txt)):
+            if row.get("OBS_VALUE"):
+                months.setdefault(int(row["TIME_PERIOD"][:4]), []).append(float(row["OBS_VALUE"]))
+        out[g] = {y: sum(v) / len(v) for y, v in months.items() if len(v) == 12 and START <= y <= END}
+        if not out[g]:
+            raise RuntimeError(f"ECB MIR {g} returned nothing: {txt[:200]}")
+    return out
+
+
 CACHE = pathlib.Path(__file__).resolve().parent / ".cache"
 
 
@@ -347,6 +365,13 @@ def main():
     add("price_to_income", "housing", oecd(HP, "{geo}.A.HPI_YDH.", extra=US), label="House prices relative to incomes", short="Price-to-income",
         unit="index, 2015 = 100", format="index",
         definition="Nominal house prices divided by nominal disposable income per person. Higher means housing is less affordable.", source=hp_src)
+    mr = ecb_mortgage_rate()
+    mr["US"] = fred("MORTGAGE30US")
+    add("mortgage_rate", "housing", mr, label="Interest rate on new mortgages", short="Mortgage rate", unit="% a year", format="decimal2",
+        definition="Average interest rate banks charged on new loans to households for house purchase, all fixation periods (annual average of monthly rates).",
+        geoSources={"US": {"org": "Freddie Mac via FRED", "dataset": "MORTGAGE30US", "url": "https://fred.stlouisfed.org/series/MORTGAGE30US",
+                           "note": "US figures are Freddie Mac's average 30-year fixed mortgage rate, not the ECB's rate on all new house-purchase loans, so compare changes, not levels."}},
+        source={"org": "European Central Bank", "dataset": "MFI interest rate statistics (MIR, A2C new business)", "url": "https://data.ecb.europa.eu/data/datasets/MIR", "upstream": "Banco de España"})
     add("price_to_rent", "housing", oecd(HP, "{geo}.A.HPI_RPI.", extra=US), label="House prices relative to rents", short="Price-to-rent",
         unit="index, 2015 = 100", format="index", definition="Nominal house prices divided by the rent index.", source=hp_src)
 
