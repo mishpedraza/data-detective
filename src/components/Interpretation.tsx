@@ -6,7 +6,7 @@ import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, outcomesFor, type Study } from '../data/research'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
-import { describeR, inRange } from '../lib/stats'
+import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
 
 interface Props {
   rel: Relationship
@@ -119,7 +119,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const sa = summarise(A, 'ES', from, to)
   const sb = summarise(B, 'ES', from, to)
   const corr = correlations(a, b, 'ES', from, to)
-  const MIN = 8
+  const MIN = MIN_CORR_YEARS
   const okL = corr.levels.length >= MIN && corr.rLevels != null
   const okC = corr.changes.length >= MIN && corr.rChanges != null
   const r = (v: number | null) => (v == null ? '—' : v.toFixed(2).replace('-', '−'))

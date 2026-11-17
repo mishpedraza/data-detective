@@ -191,7 +191,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
               {ticks.map((t) => (
                 <g key={t} className="ytick" style={{ transform: `translateY(${y(t)}px)` }}>
                   <line x1={0} x2={innerW} />
-                  <text x={innerW + 8} dy="0.32em">
+                  <text x={innerW + 8} dy="0.32em" style={{ display: hoverYear == null && endLabels.some((l) => Math.abs(l.y - y(t)) < 13) ? 'none' : undefined }}>
                     {tf(t)}
                   </text>
                 </g>

@@ -1,5 +1,7 @@
 import type { Point } from '../data/types'
 
+export const MIN_CORR_YEARS = 8
+
 export function inRange(s: Point[], from: number, to: number) {
   return s.filter((p) => p.year >= from && p.year <= to)
 }
