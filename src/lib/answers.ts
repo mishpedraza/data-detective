@@ -65,7 +65,7 @@ function growthWages(geo: string, from: number, to: number, short: boolean): Bui
   const gy = cagr('gdp_pc_real', geo, w)
   const py = cagr('median_earnings_real', geo, w)
   if (g == null || p == null || gy == null || py == null) return null
-  if (short) return `In ${place(geo)} over the same years, real GDP per person ${moved(g)} and real median hourly pay ${moved(p)}.`
+  if (short) return `In ${place(geo)} in ${span(w)}, real GDP per person ${moved(g)} and real median ${INDICATORS.median_earnings_real.geoUnits?.[geo] ? 'weekly pay of full-time workers' : 'hourly pay'} ${moved(p)}.`
   const gap = g - p
   const econ = gy > FLAT ? 'grew' : gy < -FLAT ? 'shrank' : 'stalled'
   const pay = py > FLAT ? 'rose' : py < -FLAT ? 'fell' : 'barely changed'
@@ -103,7 +103,7 @@ function productivityWages(geo: string, from: number, to: number, short: boolean
   const q = pct('productivity', geo, w)
   const p = pct('real_wage', geo, w)
   if (q == null || p == null) return null
-  if (short) return `In ${place(geo)} over the same years, output per hour ${moved(q)} and real average wages ${moved(p)}.`
+  if (short) return `In ${place(geo)} in ${span(w)}, output per hour ${moved(q)} and real average wages ${moved(p)}.`
   const gap = q - p
   const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, average wages kept pace with productivity` : gap > 0 ? `In ${place(geo)}, average wages fell behind productivity` : `In ${place(geo)}, average wages grew faster than productivity`
   const meaning = Math.abs(gap) <= 2
@@ -122,7 +122,7 @@ function affordability(geo: string, from: number, to: number, short: boolean): B
   const h = pct('house_price_real', geo, w)
   const i = pct('disp_income_real', geo, w)
   if (h == null || i == null) return null
-  if (short) return `In ${place(geo)} over the same years, real house prices ${moved(h)} and real household income ${moved(i)}.`
+  if (short) return `In ${place(geo)} in ${span(w)}, real house prices ${moved(h)} and real household income ${moved(i)}.`
   const gap = h - i
   const rel = gap > 0
     ? h > 0 ? `house prices rose ${i > 0 ? 'faster than incomes' : 'while incomes fell'}` : 'incomes fell more than house prices'
@@ -211,7 +211,8 @@ export function answerFor(relId: string, a: string, b: string, compare: string |
   if (bt) {
     const main = bt.fn('ES', from, to, false)
     if (!main) return { headline: bt.none[0], stats: [], meaning: bt.none[1], detail: [], covered: [] }
-    const other = compare && compare !== 'none' ? bt.fn(compare, from, to, true) : null
+    const [f, t] = main.period ? main.period.split('–').map(Number) : [from, to]
+    const other = compare && compare !== 'none' ? bt.fn(compare, f, t, true) : null
     return { ...main, detail: other ? [...main.detail, other] : main.detail, covered: bt.covered }
   }
   const d = describePair(a, b, from, to)

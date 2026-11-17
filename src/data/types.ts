@@ -1,6 +1,6 @@
 export type DimensionId = 'immigration' | 'crime' | 'economy' | 'housing' | 'living'
 
-export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'eur2' | 'index'
+export type Format = 'count' | 'decimal1' | 'decimal2' | 'pct1' | 'bn' | 'mn' | 'eur' | 'eur2' | 'usd' | 'index'
 
 export interface SeriesBreak {
   year: number
@@ -29,6 +29,8 @@ export interface Indicator {
   geoBreaks?: Record<string, number[]>
   /** Where a country's figures come from a different source than the indicator's main one. */
   geoSources?: Record<string, { org: string; dataset: string; url: string; note: string }>
+  /** Units for countries whose figures are in a different currency or unit than the indicator's main one. */
+  geoUnits?: Record<string, { unit: string; format: Format }>
   derived?: boolean
   parts?: { label: string; code: string; data: Record<string, number> }[]
   retrieved: string

@@ -9,7 +9,6 @@ import json, datetime, pathlib, csv, io, sys
 import requests
 
 START, END = 1998, 2025
-US_ONLY = {}
 GEOS = {"ES": "ESP", "PT": "PRT", "IT": "ITA", "FR": "FRA", "DE": "DEU", "EU27_2020": None}
 OUT = pathlib.Path(__file__).resolve().parent.parent / "src/data/generated/indicators.json"
 TODAY = datetime.date.today().isoformat()
@@ -114,6 +113,8 @@ def fbi(*offenses):
         else:
             d = S.get(f"https://api.usa.gov/crime/fbi/cde/summarized/national/{off}",
                       params={"from": f"01-{START}", "to": f"12-{END}", "API_KEY": os.environ.get("FBI_API_KEY", "DEMO_KEY")}, timeout=180).json()
+            if "offenses" not in d:
+                raise RuntimeError(f"FBI {off}: {str(d)[:200]} (set FBI_API_KEY from api.data.gov if DEMO_KEY is rate-limited)")
             CACHE.mkdir(exist_ok=True)
             f.write_text(json.dumps(d))
         months = {}
@@ -351,7 +352,7 @@ def main():
 
     # ---------- living standards ----------
     rw = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.EUR.A.Q...")
-    rw["US"] = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.USD.A.Q...", extra=US_ONLY)["US"]
+    rw["US"] = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.USD.A.Q...", extra={"US": "USA"})["US"]
     add("real_wage", "living", rw,
         geoUnits={"US": {"unit": "US$ per year, constant prices", "format": "usd"}},
         geoSources={"US": {"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE), US dollars", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE",

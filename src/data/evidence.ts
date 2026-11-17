@@ -392,6 +392,8 @@ export interface TopicEvidence {
   international: StudyLink[]
   spain: StudyLink[]
   gap: string
+  /** Research on a comparison country, shown when that country is selected. */
+  byCountry?: Record<string, { findings: (Note & { lead: string })[]; studies: StudyLink[] }>
 }
 
 const DECOUPLING: TopicEvidence = {
@@ -465,6 +467,19 @@ const AFFORDABILITY: TopicEvidence = {
     { id: 'gonzalez2013', relevance: 'direct', note: 'Spain, 2000–2010; immigration’s share of the boom.' },
   ],
   gap: 'No verified study measures how much credit, supply, tourism, immigration and incomes each contributed to Spain’s price and rent rises since 2015.',
+  byCountry: {
+    US: {
+      findings: [
+        { lead: 'Easier mortgage credit drove the mid-2000s price boom.', text: 'From 2002 to 2005, lending grew fastest in neighbourhoods with many subprime borrowers, even though their incomes grew relatively slowly; prices, and later defaults, rose most there.', refs: ['miansufi2009'] },
+        { lead: 'Limits on building keep prices far above construction costs.', text: 'In Manhattan and other expensive markets, homes sell far above what they cost to build; the authors attribute much of the gap to rules restricting new housing.', refs: ['glaeser2005'] },
+      ],
+      studies: [
+        { id: 'miansufi2009', relevance: 'direct', note: 'United States, 2002–2007.' },
+        { id: 'glaeser2005', relevance: 'direct', note: 'United States, to the early 2000s.' },
+        { id: 'glaeser2008', relevance: 'direct', note: 'US cities; supply flexibility and booms.' },
+      ],
+    },
+  },
 }
 
 const GROWTH_WAGES: TopicEvidence = {
@@ -477,6 +492,12 @@ const GROWTH_WAGES: TopicEvidence = {
     { id: 'barcelo2021', relevance: 'direct', note: 'Spain; employment effects of the 2019 minimum-wage rise.' },
   ],
   gap: 'No verified study explains why typical pay in Spain grew so much more slowly than GDP per person since 2000.',
+  byCountry: {
+    US: {
+      findings: [{ lead: 'Pay still follows productivity, but other forces held typical pay down.', text: 'From 1973 to 2016, each extra percentage point of productivity growth went with roughly 0.7 to 1 point more growth in median pay; the gap opened because of other factors, not because the link broke.', refs: ['stansbury2017'] }],
+      studies: [{ id: 'stansbury2017', relevance: 'direct', note: 'United States, 1973–2016; working paper.' }],
+    },
+  },
 }
 
 export const TOPIC: Record<string, TopicEvidence> = {

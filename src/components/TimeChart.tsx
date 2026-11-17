@@ -52,15 +52,21 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
   const uid = useId().replace(/:/g, '')
   const main = useMemo(() => inRange(series(indicator.id, 'ES'), from, to), [indicator.id, from, to])
   const comp = useMemo(() => (compare ? inRange(series(indicator.id, compare), from, to) : []), [indicator.id, compare, from, to])
+  const cUnit = compare ? indicator.geoUnits?.[compare] : undefined
+  const base = cUnit ? main.find((p) => comp.some((c) => c.year === p.year))?.year : undefined
+  const kM = base != null ? 100 / main.find((p) => p.year === base)!.value : 1
+  const kC = base != null ? 100 / comp.find((p) => p.year === base)!.value : 1
+  const mainP = kM === 1 ? main : main.map((p) => ({ ...p, value: p.value * kM }))
+  const compP = cUnit && base == null ? [] : kC === 1 ? comp : comp.map((p) => ({ ...p, value: p.value * kC }))
   const breakYears = indicator.breaks.map((b) => b.year).filter((y) => y > from && y <= to)
 
   const innerW = Math.max(10, width - M.left - M.right)
   const innerH = h - M.top - M.bottom
   const x = d3.scaleLinear().domain([from, to]).range([0, innerW])
-  const vals = [...main, ...comp].map((p) => p.value)
+  const vals = [...mainP, ...compP].map((p) => p.value)
   const lo = d3.min(vals) ?? 0
   const hi = d3.max(vals) ?? 1
-  const zeroBased = !['index', 'eur'].includes(indicator.format) && lo >= 0
+  const zeroBased = !cUnit && !['index', 'eur', 'usd'].includes(indicator.format) && lo >= 0
   const pad = (hi - lo || Math.abs(hi) || 1) * 0.12
   const y = d3
     .scaleLinear()
@@ -68,12 +74,12 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
     .range([innerH, 0])
     .nice(4)
   const ticks = y.ticks(compact ? 3 : 4)
-  const tf = tickFormat(indicator.format)
+  const tf = tickFormat(cUnit ? 'index' : indicator.format)
   const xTicks = d3.ticks(from, to, Math.max(2, Math.min(8, Math.floor(innerW / 90)))).filter(Number.isInteger)
 
   const line = d3.line<Point>().x((p) => x(p.year)).y((p) => y(p.value)).curve(d3.curveMonotoneX)
   const area = d3.area<Point>().x((p) => x(p.year)).y0(innerH).y1((p) => y(p.value)).curve(d3.curveMonotoneX)
-  const segs = segments(main, breakYears)
+  const segs = segments(mainP, breakYears)
   const mainD = segs.map((s) => line(s) ?? '').join('')
   const areaD = segs.map((s) => area(s) ?? '').join('')
   const bridges = segs.slice(1).map((s, i) => {
@@ -81,7 +87,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
     const b = s[0]
     return { a, b }
   })
-  const compD = segments(comp, []).map((s) => line(s) ?? '').join('')
+  const compD = segments(compP, []).map((s) => line(s) ?? '').join('')
 
   const dataStart = main[0]?.year
   const dataEnd = main[main.length - 1]?.year
@@ -107,8 +113,8 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
   }
 
   let endLabels: { key: string; y: number; text: string; cls: string }[] = []
-  if (lastMain) endLabels.push({ key: 'm', y: y(lastMain.value), text: 'Spain', cls: 'end-label main' })
-  if (lastComp && compare) endLabels.push({ key: 'c', y: y(lastComp.value), text: COUNTRIES[compare].name.replace('the ', ''), cls: 'end-label comp' })
+  if (lastMain) endLabels.push({ key: 'm', y: y(lastMain.value * kM), text: 'Spain', cls: 'end-label main' })
+  if (lastComp && compare && compP.length) endLabels.push({ key: 'c', y: y(lastComp.value * kC), text: COUNTRIES[compare].name.replace('the ', ''), cls: 'end-label comp' })
   if (endLabels.length === 2 && Math.abs(endLabels[0].y - endLabels[1].y) < 14) {
     const [a, b] = endLabels
     const mid = (a.y + b.y) / 2
@@ -124,7 +130,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
         <div>
           <div className="chart-title">{indicator.label}</div>
           <div className="chart-unit">
-            {indicator.unit}
+            {cUnit ? (base != null ? `Lines indexed, ${base} = 100: ${COUNTRIES[compare!].name.replace('the ', '')} is in ${cUnit.unit.split(',')[0].replace(/ per .*/, '')}` : indicator.unit) : indicator.unit}
             {cov && <span className="chart-coverage"> · data {cov[0]}–{cov[1]}</span>}
           </div>
         </div>
@@ -137,7 +143,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
           )}
           {compare && (
             <span className="readout-comp">
-              {COUNTRIES[compare].name.replace('the ', '')} {(hoverYear != null ? hc : comp.find((p) => p.year === readoutYear)) ? formatValue((hoverYear != null ? hc : comp.find((p) => p.year === readoutYear))?.value, indicator.format) : 'data unavailable'}
+              {COUNTRIES[compare].name.replace('the ', '')} {(hoverYear != null ? hc : comp.find((p) => p.year === readoutYear)) ? formatValue((hoverYear != null ? hc : comp.find((p) => p.year === readoutYear))?.value, cUnit?.format ?? indicator.format) : 'data unavailable'}
             </span>
           )}
         </div>
@@ -225,15 +231,15 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
               {hoverYear != null && (
                 <g className="hover" transform={`translate(${x(hoverYear)},0)`}>
                   <line y1={-4} y2={innerH} />
-                  {hc && <circle className="dot comp" cy={y(hc.value)} r={4} />}
-                  {hv && <circle className="dot main" cy={y(hv.value)} r={5.5} />}
+                  {hc && compP.length > 0 && <circle className="dot comp" cy={y(hc.value * kC)} r={4} />}
+                  {hv && <circle className="dot main" cy={y(hv.value * kM)} r={5.5} />}
                   {missing && (
                     <text className="hover-missing" y={innerH / 2} x={x(hoverYear) > innerW - 90 ? -6 : 6} textAnchor={x(hoverYear) > innerW - 90 ? 'end' : 'start'}>
                       Data unavailable
                     </text>
                   )}
                   {hv && (
-                    <text className="hover-value" y={y(hv.value) - 12} textAnchor={x(hoverYear) > innerW - 40 ? 'end' : 'middle'}>
+                    <text className="hover-value" y={y(hv.value * kM) - 12} textAnchor={x(hoverYear) > innerW - 40 ? 'end' : 'middle'}>
                       {formatValue(hv.value, indicator.format)}
                     </text>
                   )}
