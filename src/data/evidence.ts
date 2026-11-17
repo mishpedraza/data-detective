@@ -87,7 +87,7 @@ export const TREND: Record<string, TrendEvidence> = {
       { id: 'chen2024', relevance: 'indirect', note: 'United States; may not transfer to Spain.' },
     ],
     gap: 'No study measures how much of Spain’s post-2019 rise, or the 2023 jump in recorded rape, comes from reporting, legal reclassification or actual incidence.',
-    summary: 'Research and Spain’s victim survey point to more reporting, plus legal changes, behind much of the rise up to 2019; what drove the later rise is not established.',
+    summary: 'Research and Spain’s victim survey suggest more reporting contributed to the rise up to 2019; how much, and what drove the later rise, is not established.',
     summaryDir: 'rise',
   },
 
@@ -396,9 +396,9 @@ export interface TopicEvidence {
 
 const DECOUPLING: TopicEvidence = {
   findings: [
-    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over roughly two decades, real median compensation grew more slowly than productivity in most OECD countries, because labour’s share of income fell and median wages fell behind average wages (OECD 2018; Schwellnus et al. 2017).', refs: ['oecd2018'] },
-    { lead: 'The size of the gap depends on the measures.', text: 'Comparing productivity with average pay deflated by the same price index shows a small gap; comparing it with median wages deflated by consumer prices shows a much larger one (Pessoa & Van Reenen 2013, working paper).' },
-    { lead: 'The link has weakened, not vanished (US evidence).', text: 'In the United States, faster productivity growth still went with faster pay growth, but other factors held typical pay down (Stansbury & Summers 2017, working paper).' },
+    { lead: 'Across the OECD, typical pay fell behind productivity.', text: 'Over roughly two decades, real median compensation grew more slowly than productivity in most OECD countries, because labour’s share of income fell and median wages fell behind average wages.', refs: ['oecd2018', 'schwellnus2017'] },
+    { lead: 'The size of the gap depends on the measures.', text: 'Comparing productivity with average pay deflated by the same price index shows a small gap; comparing it with median wages deflated by consumer prices shows a much larger one.', refs: ['pessoa2013'] },
+    { lead: 'The link has weakened, not vanished (US evidence).', text: 'In the United States, faster productivity growth still went with faster pay growth, but other factors held typical pay down.', refs: ['stansbury2017'] },
   ],
   international: [
     { id: 'schwellnus2017', relevance: 'indirect', note: 'OECD countries; measures the gap and its two components.' },
@@ -412,9 +412,9 @@ const DECOUPLING: TopicEvidence = {
 
 const EUROPE_US: TopicEvidence = {
   findings: [
-    { lead: 'Europe chose more leisure.', text: 'By the early 2000s European productivity per hour was close to the US level; Europeans took more of the gains as shorter working hours rather than higher incomes (Blanchard 2004).' },
-    { lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe (Prescott 2004).' },
-    { lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does (Jones & Klenow 2016).' },
+    { lead: 'Europe chose more leisure.', text: 'By the early 2000s European productivity per hour was close to the US level; Europeans took more of the gains as shorter working hours rather than higher incomes.', refs: ['blanchard2004'] },
+    { lead: 'Hours worked diverged after the 1970s.', text: 'Americans went from working less than Western Europeans in the early 1970s to about 50% more by the mid-1990s; the author attributes most of this to higher taxes on labour income in Europe.', refs: ['prescott2004'] },
+    { lead: 'Beyond GDP the gap is smaller.', text: 'Counting leisure, life expectancy and inequality as well as consumption puts Western Europe considerably closer to the US than GDP per person does.', refs: ['jonesklenow2016'] },
   ],
   international: [
     { id: 'jonesklenow2016', relevance: 'indirect', note: 'Includes Spain, France, Germany, Italy and the US; data end in the 2000s.' },
@@ -425,7 +425,32 @@ const EUROPE_US: TopicEvidence = {
   gap: 'No verified peer-reviewed study explains why Spain’s GDP per person and wages fell further behind the US level after 2008.',
 }
 
+const IMM_HOUSING: TopicEvidence = {
+  findings: [
+    { lead: 'In Spain’s 2000s boom, immigration accounted for about a quarter of the house-price rise.', text: 'Estimates for 2000–2010 attribute about 2% a year of price growth, and about half of new construction, to population growth from immigration.', refs: ['gonzalez2013'] },
+    { lead: 'In US cities, rents rose with immigrant inflows.', text: 'An inflow equal to 1% of a city’s population went with roughly 1% higher average rents and house values.', refs: ['saiz2007'] },
+    { lead: 'In the UK, local prices fell instead.', text: 'House prices fell where immigrants arrived, because higher-earning residents moved away.', refs: ['sa2015'] },
+  ],
+  international: [
+    { id: 'saiz2007', relevance: 'indirect', note: 'United States; may not transfer to Spain.' },
+    { id: 'sa2015', relevance: 'indirect', note: 'United Kingdom; may not transfer to Spain.' },
+  ],
+  spain: [{ id: 'gonzalez2013', relevance: 'direct', note: 'Spain, 2000–2010.' }],
+  gap: 'No verified study measures how immigration affected Spanish house prices or rents after 2010, including the rise since 2015.',
+}
+
+const IMM_EMPLOYMENT: TopicEvidence = {
+  findings: [
+    { lead: 'In Spain, immigrant and native workers were not perfect substitutes.', text: 'Immigration appears to have changed the tasks native workers specialise in, with effects differing by sex.', refs: ['amuedo2011'] },
+  ],
+  international: [],
+  spain: [{ id: 'amuedo2011', relevance: 'direct', note: 'Spain, 2000s.' }],
+  gap: 'Only one verified study of Spain is shown, and it covers the 2000s; none covers the period since the 2008 crisis.',
+}
+
 export const TOPIC: Record<string, TopicEvidence> = {
+  'immigration-housing': IMM_HOUSING,
+  'immigration-employment': IMM_EMPLOYMENT,
   'europe-us': EUROPE_US,
   'growth-wages': DECOUPLING,
   'productivity-wages': DECOUPLING,

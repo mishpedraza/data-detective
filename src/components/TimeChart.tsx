@@ -17,6 +17,7 @@ interface Props {
   onHover: (y: number | null) => void
   tone: 'a' | 'b'
   showEventLabels?: boolean
+  showEvents?: boolean
   height?: number
 }
 
@@ -42,7 +43,7 @@ function Line({ d, className }: { d: string; className: string }) {
   return <path d={t} className={className} />
 }
 
-export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, tone, showEventLabels, height }: Props) {
+export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, tone, showEventLabels, showEvents, height }: Props) {
   const [ref, width] = useMeasure<HTMLDivElement>()
   const compact = width > 0 && width < 640
   const h = height ?? (compact ? 210 : 300)
@@ -84,7 +85,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
 
   const dataStart = main[0]?.year
   const dataEnd = main[main.length - 1]?.year
-  const events = EVENTS.filter((e) => (!e.only || e.only.includes(indicator.dimension)) && e.end >= from && e.start <= to)
+  const events = !showEvents ? [] : EVENTS.filter((e) => (!e.only || e.only.includes(indicator.dimension)) && e.end >= from && e.start <= to)
 
   const hv = hoverYear != null ? main.find((p) => p.year === hoverYear) : undefined
   const hc = hoverYear != null ? comp.find((p) => p.year === hoverYear) : undefined

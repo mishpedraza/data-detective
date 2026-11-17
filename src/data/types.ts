@@ -52,6 +52,8 @@ export interface Reference {
 export interface Claim {
   text: string
   refs?: string[]
+  /** Show only when one of these indicators is selected. */
+  only?: string[]
 }
 
 export interface Relationship {
