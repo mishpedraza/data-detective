@@ -5,7 +5,7 @@ import { DIMENSIONS, INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, outcomesFor, type Study } from '../data/research'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
-import { correlations } from '../lib/narrative'
+import { changeMode, correlations } from '../lib/narrative'
 import { describeR, inRange } from '../lib/stats'
 
 interface Props {
@@ -20,6 +20,7 @@ interface Props {
 type Dir = 'rose' | 'fell' | 'stable'
 
 const lc = (s: string) => (/^[A-Z][a-z]/.test(s) ? s.charAt(0).toLowerCase() + s.slice(1) : s)
+const uc = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const nm = (ind: Indicator) => lc(ind.short.replace(/\s*\(.*?\)/g, ''))
 
 function summarise(ind: Indicator, geo: string, from: number, to: number) {
@@ -66,6 +67,9 @@ function Tag({ kind }: { kind: 'descriptive' | 'association' | 'causal' }) {
 }
 
 function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolean; open: boolean; onToggle: () => void }) {
+  const [lim, setLim] = useState(false)
+  const names = s.authors.split(/, | & /)
+  const cite = names.length > 2 ? `${names[0].split(' ').slice(-1)[0]} et al.` : names.map((n) => n.split(' ').slice(-1)[0]).join(' & ')
   return (
     <li className={`study ${open ? 'open' : ''}`}>
       <button className="study-head" onClick={onToggle} aria-expanded={open}>
@@ -75,34 +79,29 @@ function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolea
           {relevant && <span className="study-relevant">Covers this crime type</span>}
         </span>
         <span className="study-headline">{s.headline}</span>
-        <span className="study-cite">
-          {s.authors.split(/, | & /).length > 2 ? `${s.authors.split(/, | & /)[0].split(' ').slice(-1)[0]} et al.` : s.authors.split(' & ').map((n) => n.split(' ').slice(-1)[0]).join(' & ')} ({s.year}) · {STATUS_LABEL[s.status]}
-        </span>
+        <span className="study-cite">{cite} ({s.year}) · {STATUS_LABEL[s.status]}</span>
         <span className="study-toggle" aria-hidden>{open ? '−' : '+'}</span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div className="study-body" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.2, 0.7, 0.2, 1] }}>
             <dl>
-              <dt>Study</dt>
-              <dd>
-                <a href={s.url} target="_blank" rel="noreferrer">{s.title}</a>
-                <br />
-                {s.authors}. <em>{s.outlet}</em>, {s.year}.
-              </dd>
-              <dt>Type</dt>
-              <dd>{STATUS_LABEL[s.status]} · {DESIGN_LABEL[s.design]}</dd>
-              <dt>Where &amp; when</dt>
-              <dd>{s.place}; {s.period}</dd>
-              <dt>Outcomes studied</dt>
-              <dd>{s.outcomes.map((o) => OUTCOME_LABEL[o]).join(', ')}</dd>
-              <dt>Main finding</dt>
+              <dt>Conclusion</dt>
               <dd>{s.finding}</dd>
               <dt>How they did it</dt>
               <dd>{s.method}</dd>
-              <dt>Limitations</dt>
-              <dd>{s.limitations}</dd>
+              <dt>Outcomes studied</dt>
+              <dd>{s.outcomes.map((o) => OUTCOME_LABEL[o]).join(', ')}</dd>
+              <dt>Evidence type</dt>
+              <dd>{STATUS_LABEL[s.status]} · {DESIGN_LABEL[s.design]}</dd>
             </dl>
+            <button className="study-lim-toggle" onClick={() => setLim((v) => !v)} aria-expanded={lim}>
+              {lim ? '− Hide limitations' : '+ Limitations'}
+            </button>
+            {lim && <p className="study-lim">{s.limitations}</p>}
+            <p className="study-source">
+              <a href={s.url} target="_blank" rel="noreferrer">{s.title}</a> — {s.authors}. <em>{s.outlet}</em>, {s.year}.
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -112,14 +111,19 @@ function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolea
 
 export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const [why, setWhy] = useState(false)
+  const [stats, setStats] = useState(false)
+  const [caveats, setCaveats] = useState(false)
   const [openStudy, setOpenStudy] = useState<string | null>(null)
   const A = INDICATORS[a]
   const B = INDICATORS[b]
   const sa = summarise(A, 'ES', from, to)
   const sb = summarise(B, 'ES', from, to)
   const corr = correlations(a, b, 'ES', from, to)
-  const enough = corr.levels.length >= 4
-  const r = (v: number | null) => (v == null ? 'n/a' : v.toFixed(2).replace('-', '−'))
+  const MIN = 8
+  const okL = corr.levels.length >= MIN && corr.rLevels != null
+  const okC = corr.changes.length >= MIN && corr.rChanges != null
+  const r = (v: number | null) => (v == null ? '—' : v.toFixed(2).replace('-', '−'))
+  const span = (pts: { year: number }[]) => (pts.length ? `${pts[0].year}–${pts[pts.length - 1].year}` : '')
 
   const footOrder: string[] = []
   const fn = (refs: string[] = []) =>
@@ -134,38 +138,97 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     })
 
   const dimA = DIMENSIONS[A.dimension].noun
-  const dimB = DIMENSIONS[B.dimension].noun
   const verb = (d: Dir) => (d === 'stable' ? 'stayed broadly stable' : d)
-  let pattern = ''
-  if (sa && sb) {
-    if (sa.dir === 'stable' || sb.dir === 'stable') pattern = `Here ${nm(A)} ${verb(sa.dir)} while ${nm(B)} ${verb(sb.dir)}.`
-    else if (sa.dir === sb.dir) pattern = `Here both ${nm(A)} and ${nm(B)} ${sa.dir}.`
-    else pattern = `Here ${nm(A)} ${sa.dir} while ${nm(B)} ${sb.dir}.`
-  }
   const isImmCrime = rel.id === 'immigration-crime' || (A.dimension === 'immigration' && B.dimension === 'crime')
+
+  // Key finding: describe both series over the years they overlap, so the sentence matches the correlations.
+  const ov = corr.levels
+  let keyLead = ''
+  if (ov.length >= 2) {
+    const f = ov[0], l = ov[ov.length - 1]
+    const dir = (x0: number, x1: number): Dir => (Math.abs((x1 - x0) / Math.abs(x0 || 1)) < 0.05 ? 'stable' : x1 > x0 ? 'rose' : 'fell')
+    const da = dir(f.x, l.x), db = dir(f.y, l.y)
+    const big = (x0: number, x1: number) => Math.abs((x1 - x0) / Math.abs(x0 || 1)) >= 0.4
+    const vA = da === 'stable' ? 'stayed broadly stable' : `${da}${big(f.x, l.x) ? ' substantially' : ''}`
+    const vB = db === 'stable' ? 'stayed broadly stable' : `${db}${big(f.y, l.y) ? ' substantially' : ''}`
+    keyLead = `Between ${f.year} and ${l.year}, ${nm(A)} ${vA} (${formatValue(f.x, A.format)} → ${formatValue(l.x, A.format)}) ${da === db ? 'and' : 'while'} ${nm(B)} ${vB} (${formatValue(f.y, B.format)} → ${formatValue(l.y, B.format)}).`
+  }
+  let keyTurn = ''
+  if (okL && okC) {
+    const L = Math.abs(corr.rLevels!), C = Math.abs(corr.rChanges!)
+    if (L >= 0.5 && C < 0.2) keyTurn = 'But their year-to-year movements show almost no linear relationship.'
+    else if (L >= 0.5 && C >= 0.2 && Math.sign(corr.rLevels!) === Math.sign(corr.rChanges!)) keyTurn = `Their year-to-year movements also show ${describeR(corr.rChanges)}, weaker than in their levels.`
+    else if (L >= 0.5) keyTurn = `Their year-to-year movements show ${describeR(corr.rChanges)}, the opposite sign to their levels.`
+    else keyTurn = `Over these years their levels show ${describeR(corr.rLevels)}, and their year-to-year changes ${describeR(corr.rChanges)}.`
+  }
+  const trendGap = okL && okC && Math.abs(corr.rLevels!) >= 0.5 && Math.abs(corr.rChanges!) < 0.2
+
   const factors = isImmCrime
     ? `Other factors may influence ${nm(B)}, including economic conditions, an ageing population, policing, and changes in how offences are reported and recorded.`
     : `Both can be shaped by other forces at the same time, such as the business cycle, policy changes, population change, or changes in how the data are measured.`
 
-  const why_items: Claim[] = [...rel.cannot]
+  const whyItems: Claim[] = [...rel.cannot]
   for (const ind of [A, B]) {
     const bs = ind.breaks.filter((x) => x.year > from && x.year <= to)
-    if (bs.length) why_items.push({ text: `${ind.short}: the series has ${bs.length === 1 ? 'a break' : `${bs.length} breaks`} in this period (${bs.map((x) => x.year).join(', ')}), so values on either side are not fully comparable.`, refs: [`data:${ind.id}`] })
+    if (bs.length) whyItems.push({ text: `${ind.short}: the series has ${bs.length === 1 ? 'a break' : `${bs.length} breaks`} in this period (${bs.map((x) => x.year).join(', ')}), so values on either side are not fully comparable.`, refs: [`data:${ind.id}`] })
   }
   if (compare && [A, B].some((x) => x.dimension === 'crime'))
-    why_items.push({ text: `Crime levels in Spain and ${COUNTRIES[compare].name} are not directly comparable because legal definitions and recording practices differ. Compare the direction of trends, not the levels.`, refs: ['eurostatCrime'] })
+    whyItems.push({ text: `Crime levels in Spain and ${COUNTRIES[compare].name} are not directly comparable because legal definitions and recording practices differ. Compare the direction of trends, not the levels.`, refs: ['eurostatCrime'] })
 
   const relevantOutcomes = outcomesFor(B.dimension === 'crime' ? b : a)
   const crimeInd = B.dimension === 'crime' ? B : A.dimension === 'crime' ? A : null
+  const changeLabel = (ind: Indicator) => (changeMode(ind.id) === 'abs' ? 'change in points' : '% change')
 
   return (
     <section className="tell" aria-labelledby="tell-title">
       <h2 id="tell-title">What does this actually tell us?</h2>
 
+      <div className="key">
+        <p className="key-kicker">The key finding</p>
+        {okL && okC ? (
+          <>
+            <p className="key-lead">
+              {keyLead} {keyTurn}
+            </p>
+            <div className="key-figs">
+              <div className="key-fig">
+                <span className="key-r">{r(corr.rLevels)}</span>
+                <span className="key-r-label">Correlation between historical levels</span>
+                <span className="key-r-note">Do high values of one coincide with high, or low, values of the other? Two series that each follow a steady long-run trend score close to ±1 even if they are unrelated.</span>
+              </div>
+              <div className="key-fig">
+                <span className="key-r">{r(corr.rChanges)}</span>
+                <span className="key-r-label">Correlation between annual changes</span>
+                <span className="key-r-note">When one moves more than usual in a year, does the other move too? This strips out shared long-run trends, so it is a stricter check. It is still not a measure of cause.</span>
+              </div>
+            </div>
+            <p className="key-why">
+              {trendGap
+                ? 'Why the difference? A strong link in levels with almost none in annual changes usually means each series is following its own long-run path rather than responding to the other year by year. '
+                : 'Correlation in levels is easily inflated by long-run trends; correlation in changes is a stricter but still limited check. '}
+              Neither number shows cause and effect: a third factor can drive both, effects can take years to appear, and recorded figures shift when measurement changes.
+            </p>
+            <p className="key-base">
+              Based on the {corr.levels.length} years where both series have data ({span(corr.levels)}){corr.changes.length !== corr.levels.length - 1 ? `; ${corr.changes.length} consecutive-year pairs for changes` : ''}. Pearson correlation, r, ranges from −1 to +1.
+              {fn([`data:${a}`, `data:${b}`])}
+            </p>
+          </>
+        ) : (
+          <>
+            {keyLead && <p className="key-lead">{keyLead}</p>}
+            <p className="key-limit">
+              {corr.levels.length < 2
+                ? `The two series have no overlapping years in ${from}–${to}, so they cannot be compared.`
+                : `Only ${corr.levels.length} years have data for both series in ${from}–${to}${corr.levels.length >= MIN ? `, and ${corr.changes.length} consecutive-year pairs` : ''}. That is too few for a meaningful correlation, so none is shown. Widen the period to compare them.`}
+            </p>
+          </>
+        )}
+      </div>
+
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">01</span>
-          <h3>What the data shows</h3>
+          <h3>What happened</h3>
           <Tag kind="descriptive" />
         </div>
         <div className="tell-body">
@@ -194,7 +257,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                     </p>
                   </>
                 ) : (
-                  <p className="ti-cov">Fewer than two observations in {from}–{to}, so no change can be described.</p>
+                  <p className="ti-cov">
+                    {series(ind.id, 'ES').some((p) => p.year >= from && p.year <= to) ? 'Only one observation' : 'No observations'} in {from}–{to}, so no change can be described.
+                  </p>
                 )}
               </article>
             ))}
@@ -203,84 +268,61 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             <p className="ti-compare">
               {(() => {
                 const parts = [A, B].flatMap((ind) => {
+                  const pts = inRange(series(ind.id, compare), from, to)
+                  if (!pts.length) return []
                   const s = summarise(ind, compare, from, to)
-                  return s ? [`${nm(ind)} ${verb(s.dir)} from ${formatValue(s.first.value, ind.format)} (${s.first.year}) to ${formatValue(s.last.value, ind.format)} (${s.last.year})`] : []
+                  return s
+                    ? [`${nm(ind)} ${verb(s.dir)} from ${formatValue(s.first.value, ind.format)} (${s.first.year}) to ${formatValue(s.last.value, ind.format)} (${s.last.year})`]
+                    : [`${nm(ind)} has a single observation in this period, ${formatValue(pts[0].value, ind.format)} (${pts[0].year})`]
                 })
                 return parts.length ? `In ${COUNTRIES[compare].name}, ${parts.join(', and ')}.` : `No data for ${COUNTRIES[compare].name} in this period.`
               })()}
             </p>
           )}
-          <div className="ti-assoc">
-            <Tag kind="association" />
-            {enough ? (
-              <p>
-                In the {corr.levels.length} years where both series have data ({corr.levels[0].year}–{corr.levels[corr.levels.length - 1].year}), their levels show {describeR(corr.rLevels)} (r = {r(corr.rLevels)}), and their year-to-year changes show {describeR(corr.rChanges)} (r = {r(corr.rChanges)}). Levels often move together simply because both follow long-run trends; year-to-year changes are a stricter test.
-                {fn([`data:${a}`, `data:${b}`])}
-              </p>
-            ) : (
-              <p>Fewer than four years have data for both series in this period, which is too few to calculate a relationship.</p>
-            )}
-          </div>
+          <button className="tell-more" onClick={() => setStats((v) => !v)} aria-expanded={stats}>
+            {stats ? '− Hide statistical details' : '+ Statistical details'}
+          </button>
+          {stats && (
+            <dl className="ti-stats">
+              <dt>Years compared</dt>
+              <dd>{corr.levels.length ? `${corr.levels.length} years with data for both (${span(corr.levels)}); years missing in either series are left out, not filled in.` : 'No overlapping years.'}</dd>
+              <dt>Levels</dt>
+              <dd>r = {r(corr.rLevels)}{corr.levels.length < MIN ? ' (too few years to interpret)' : ''} · <Tag kind="association" /></dd>
+              <dt>Annual changes</dt>
+              <dd>r = {r(corr.rChanges)} across {corr.changes.length} consecutive-year pairs{corr.changes.length < MIN ? ' (too few to interpret)' : ''}. Uses {changeLabel(A)} for {nm(A)} and {changeLabel(B)} for {nm(B)}.</dd>
+              <dt>Method</dt>
+              <dd>Pearson correlation, which measures straight-line association only. It is not a causal estimate and does not adjust for any other factor.</dd>
+            </dl>
+          )}
         </div>
       </div>
 
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">02</span>
-          <h3>Does this prove anything?</h3>
-        </div>
-        <div className="tell-body">
-          <p className="tell-lead">
-            {pattern} These trends do not establish whether {dimA} caused {sb ? nm(B) : dimB} to rise or fall. {factors}
-          </p>
-          <p className="tell-text">
-            {sa && sb && sa.dir !== sb.dir && sa.dir !== 'stable' && sb.dir !== 'stable'
-              ? `Opposite trends do not show that ${dimA} reduced ${nm(B)}. They also cannot rule out an effect in either direction that was outweighed by other forces.`
-              : sa && sb && sa.dir === sb.dir && sa.dir !== 'stable'
-                ? `Rising or falling together does not show that one drove the other. Many unrelated series share a trend over the same years.`
-                : `A flat series next to a changing one tells us little on its own about cause and effect.`}{' '}
-            Answering that needs studies designed to separate cause from coincidence, like those below.
-          </p>
-          <button className="tell-more" onClick={() => setWhy((w) => !w)} aria-expanded={why}>
-            {why ? '− Hide' : '+ Why two trends aren’t enough'} <span>({why_items.length})</span>
-          </button>
-          <AnimatePresence initial={false}>
-            {why && (
-              <motion.ul className="tell-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
-                {why_items.map((c, i) => (
-                  <li key={i}>
-                    {c.text}
-                    {fn(c.refs)}
-                  </li>
-                ))}
-              </motion.ul>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      <div className="tell-part">
-        <div className="tell-label">
-          <span className="evidence-num">03</span>
-          <h3>What researchers have found</h3>
+          <h3>What does the research say?</h3>
           {isImmCrime && <Tag kind="causal" />}
         </div>
         <div className="tell-body">
           {isImmCrime ? (
             <>
-              <div className="synthesis">
-                {SYNTHESIS.map((p, i) => (
-                  <p key={i}>{p}</p>
+              <ul className="synthesis">
+                {SYNTHESIS.map((p) => (
+                  <li key={p.lead}>
+                    <strong>{p.lead}</strong> {p.text}
+                  </li>
                 ))}
-                {crimeInd && (
-                  <p className="synthesis-note">
-                    You are looking at <strong>{nm(crimeInd)}</strong>.{' '}
-                    {relevantOutcomes.length
-                      ? `Studies marked “Covers this crime type” report results for ${relevantOutcomes.map((o) => OUTCOME_LABEL[o].toLowerCase()).join(' or ')}.`
+              </ul>
+              {crimeInd && (
+                <p className="synthesis-note">
+                  You are looking at <strong>{nm(crimeInd)}</strong>.{' '}
+                  {relevantOutcomes.length
+                    ? `Studies marked “Covers this crime type” report results for ${new Intl.ListFormat('en', { type: 'disjunction' }).format(relevantOutcomes.map((o) => OUTCOME_LABEL[o].toLowerCase()))}.`
+                    : /homicide/.test(crimeInd.id)
+                      ? 'None of the studies below reports results for homicide separately; some cover violent crime as a broader group.'
                       : 'None of the studies below reports results for this specific category.'}
-                  </p>
-                )}
-              </div>
+                </p>
+              )}
               {(['Spain', 'Europe', 'Review'] as const).map((scope) => (
                 <div key={scope} className="study-group">
                   <h4>{scope === 'Spain' ? 'Studies of Spain' : scope === 'Europe' ? 'Studies elsewhere in Europe' : 'Reviews of the research'}</h4>
@@ -298,16 +340,70 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           ) : (
             <>
               <p className="unavailable-note">
-                <strong>Research summary not yet available.</strong> A verified review of studies on this question has not been completed for this prototype. The notes below give context from published work but have not yet been checked study by study.
+                <strong>Research summary not yet available.</strong> A verified review of studies on this question has not been completed for this prototype, so no studies are shown. The background notes below come from published work but have not been checked study by study.
               </p>
-              <ul className="tell-list">
-                {rel.explain.map((c, i) => (
-                  <li key={i}>
-                    {c.text}
-                    {fn(c.refs)}
-                  </li>
-                ))}
-              </ul>
+              <button className="tell-more" onClick={() => setWhy((v) => !v)} aria-expanded={why}>
+                {why ? '− Hide background notes' : `+ Background notes (${rel.explain.length})`}
+              </button>
+              {why && (
+                <ul className="tell-list">
+                  {rel.explain.map((c, i) => (
+                    <li key={i}>
+                      {c.text}
+                      {fn(c.refs)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="tell-part">
+        <div className="tell-label">
+          <span className="evidence-num">03</span>
+          <h3>What can we conclude?</h3>
+        </div>
+        <div className="tell-body">
+          <dl className="conclude">
+            <dt><Tag kind="descriptive" /></dt>
+            <dd>
+              {sa && sb
+                ? `${uc(nm(A))} ${verb(sa.dir)} and ${nm(B)} ${verb(sb.dir)} over the selected years. That is what happened, not why.`
+                : 'One of the series has too few observations in the selected years to describe a trend.'}
+            </dd>
+            <dt><Tag kind="association" /></dt>
+            <dd>
+              {okL && okC
+                ? `The levels show ${describeR(corr.rLevels)} (r = ${r(corr.rLevels)}); annual changes show ${describeR(corr.rChanges)} (r = ${r(corr.rChanges)}). Association alone does not tell us whether ${dimA} affects ${nm(B)}.`
+                : 'Too few shared years for a meaningful correlation.'}
+            </dd>
+            <dt><Tag kind="causal" /></dt>
+            <dd>
+              {isImmCrime
+                ? `Only research designed to isolate cause can answer that. For immigration and crime it mostly finds little or no effect on overall crime, with exceptions that depend on who migrates, the offence and the period. None of it isolates homicide.`
+                : 'No verified research summary is available for this question yet, and the data shown here cannot establish cause.'}
+            </dd>
+          </dl>
+          <p className="tell-text">{factors}</p>
+          {whyItems.length > 0 && (
+            <>
+              <button className="tell-more" onClick={() => setCaveats((w) => !w)} aria-expanded={caveats}>
+                {caveats ? '− Hide' : '+ Why two trends aren’t enough'} <span>({whyItems.length})</span>
+              </button>
+              <AnimatePresence initial={false}>
+                {caveats && (
+                  <motion.ul className="tell-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+                    {whyItems.map((c, i) => (
+                      <li key={i}>
+                        {c.text}
+                        {fn(c.refs)}
+                      </li>
+                    ))}
+                  </motion.ul>
+                )}
+              </AnimatePresence>
             </>
           )}
         </div>

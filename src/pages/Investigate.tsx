@@ -42,15 +42,24 @@ export function Investigate({ params }: { params: URLSearchParams }) {
     return f && t ? [f, t] : defaultRange(a, b)
   })
   const [view, setView] = useState<'time' | 'scatter'>(() => (params.get('view') === 'scatter' ? 'scatter' : 'time'))
-  const [mode, setMode] = useState<'levels' | 'changes'>('levels')
+  const [mode, setMode] = useState<'levels' | 'changes'>(() => (params.get('mode') === 'changes' ? 'changes' : 'levels'))
   const [hoverYear, setHoverYear] = useState<number | null>(null)
   const [playing, setPlaying] = useState(false)
   const playRef = useRef<number | null>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined })
+    const box = tabsRef.current
+    const btn = box?.querySelector<HTMLElement>('button.active')
+    if (!box || !btn) return
+    const left = btn.offsetLeft - box.offsetLeft
+    if (left < box.scrollLeft || left + btn.offsetWidth > box.scrollLeft + box.clientWidth - 48) box.scrollTo({ left: Math.max(0, left - 24), behavior: 'smooth' })
+  }, [rel.id])
+
+  useEffect(() => {
+    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined, mode: view === 'scatter' && mode === 'changes' ? 'changes' : undefined })
     if (window.location.hash !== q) window.history.replaceState(null, '', q)
-  }, [rel.id, a, b, compare, from, to, view])
+  }, [rel.id, a, b, compare, from, to, view, mode])
 
   function chooseRelationship(id: string) {
     const r = relationshipById(id)
@@ -106,7 +115,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
       </section>
 
       <nav className="rel-tabs" aria-label="Relationships">
-        <div className="rel-tabs-inner">
+        <div className="rel-tabs-inner" ref={tabsRef}>
           {RELATIONSHIPS.map((r) => (
             <button key={r.id} className={r.id === rel.id ? 'active' : ''} onClick={() => chooseRelationship(r.id)}>
               {r.shortQuestion}

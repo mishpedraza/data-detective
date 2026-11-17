@@ -181,7 +181,7 @@ export function TimeChart({ indicator, compare, from, to, hoverYear, onHover, to
               {dataEnd != null && dataEnd < to && (
                 <g className="nodata">
                   <rect className="nodata-end" x={x(dataEnd) + 2} width={Math.max(0, innerW - x(dataEnd) - 2)} y={0} height={innerH} fill={`url(#h${uid})`} />
-                  {innerW - x(dataEnd) > 56 && (
+                  {innerW - x(dataEnd) > 56 && !(hoverYear != null && hoverYear > dataEnd) && (
                     <text x={(x(dataEnd) + innerW) / 2} y={innerH / 2} textAnchor="middle">
                       No data
                     </text>

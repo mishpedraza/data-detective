@@ -43,10 +43,11 @@ export const DESIGN_LABEL: Record<Design, string> = {
 
 const doi = (d: string) => `https://doi.org/${d}`
 
-export const SYNTHESIS = [
-  'Studies designed to separate cause from coincidence mostly find that more immigration does not raise overall local crime rates, or changes them only slightly and for particular offences. Some do find increases, including the main study of Spain in 1999–2009 and studies of Germany after the 2015 refugee inflow.',
-  'Two findings recur. Effects differ between groups of migrants, linked to their education, language and job prospects. And in Italy, gaining legal status lowered immigrants’ offending.',
-  'None of the studies below looks at homicide on its own. The Spanish study left homicide out because the numbers per province were too small to analyse. Results for property or total crime should not be assumed to hold for homicide or other offences.',
+export const SYNTHESIS: { lead: string; text: string }[] = [
+  { lead: 'Mostly little or no effect on overall crime.', text: 'Studies designed to separate cause from coincidence mostly find that immigration does not raise overall local crime rates, or changes them only slightly and for particular offences.' },
+  { lead: 'But there are exceptions.', text: 'The main study of Spain (1999–2009) found that recorded crime rose with the immigrant share, depending on immigrants’ origin. In Germany, crime rose slightly a year after the 2015–16 refugee inflow.' },
+  { lead: 'Who migrates, and on what terms, matters.', text: 'Effects differ with migrants’ education, language and job prospects. In Italy, gaining legal status lowered immigrants’ offending.' },
+  { lead: 'Not about homicide.', text: 'None of these studies looks at homicide on its own; the Spanish study left it out because numbers per province were too small. Results for property or total crime should not be assumed to hold for homicide or other offences.' },
 ]
 
 export const STUDIES: Study[] = [
@@ -233,7 +234,8 @@ export const STUDIES: Study[] = [
 ]
 
 export function outcomesFor(indicatorId: string): Outcome[] {
-  if (/homicide|assault|sexual/.test(indicatorId)) return ['violent']
+  if (/homicide/.test(indicatorId)) return []
+  if (/assault|sexual/.test(indicatorId)) return ['violent']
   if (/robbery/.test(indicatorId)) return ['robbery', 'violent', 'property']
   if (/theft|burglary/.test(indicatorId)) return ['property']
   return []
