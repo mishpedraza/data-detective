@@ -44,15 +44,6 @@ export const EDITORIAL_QUESTIONS: readonly EditorialQuestion[] = [
     id: 'crime-perceptions', question: 'Is crime really rising as much as people think?', status: 'preview',
     needs: 'We need surveys of perceived crime trends and comparable recorded or reported crime measures for the same places and years.',
   },
-  {
-    id: 'loneliness-and-connection', question: 'Are we becoming lonelier despite being more connected?', status: 'preview',
-    needs: 'We need repeated surveys that measure loneliness consistently alongside comparable evidence on social contact and online connection.',
-  },
-  {
-    id: 'growth-and-prosperity', question: 'Does economic growth make everyone richer?', featured: true, status: 'preview',
-    needs: 'The existing Spanish evidence compares growth with typical pay. To tell who gained and who fell behind, we need real household incomes across the income distribution.',
-    related: { relationship: 'growth-wages', label: 'Explore the evidence on growth and typical pay in Spain' },
-  },
 ]
 
 export const DEFAULT_INVESTIGATION = 'housing-affordability'

@@ -1,21 +1,23 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { discoveryEvidence, predictions, predictionOptions } from '../src/data/discoveries'
-import { EDITORIAL_QUESTIONS, editorialQuestionById, editorialQuestionForRelationship } from '../src/data/editorial'
+import { EDITORIAL_QUESTIONS, editorialQuestionById } from '../src/data/editorial'
 import { RELATIONSHIPS } from '../src/data/relationships'
 import { explain } from '../src/lib/explain'
 
 test('featured predictions have scoped evidence and open actual investigations', () => {
   const ids = new Set(RELATIONSHIPS.map(({ id }) => id))
-  assert.equal(EDITORIAL_QUESTIONS.length, 11)
-  assert.equal(EDITORIAL_QUESTIONS.filter(({ featured }) => featured).length, 3)
-  assert.equal(new Set(EDITORIAL_QUESTIONS.map(({ question }) => question)).size, 11)
+  assert.equal(EDITORIAL_QUESTIONS.length, 9)
+  assert.equal(EDITORIAL_QUESTIONS.filter(({ featured }) => featured).length, 2)
+  assert.equal(new Set(EDITORIAL_QUESTIONS.map(({ question }) => question)).size, 9)
   for (const entry of EDITORIAL_QUESTIONS) {
     assert.equal(editorialQuestionById(entry.id), entry)
     if (entry.status === 'available') assert.ok(ids.has(entry.relationship), entry.id)
     else if (entry.related) assert.ok(ids.has(entry.related.relationship), entry.id)
   }
-  for (const { id } of predictions) assert.ok(editorialQuestionForRelationship(id), id)
+  assert.equal(editorialQuestionById('loneliness-and-connection'), undefined)
+  assert.equal(editorialQuestionById('growth-and-prosperity'), undefined)
+  for (const { id } of predictions) assert.ok(ids.has(id), id)
   for (const discovery of predictions) {
     const evidence = discoveryEvidence(discovery)
     assert.ok(evidence, discovery.id)
