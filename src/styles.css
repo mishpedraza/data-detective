@@ -461,13 +461,3 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .nav nav { gap: 10px; }
 }
 
-.ti-table-wrap { margin: 18px 0 6px; overflow-x: auto; }
-.ti-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
-.ti-table caption { text-align: left; font-size: 13px; color: var(--muted, #6b6459); padding-bottom: 8px; }
-.ti-table th, .ti-table td { padding: 7px 8px; border-bottom: 1px solid rgba(0,0,0,0.08); text-align: right; vertical-align: top; }
-.ti-table thead th { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted, #6b6459); }
-.ti-table th[scope="row"] { text-align: left; font-weight: 600; }
-.ti-table small { display: block; font-size: 11px; font-weight: 400; color: var(--muted, #6b6459); }
-.ti-table .ti-diff th, .ti-table .ti-diff td { border-bottom: none; font-weight: 600; }
-.ti-table-note { font-size: 12px; color: var(--muted, #6b6459); margin-top: 6px; }
-@media (max-width: 480px) { .ti-table { font-size: 13px; } .ti-table th, .ti-table td { padding: 6px 4px; } }
