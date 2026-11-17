@@ -8,6 +8,7 @@ import { BROADER, countryEvidence, relationshipEvidence, trendEvidence, type Exp
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
+import { comparePair, usesPoints, type PairComparison } from '../lib/compare'
 
 interface Props {
   rel: Relationship
@@ -33,6 +34,18 @@ function summarise(ind: Indicator, geo: string, from: number, to: number) {
   const dir: Dir = Math.abs(rel) < 0.05 ? 'stable' : rel > 0 ? 'rose' : 'fell'
   const gaps = to - from + 1 - pts.length
   return { pts, first, last, rel, dir, gaps }
+}
+
+const fp = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)}%`
+const fpt = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v).toFixed(1)} percentage points`
+
+function pairText(A: Indicator, B: Indicator, p: PairComparison, place: string) {
+  if (!p.window || !p.a || !p.b) return `${place}: ${p.reason}`
+  const one = (ind: Indicator, c: NonNullable<PairComparison['a']>) =>
+    c.pct != null ? `${nm(ind)} ${fp(c.pct)}${c.cagr != null ? ` (${fp(c.cagr)} a year)` : ''}` : `${nm(ind)} ${absChange(ind, c.first, c.last)}${ind.format === 'pct1' ? '' : ` ${ind.unit}`}`
+  const base = `${place}, ${p.window[0]}–${p.window[1]} (years both indicators cover): ${one(A, p.a)}; ${one(B, p.b)}.`
+  if (p.gap != null) return `${base} Gap: ${fpt(p.gap)} in favour of ${p.gap >= 0 ? nm(A) : nm(B)}.`
+  return p.a.pct != null && p.b.pct != null ? `${base} No gap is calculated: ${lc(p.reason ?? '')}` : base
 }
 
 function absChange(ind: Indicator, first: Point, last: Point) {
@@ -330,7 +343,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                       <Spark pts={s.pts} tone={tone} />
                     </div>
                     <p className="ti-change">
-                      {absChange(ind, s.first, s.last)} ({s.rel >= 0 ? '+' : '−'}{Math.abs(s.rel * 100).toFixed(0)}%) · {ind.unit}
+                      {absChange(ind, s.first, s.last)}{!usesPoints(ind) && s.pts.every((x) => x.value > 0) && <> ({fp(s.rel * 100)})</>} · {ind.unit}
                       {fn([`data:${ind.id}`])}
                     </p>
                     <p className="ti-cov">
@@ -348,6 +361,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
             ))}
           </div>
           {tp && <p className="ti-counts">{tp}</p>}
+          <p className="ti-counts"><strong>Calculated from the data.</strong> {pairText(A, B, comparePair(A, B, 'ES', from, to), 'Spain')}{compare && A.data[compare] && B.data[compare] && <> {pairText(A, B, comparePair(A, B, compare, from, to), uc(COUNTRIES[compare].name))}</>}</p>
           {profile && crimeInd && (
             <p className="ti-counts">
               <strong>What the crime figures count:</strong> {crimeInd.definition}
