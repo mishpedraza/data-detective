@@ -40,6 +40,8 @@ export interface TrendEvidence {
   gap: string
   /** One-sentence synthesis for the conclusion. */
   summary: string
+  /** The movement the summary describes; other selections get a neutral statement. */
+  summaryDir: Direction
 }
 
 export interface RelationshipEvidence {
@@ -86,6 +88,7 @@ export const TREND: Record<string, TrendEvidence> = {
     ],
     gap: 'No study measures how much of Spain’s post-2019 rise, or the 2023 jump in recorded rape, comes from reporting, legal reclassification or actual incidence.',
     summary: 'Research and Spain’s victim survey point to more reporting, plus legal changes, behind much of the rise up to 2019; what drove the later rise is not established.',
+    summaryDir: 'rise',
   },
 
   crime_homicide: {
@@ -107,6 +110,7 @@ export const TREND: Record<string, TrendEvidence> = {
     ],
     gap: 'No study explains Spain’s homicide trend specifically, and the drivers of the wider European decline are not established.',
     summary: 'Spain’s homicide decline matches a long Western European fall whose causes researchers have not established.',
+    summaryDir: 'fall',
   },
 
   crime_assault: {
@@ -122,6 +126,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [...COVID_STUDIES, EUROPE_PROPERTY],
     gap: 'No study explains Spain’s recent rise in recorded serious assault, and recording changes in 2010 and 2015 limit comparisons over time.',
     summary: 'Recorded serious assault is dominated by recording changes before 2016; the recent rise has no verified explanation.',
+    summaryDir: 'any',
   },
 
   crime_robbery: {
@@ -136,6 +141,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [...COVID_STUDIES, { id: 'buonanno2008', relevance: 'indirect', note: 'Spain, 1993–1999; association only.' }, EUROPE_PROPERTY],
     gap: 'No study explains Spain’s robbery trend after 2010; only the 2020 fall has direct evidence.',
     summary: 'The 2020 fall is well explained by lockdowns; the longer decline has plausible but untested explanations.',
+    summaryDir: 'fall',
   },
 
   crime_burglary: {
@@ -146,6 +152,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [...COVID_STUDIES, { id: 'tseloni2017', relevance: 'indirect', note: 'England and Wales; not tested for Spain.' }, { id: 'buonanno2008', relevance: 'indirect', note: 'Spain, 1993–1999; association only.' }],
     gap: 'Whether better security explains Spain’s burglary decline has not been tested.',
     summary: 'Better security is a plausible but untested explanation for the longer decline; city studies show lockdowns cut burglary in 2020, though Spain’s national rate did not fall that year.',
+    summaryDir: 'fall',
   },
 
   crime_theft: {
@@ -161,6 +168,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [{ id: 'nivette2021', relevance: 'direct', note: 'Reports Barcelona’s thefts in 2020.' }, { id: 'trajtenberg2024', relevance: 'indirect', note: 'Cities worldwide; 2020 only.' }, { id: 'buonanno2008', relevance: 'indirect', note: 'Spain, 1993–1999; association only.' }],
     gap: 'Apart from 2020, no study explains Spain’s theft trend, and recording changes in 2010 and 2015 limit comparisons.',
     summary: 'Recording changes and the 2020 lockdown explain the sharpest movements; the underlying trend has no verified explanation.',
+    summaryDir: 'any',
   },
 
   crime_fraud: {
@@ -174,6 +182,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [{ id: 'kemp2020', relevance: 'direct', note: 'Spain; documents the cyber-fraud rise.' }, { id: 'builgil2021', relevance: 'indirect', note: 'United Kingdom, 2019–2020.' }],
     gap: 'No study estimates how much of Spain’s recorded fraud rise reflects more fraud versus more reporting.',
     summary: 'The rise reflects fraud moving online, documented for Spain, though its exact size and drivers are not measured.',
+    summaryDir: 'rise',
   },
 
   crime_cyber: {
@@ -187,6 +196,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [{ id: 'kemp2020', relevance: 'indirect', note: 'Spain; about fraud rather than attacks on computer systems.' }, { id: 'builgil2021', relevance: 'indirect', note: 'United Kingdom, 2019–2020.' }],
     gap: 'No study explains Spain’s recorded rise in attacks on computer systems.',
     summary: 'The rise is consistent with more activity moving online, but its drivers in Spain are not established.',
+    summaryDir: 'rise',
   },
 
   crime_drugs: {
@@ -200,6 +210,7 @@ export const TREND: Record<string, TrendEvidence> = {
     studies: [EUROPE_PROPERTY],
     gap: 'No study explains Spain’s recorded drug offences, which mainly reflect enforcement.',
     summary: 'Recorded drug offences mostly measure police activity; we found no study explaining Spain’s trend.',
+    summaryDir: 'any',
   },
 }
 TREND.crime_homicide_long = TREND.crime_homicide

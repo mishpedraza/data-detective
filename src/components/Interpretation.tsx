@@ -201,12 +201,14 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const immInd = A.dimension === 'immigration' ? A : B.dimension === 'immigration' ? B : null
   const trend = B.dimension === 'crime' ? trendEvidence(B.id) : null
   const relEv = isImmCrime && crimeInd && immInd ? relationshipEvidence(immInd.dimension, crimeInd.id) : null
+  const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
+  const crimeDir = sc ? (sc.dir === 'rose' ? 'rise' : sc.dir === 'fell' ? 'fall' : 'stable') : null
   const profile = trend && relEv
     ? {
         noun: trend.noun, recorded: trend.measurement, explanations: trend.explanations, trend: trend.studies,
         confounders: relEv.confounders, periods: relEv.periods, synthesis: relEv.synthesis,
         direct: relEv.studies.filter((x) => !x.broader && !BROADER.has(x)), broader: relEv.studies.filter((x) => x.broader || BROADER.has(x)),
-        gap: relEv.gap, causal: relEv.causal, uncertain: relEv.uncertain, summary: trend.summary, trendGap: trend.gap,
+        gap: relEv.gap, causal: relEv.causal, uncertain: relEv.uncertain, summary: trend.summaryDir === 'any' || trend.summaryDir === crimeDir ? trend.summary : `No verified explanation covers this ${crimeDir === 'stable' ? 'flat trend' : crimeDir ?? 'movement'} in the selected years. ${trend.gap}`, trendGap: trend.gap,
       }
     : null
   const tp = (() => {
@@ -228,8 +230,6 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     if (big) parts.push(`its largest one-year change was ${big.pct > 0 ? '+' : '−'}${useAbs ? formatValue(Math.abs(big.pct), B.format === 'pct1' ? 'decimal1' : B.format) : `${Math.abs(big.pct).toFixed(0)}%`} in ${big.year - 1}–${big.year}${B.breaks.some((x) => x.year === big!.year) ? ', a year with a series break' : ''}`)
     return parts.length ? `Within these years, ${nm(B)} ${parts.join('; ')}.` : null
   })()
-  const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
-  const crimeDir = sc ? (sc.dir === 'rose' ? 'rise' : sc.dir === 'fell' ? 'fall' : 'stable') : null
   // An explanation applies only if the selection has observations both before its end year and from its start year on.
   const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
   const explanations = trend && crimeDir ? trend.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
