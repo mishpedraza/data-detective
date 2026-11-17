@@ -7,17 +7,16 @@ import { hrefFor } from '../lib/route'
 type Featured = typeof EDITORIAL_QUESTIONS[number]
 
 function DiscoveryCard({ entry, navigate }: { entry: Featured; navigate: (href: string) => void }) {
-  const relationship = entry.status === 'available' ? entry.relationship : entry.related?.relationship
-  const discovery = predictions.find(({ id }) => id === relationship)
+  const discovery = entry.status === 'available' ? predictions.find(({ id }) => id === entry.relationship) : undefined
   const href = hrefFor('investigate', { r: entry.id })
 
   return (
     <article className="discovery-card">
       <h2>{entry.question}</h2>
-      {entry.status === 'preview' && <p className="tell-text">Full investigation not yet available. Try the supporting prediction about pay in Spain.</p>}
+      {entry.status === 'preview' && <p className="tell-text">Investigation not yet available.</p>}
       {discovery && <DiscoveryPrediction discovery={discovery} navigate={navigate} />}
       {entry.status === 'preview' && <a className="tell-more" href={href}>Read preview →</a>}
-      {entry.status === 'available' && !discovery && <a className="tell-more discovery-open" href={href}>Open investigation →</a>}
+      {entry.status === 'available' && !discovery && <a className="tell-more discovery-open" href={href}>Explore the evidence →</a>}
     </article>
   )
 }

@@ -12,7 +12,7 @@ const correlation = { text: 'Two lines moving together, or apart, does not show 
 export const RELATIONSHIPS: Relationship[] = [
   {
     id: 'housing-affordability',
-    question: 'Why has housing become so unaffordable?',
+    question: 'Are houses really more expensive than they used to be?',
     shortQuestion: 'Housing ↔ Incomes',
     outcome: 'left',
     kicker: 'Housing affordability',
