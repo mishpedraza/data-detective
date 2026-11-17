@@ -8,8 +8,8 @@ import { BROADER, TOPIC, countryEvidence, relationshipEvidence, trendEvidence, t
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
-import { comparePair, usesPoints, type PairComparison } from '../lib/compare'
-import { answerFor, isDriverQuestion } from '../lib/answers'
+import { change, comparePair, usesPoints, type PairComparison } from '../lib/compare'
+import { answerFor, isDriverQuestion, statFor, type Stat } from '../lib/answers'
 
 interface Props {
   rel: Relationship
@@ -296,13 +296,23 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const ans = answerFor(rel.id, a, b, compare, from, to)
   const driver = isDriverQuestion(rel.id)
   const showChange = !ans || !(ans.covered.includes(a) && ans.covered.includes(b))
+  const hasCmp = !!compare && compare !== 'none'
+  const showCmp = hasCmp && (driver || showChange)
+  const keyStats: Stat[] = [...(ans?.stats ?? [])]
+  if (ans && !driver) for (const ind of [A, B]) {
+    if (ans.covered.includes(ind.id) || keyStats.length >= 4) continue
+    const c = change(ind, 'ES', from, to)
+    if (c) keyStats.push(statFor(ind.id, c, true))
+  }
+  const meaning = ans?.meaning || (trend ? firstSentence(trend.measurement[0].text) : '')
   const relevantCannot = rel.cannot.filter((c) => (!c.only || c.only.includes(a) || c.only.includes(b)) && !(driver && c.text.startsWith('Two lines moving together')))
   const uncertain: Claim[] = profile
     ? [...(trendGapText ? [{ text: trendGapText }] : []), { text: profile.gap }, ...breakItems].slice(0, 3)
     : trend
       ? [...(trendGapText ? [{ text: trendGapText }] : []), ...relevantCannot.slice(0, 1), ...breakItems].slice(0, 3)
       : [...(topic ? [{ text: topic.gap }] : []), ...breakItems, ...relevantCannot].slice(0, 3)
-  const moreLimits: Claim[] = [...(profile ? profile.uncertain : []), ...relevantCannot, ...breakItems].filter((c) => !uncertain.some((u) => u.text === c.text))
+  const shownLimits = uncertain.slice(0, 1)
+  const moreLimits: Claim[] = [...uncertain.slice(1), ...(profile ? profile.uncertain : []), ...relevantCannot, ...breakItems].filter((c, i, all) => !shownLimits.some((u) => u.text === c.text) && all.findIndex((x) => x.text === c.text) === i)
 
   return (
     <section className="tell" aria-label="The evidence">
@@ -313,15 +323,29 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <h3>The findings</h3>
         </div>
         <div className="tell-body">
-          {ans?.text && <p className="ti-answer">{ans.text}</p>}
-          {showChange && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
-          {tp && <p className="ti-counts">{tp}</p>}
-          {trend && <p className="ti-note">{firstSentence(trend.measurement[0].text)}</p>}
+          {keyStats.length > 0 && (
+            <>
+              {ans?.period && <p className="stat-cap">Spain, {ans.period}</p>}
+              <ul className="stats">
+                {keyStats.map((st) => (
+                  <li key={st.label}>
+                    <span className="stat-v">{st.value}</span>
+                    <span className="stat-l">{st.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          {meaning && <p className={`ti-answer${ans?.meaning ? "" : " ti-answer-sm"}`}>{meaning}</p>}
           <button className="tell-more" onClick={() => setStats((v) => !v)} aria-expanded={stats}>
-            {stats ? '− Hide statistical details' : '+ Statistical details'}
+            {stats ? '− Hide details' : '+ More detail'}
           </button>
           {stats && (
             <div className="ti-details">
+              {ans?.detail.map((d) => <p key={d} className="tell-text">{d}</p>)}
+              {showCmp && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
+              {tp && <p className="ti-counts">{tp}</p>}
+              {trend && ans?.meaning && <p className="ti-note">{firstSentence(trend.measurement[0].text)}</p>}
               <p className="tell-text">
                 {okL && okC
                   ? `In ${span(corr.levels)}, the two series’ levels show ${describeR(corr.rLevels)} (r = ${r(corr.rLevels)}), and their annual changes ${describeR(corr.rChanges)} (r = ${r(corr.rChanges)}). `
@@ -389,7 +413,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
         <div className="tell-body">
           {findings.length ? (
             <ul className="findings">
-              {findings.map((f) => (
+              {findings.slice(0, 1).map((f) => (
                 <li key={f.lead}>
                   <p className="finding-lead">{f.lead}</p>
                   {f.body && <p className="finding-body">{f.body}</p>}
@@ -405,6 +429,17 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           </button>
           {why && (
             <div className="research-more">
+              {findings.length > 1 && (
+                <ul className="findings">
+                  {findings.slice(1).map((f) => (
+                    <li key={f.lead}>
+                      <p className="finding-lead">{f.lead}</p>
+                      {f.body && <p className="finding-body">{f.body}</p>}
+                      {f.refs.length > 0 && <p className="finding-src">{f.refs.map(citeOf).filter(Boolean).join('; ')} {fn(f.refs)}</p>}
+                    </li>
+                  ))}
+                </ul>
+              )}
               {trend && (
                 <div className="study-group">
                   <h4>Why recorded {trend.noun} changed</h4>
@@ -489,14 +524,14 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
         </div>
         <div className="tell-body">
           <ul className="uncertain">
-            {uncertain.map((c, i) => (
+            {shownLimits.map((c, i) => (
               <li key={i}>{c.text}{fn(c.refs)}</li>
             ))}
           </ul>
           {moreLimits.length > 0 && (
             <>
               <button className="tell-more" onClick={() => setCaveats((v) => !v)} aria-expanded={caveats}>
-                {caveats ? '− Hide' : `+ More limitations (${moreLimits.length})`}
+                {caveats ? '− Hide limitations' : '+ Explore limitations'}
               </button>
               {caveats && (
                 <ul className="tell-list">
