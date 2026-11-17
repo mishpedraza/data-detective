@@ -116,6 +116,7 @@ export const RELATIONSHIPS: Relationship[] = [
       { text: 'Spain raised its minimum wage by 22% in 2019 and further in later years, which lifts pay at the bottom more than the average.', refs: ['rd2018'] },
     ],
     cannot: [
+      { text: 'Wages are not the same as household living standards: household income also counts benefits, pensions, other earners and working hours, and can move differently. Select household or median income above to see it.' },
       correlation,
       { text: 'Average wages, median income and household income measure different things. A rising average can coexist with stagnant pay for many workers.' },
       { text: 'Inflation measures are national averages. Households that spend more on rent or energy may have lost more purchasing power than these figures show.' },
