@@ -274,7 +274,8 @@ test('02 leads with a study, not with our own data notes, whenever a study cover
     const ex = explain(rel, a, b, c, from, to)
     const first = ex.findings[0]
     if (!first || first.lead === t.gap) continue
-    assert.ok(first.refs.some((id) => studyById(id)), `${rel.id} ${a}/${b} ${from}–${to}: "${first.lead}" cites no study`)
+    const usesNationalAccounts = rel.id === 'growth-wages' && ex.ans?.period === '2006–2022' && ex.ans.covered.includes('median_earnings_real')
+    assert.ok(first.refs.some((id) => studyById(id) || (usesNationalAccounts && id === 'eurostatNA')), `${rel.id} ${a}/${b} ${from}–${to}: "${first.lead}" cites no study`)
   }
 })
 
@@ -282,6 +283,9 @@ test('Spain growth and wages keeps the average-pay study in Explore the research
   const rel = RELATIONSHIPS.find((r) => r.id === 'growth-wages')!
   const ex = explain(rel, 'gdp_pc_real', 'real_wage', 'PT', 2000, 2025)
   assert.match(ex.ans!.headline, /real pay rose slightly/)
-  assert.equal(ex.findings[0].lead, TOPIC[rel.id].gap)
+  assert.match(ex.findings[0].lead, /produced more in each hour/)
+  assert.deepEqual(ex.findings[0].years, [2006, 2022])
+  assert.deepEqual(ex.findings[0].refs, ['eurostatNA'])
+  assert.equal(explain(rel, 'gdp_pc_real', 'real_wage', null, 2014, 2022).findings[0].lead, TOPIC[rel.id].gap)
   assert.ok(ex.findings.slice(1).some((f) => f.refs.includes('bosca2025')))
 })

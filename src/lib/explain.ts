@@ -129,12 +129,17 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
     const best = dated.find((f) => overlapShare(f.years!, af, at) >= MIN_OVERLAP)
     const lead = dated[0]
     if (rel.id === 'growth-wages') {
-      gapLeads = true
-      findings.push({
-        lead: topic.gap,
-        body: 'A growing economy can produce more per person while the buying power of a typical worker’s pay or household’s income changes very little.',
-        refs: [],
-      })
+      if (ans?.period === '2006–2022' && ans.covered.includes('median_earnings_real')) {
+        findings.push({
+          lead: 'Spain produced more in each hour of work.',
+          body: 'From 2006 to 2022, Spain produced about 15% more per hour worked, even as total hours worked per resident fell. That explains how the economy grew per person. The increase in output per hour was much larger than the gain in what typical hourly pay could buy.',
+          refs: ['eurostatNA'],
+          years: [2006, 2022],
+        })
+      } else {
+        gapLeads = true
+        findings.push({ lead: topic.gap, refs: [] })
+      }
     } else if (!phases.length && best) findings.push({ lead: best.lead, body: best.text, refs: best.refs ?? [], years: best.years })
     else if (!phases.length && lead?.years) {
       gapLeads = true

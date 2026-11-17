@@ -571,7 +571,7 @@ const GROWTH_WAGES: TopicEvidence = {
     { id: 'font2015', relevance: 'direct', note: 'Spain, 1987–2013.' },
     { id: 'barcelo2021', relevance: 'direct', note: 'Spain; employment effects of the 2019 minimum-wage rise.' },
   ],
-  gap: 'The research here leaves the change in typical living standards unexplained.',
+  gap: 'The studies here leave open why typical pay or household income changed over these years.',
   byCountry: {
     US: {
       findings: [{ lead: 'Pay still follows productivity, but other forces held typical pay down.', text: 'From 1973 to 2016, each extra percentage point of productivity growth went with roughly 0.7 to 1 point more growth in median pay; the gap opened because of other factors, not because the link broke.', refs: ['stansbury2017'] }],
