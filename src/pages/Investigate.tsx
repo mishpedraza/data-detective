@@ -2,14 +2,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
-import { Evidence } from '../components/Evidence'
+import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
 import { RangeBrush } from '../components/RangeBrush'
 import { ScatterChart } from '../components/ScatterChart'
 import { TimeChart } from '../components/TimeChart'
 import { COMPARE_OPTIONS, COUNTRIES } from '../data/countries'
 import { EVENTS } from '../data/events'
-import { DIMENSIONS, INDICATORS, coverage, series } from '../data/indicators'
+import { DIMENSIONS, INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { RELATIONSHIPS, relationshipById } from '../data/relationships'
 
 const MIN = 1998
@@ -88,6 +88,10 @@ export function Investigate({ params }: { params: URLSearchParams }) {
   const sparkB = useMemo(() => series(b, 'ES'), [b])
   const events = EVENTS.filter((e) => e.end >= from && e.start <= to && (!e.only || e.only.includes(A.dimension) || e.only.includes(B.dimension)))
 
+  const covA = coverage(a)
+  const covB = coverage(b)
+  const valueAt = (id: string, y: number) => INDICATORS[id].data.ES?.[String(y)]
+
   const handleHover = (y: number | null) => {
     if (playing) setPlaying(false)
     setHoverYear(y)
@@ -156,8 +160,31 @@ export function Investigate({ params }: { params: URLSearchParams }) {
       <AnimatePresence mode="wait">
         {view === 'time' ? (
           <motion.div key="time" className="charts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+            <div className="year-strip" aria-live="polite">
+              {hoverYear == null ? (
+                <span>Hover, tap or drag across either chart to compare the same year in both.</span>
+              ) : (
+                <>
+                  <span className="year-strip-year">{hoverYear}</span>
+                  {[A, B].map((ind, i) => {
+                    const v = valueAt(ind.id, hoverYear)
+                    return (
+                      <span key={ind.id} className={`year-strip-item tone-${i ? 'b' : 'a'}`}>
+                        {lowerFirst(ind.short)} {v == null ? <em>Data unavailable</em> : <strong>{formatValue(v, ind.format)}</strong>}
+                      </span>
+                    )
+                  })}
+                  <button className="year-strip-clear" onClick={() => { setPlaying(false); setHoverYear(null) }}>Clear</button>
+                </>
+              )}
+            </div>
             <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels />
             <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" />
+            {covA && covB && (covA[0] !== covB[0] || covA[1] !== covB[1]) && (
+              <p className="coverage-note">
+                The two series cover different years: <strong className="tone-a-text">{lowerFirst(A.short)}</strong> {covA[0]}–{covA[1]}, <strong className="tone-b-text">{lowerFirst(B.short)}</strong> {covB[0]}–{covB[1]}. Hatched areas mark years with no observation; they are gaps, not zero values, and nothing is estimated to fill them.
+              </p>
+            )}
             <ul className="event-legend">
               {events.map((e) => (
                 <li key={e.id}>
@@ -177,7 +204,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
         Showing <span className="tone-a-text">{DIMENSIONS[A.dimension].label.toLowerCase()}</span> and <span className="tone-b-text">{DIMENSIONS[B.dimension].label.toLowerCase()}</span> on separate scales, because they are measured in different units.
       </p>
 
-      <Evidence rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
+      <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
       <DataNotes ids={[a, b]} />
     </div>
   )
