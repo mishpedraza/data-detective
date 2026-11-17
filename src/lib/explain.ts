@@ -127,7 +127,13 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
     const [af, at] = ap?.length === 2 ? ap : [from, to]
     const dated = topic.findings.filter((f) => f.years)
     const best = dated.find((f) => overlapShare(f.years!, af, at) >= MIN_OVERLAP)
-    const lead = dated[0]
+    // For a gap, reference the closest period, even if an older study has
+    // higher editorial priority for the full investigation.
+    const distance = ([start, end]: [number, number]) => Math.max(0, start - at, af - end)
+    const lead = [...dated].sort((left, right) =>
+      distance(left.years!) - distance(right.years!) ||
+      overlapShare(right.years!, af, at) - overlapShare(left.years!, af, at),
+    )[0]
     if (rel.id === 'growth-wages') {
       if (ans?.period === '2006–2022' && ans.covered.includes('median_earnings_real')) {
         findings.push({

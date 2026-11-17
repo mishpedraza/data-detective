@@ -554,3 +554,27 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .surgery-chart line { stroke: var(--rule); }
 .surgery-chart polyline { fill: none; stroke: var(--b); stroke-width: 2; }
 .surgery-chart circle { fill: var(--b); }
+
+.discovery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1.5px solid var(--ink); border-bottom: 1px solid var(--rule); }
+.discovery-card { display: flex; flex-direction: column; align-items: flex-start; padding: 26px clamp(16px, 2.5vw, 32px); }
+.discovery-card + .discovery-card { border-left: 1px solid var(--rule); }
+.discovery-card:first-child { padding-left: 0; }
+.discovery-card:last-child { padding-right: 0; }
+.discovery-card h2 { font: 400 clamp(26px, 3vw, 40px)/1.08 var(--serif); letter-spacing: -.025em; margin: 0 0 18px; }
+.discovery-prediction { border: 0; margin: 0 0 18px; padding: 0; min-width: 0; }
+.discovery-prediction legend { padding: 0; color: var(--ink-2); font-size: 15px; line-height: 1.5; }
+.discovery-options { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.discovery-options button { border: 1px solid var(--rule-strong); border-radius: 3px; padding: 8px 10px; color: var(--ink); font: inherit; font-size: 13px; }
+.discovery-options button:hover, .discovery-options button:focus-visible { border-color: var(--ink); }
+.discovery-open { margin-top: auto; }
+.discovery-reveal { margin-bottom: 16px; }
+.discovery-reveal .tell-fine { margin: 0 0 8px; }
+.discovery-archive { margin: 20px 0 0; }
+.discovery-archive summary { cursor: pointer; }
+.discover .more-q li > a { grid-template-columns: minmax(0, 1fr) 28px; }
+.discover .more-q { padding-bottom: 48px; }
+@media (max-width: 820px) {
+  .discovery-grid { grid-template-columns: 1fr; }
+  .discovery-card, .discovery-card:first-child, .discovery-card:last-child { padding: 24px 0; }
+  .discovery-card + .discovery-card { border-left: 0; border-top: 1px solid var(--rule); }
+}
