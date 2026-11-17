@@ -54,6 +54,8 @@ export function formatValue(v: number | undefined | null, f: Format, compact = f
       return compact ? `€${nf(1).format(v / 1000)}k` : `€${nf(0).format(Math.round(v / 10) * 10)}`
     case 'eur2':
       return `€${nf(2).format(v)}`
+    case 'usd':
+      return compact ? `$${nf(1).format(v / 1000)}k` : `$${nf(0).format(v >= 1000 ? Math.round(v / 10) * 10 : v)}`
     case 'index':
       return nf(0).format(v)
   }
@@ -64,6 +66,7 @@ export function tickFormat(f: Format): (v: number) => string {
     if (f === 'count') return Math.abs(v) >= 1e6 ? `${nf(0, 1).format(v / 1e6)}m` : `${nf(0).format(v / 1e3)}k`
     if (f === 'pct1') return `${nf(0, 1).format(v)}%`
     if (f === 'eur') return `€${nf(0, 1).format(v / 1000)}k`
+    if (f === 'usd') return `$${nf(0, 1).format(v / 1000)}k`
     if (f === 'eur2') return `€${nf(0, 1).format(v)}`
     if (f === 'bn') return `€${nf(0).format(v)}bn`
     if (f === 'mn') return `${nf(0, 1).format(v)}m`

@@ -1,9 +1,10 @@
 """Fetch every indicator used by Data Detective from official public APIs.
 
 Run: python3 scripts/fetch_data.py  ->  writes src/data/generated/indicators.json
-No API keys are needed. Every series keeps its source, dataset code and retrieval date.
+US crime figures use the FBI Crime Data Explorer API (FBI_API_KEY from api.data.gov; DEMO_KEY otherwise,
+with responses cached in scripts/.cache). Every series keeps its source, dataset code and retrieval date.
 """
-import time
+import time, os
 import json, datetime, pathlib, csv, io, sys
 import requests
 
@@ -82,6 +83,56 @@ def oecd(flow, key_tpl, extra=None):
     return out
 
 
+FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+
+
+def fred(sid):
+    """Annual averages of a FRED series (BLS, BEA and other US agencies), as {year: value}."""
+    txt = S.get(FRED, params={"id": sid, "fq": "Annual", "fam": "avg", "cosd": f"{START}-01-01"}, timeout=120).text
+    out = {}
+    for row in csv.DictReader(io.StringIO(txt)):
+        y, v = int(row["observation_date"][:4]), row.get(sid, "")
+        if v not in ("", ".") and START <= y <= END:
+            out[y] = float(v)
+    if not out:
+        raise RuntimeError(f"FRED {sid} returned nothing: {txt[:200]}")
+    return out
+
+
+CACHE = pathlib.Path(__file__).resolve().parent / ".cache"
+
+
+def fbi(*offenses):
+    """US offences per 100,000 residents from the FBI Crime Data Explorer: monthly rates (offences reported by
+    participating agencies per 100,000 people they cover) summed over complete years, then summed over offences."""
+    out = {}
+    for off in offenses:
+        f = CACHE / f"fbi_{off}_{TODAY}.json"
+        if f.exists():
+            d = json.loads(f.read_text())
+        else:
+            d = S.get(f"https://api.usa.gov/crime/fbi/cde/summarized/national/{off}",
+                      params={"from": f"01-{START}", "to": f"12-{END}", "API_KEY": os.environ.get("FBI_API_KEY", "DEMO_KEY")}, timeout=180).json()
+            if "offenses" not in d:
+                raise RuntimeError(f"FBI {off}: {str(d)[:200]} (set FBI_API_KEY from api.data.gov if DEMO_KEY is rate-limited)")
+            CACHE.mkdir(exist_ok=True)
+            f.write_text(json.dumps(d))
+        months = {}
+        for k, v in d["offenses"]["rates"]["United States Offenses"].items():
+            if v is not None:
+                months.setdefault(int(k[3:]), []).append(v)
+        for y, vs in months.items():
+            if len(vs) == 12 and START <= y <= END:
+                out[y] = out.get(y, 0) + sum(vs)
+    if not out:
+        raise RuntimeError(f"FBI {offenses} returned nothing")
+    return out
+
+
+def rebase1(s, base_year):
+    return {y: v / s[base_year] * 100 for y, v in s.items()} if base_year in s else {}
+
+
 def combine(a, b, fn):
     out = {}
     for g in a:
@@ -127,7 +178,7 @@ def add(id, dimension, data, **meta):
     breaks.sort(key=lambda b: b["year"])
     other = {g: sorted(y for y in ys & set(data.get(g, {})) if y >= meta.get("keep_from", 0) and y > min(data[g])) for g, ys in flags.items() if g != "ES"}
     if any(other.values()):
-        meta["geoBreaks"] = {g: ys for g, ys in other.items() if ys}
+        meta["geoBreaks"] = {**meta.get("geoBreaks", {}), **{g: ys for g, ys in other.items() if ys}}
     keep_from = meta.pop("keep_from", None)
     if keep_from:
         data = {g: {y: v for y, v in s.items() if y >= keep_from} for g, s in data.items()}
@@ -204,12 +255,25 @@ def main():
         ("crime_cyber", "ICCS0903", "Acts against computer systems", "Cybercrime", "Unauthorised access to, interference with or interception of computer systems and data.", []),
         ("crime_drugs", "ICCS0601", "Drug offences", "Drug offences", "Unlawful possession, use, production or trafficking of controlled drugs. Strongly driven by police activity.", []),
     ]
+    FBI_URL = "https://cde.ucr.cjis.gov/LATEST/webapp/#/pages/explorer/crime/crime-trend"
+    FBI_NOTE = ("US figures are offences known to police reported to the FBI by participating agencies, per 100,000 people those agencies cover. "
+                "US and EU legal definitions differ, so compare trends, not levels. In 2021 the FBI's switch to its new reporting system (NIBRS) cut coverage to about 80% of the population, so treat 2021 with caution.")
+    us_crime = {"crime_homicide": (("homicide",), "Murder and non-negligent manslaughter."),
+                "crime_assault": (("aggravated-assault",), "FBI aggravated assault: an attack intended to cause severe injury, usually with a weapon."),
+                "crime_robbery": (("robbery",), "FBI robbery."),
+                "crime_burglary": (("burglary",), "FBI burglary, including non-residential premises."),
+                "crime_theft": (("larceny", "motor-vehicle-theft"), "FBI larceny-theft plus motor vehicle theft, to match the EU category, which includes vehicle theft.")}
     for id, code, label, short, definition, breaks in cats:
         extra = {}
+        data = eurostat("crim_off_cat", iccs=code, unit="P_HTHAB")
+        if id in us_crime:
+            offs, what = us_crime[id]
+            data["US"] = fbi(*offs)
+            extra["geoSources"] = {"US": {"org": "FBI Crime Data Explorer", "dataset": "Summarized offences: " + ", ".join(offs), "url": FBI_URL, "note": what + " " + FBI_NOTE}}
         if id == "crime_sexual":
             extra["parts"] = [{"label": lab, "code": c, "data": {str(y): round(v, 4) for y, v in sorted(eurostat("crim_off_cat", iccs=c, unit="P_HTHAB").get("ES", {}).items())}}
                               for c, lab in (("ICCS03011", "Rape"), ("ICCS03012", "Sexual assault"))]
-        add(id, data=eurostat("crim_off_cat", iccs=code, unit="P_HTHAB"), label=f"{label} recorded by police", short=short,
+        add(id, data=data, label=f"{label} recorded by police", short=short,
             definition=definition, breaks=breaks, **crime_meta, **extra)
     add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5", extra={"US": "USA"}), label="Intentional homicide (long series)", short="Homicide (UNODC)",
         unit="per 100,000 residents", format="decimal2",
@@ -223,7 +287,12 @@ def main():
         definition="Gross domestic product in chain-linked volumes (2010 euros), removing the effect of inflation.",
         notes="GDP grows mechanically when the population grows; GDP per person is a better guide to average living standards.",
         source={"org": EUROSTAT_SRC, "dataset": "nama_10_gdp", "url": LINK("nama_10_gdp"), "upstream": "INE Spain"})
-    add("gdp_pc_real", "economy", eurostat("nama_10_pc", na_item="B1GQ", unit="CLV10_EUR_HAB"),
+    gdp_pc = eurostat("nama_10_pc", na_item="B1GQ", unit="CLV10_EUR_HAB")
+    gdp_pc["US"] = worldbank("NY.GDP.PCAP.KD", extra={"US": "USA"}, only_extra=True)["US"]
+    add("gdp_pc_real", "economy", gdp_pc,
+        geoUnits={"US": {"unit": "US$ per person, 2015 prices", "format": "usd"}},
+        geoSources={"US": {"org": "World Bank", "dataset": "NY.GDP.PCAP.KD", "url": "https://data.worldbank.org/indicator/NY.GDP.PCAP.KD?locations=US",
+                           "note": "US figures are World Bank real GDP per person in 2015 dollars (from BEA national accounts); compare growth rates, not levels."}},
         label="Real GDP per person", short="GDP per person", unit="€ per person, 2010 prices", format="eur",
         definition="Real GDP divided by population (chain-linked volumes, 2010 euros).",
         source={"org": EUROSTAT_SRC, "dataset": "nama_10_pc", "url": LINK("nama_10_pc"), "upstream": "INE Spain"})
@@ -232,50 +301,70 @@ def main():
         definition="Total employment (domestic concept, national accounts), in millions of people.",
         source={"org": EUROSTAT_SRC, "dataset": "nama_10_pe", "url": LINK("nama_10_pe"), "upstream": "INE Spain"})
     une = eurostat("lfsa_urgan", age="Y15-74", sex="T", citizen="TOTAL", unit="PC")
+    une["US"] = fred("UNRATE")
     add("unemployment", "economy", une, label="Unemployment rate", short="Unemployment", unit="% of labour force", format="pct1",
         definition="Unemployed people aged 15–74 as a percentage of the labour force (Labour Force Survey, ILO definition).",
         breaks=[{"year": 2021, "note": "EU-wide Labour Force Survey methodology change (IESS regulation) in 2021."}],
+        geoSources={"US": {"org": "BLS via FRED", "dataset": "UNRATE (Current Population Survey)", "url": "https://fred.stlouisfed.org/series/UNRATE",
+                           "note": "US figures are the BLS unemployment rate for people aged 16 and over; the ILO definition is similar, but the age range differs."}},
         source={"org": EUROSTAT_SRC, "dataset": "lfsa_urgan", "url": LINK("lfsa_urgan"), "upstream": "INE Spain (EPA)"})
     add("employment_rate", "economy", eurostat("lfsa_ergan", age="Y20-64", sex="T", citizen="TOTAL", unit="PC"),
         label="Employment rate (age 20–64)", short="Employment rate", unit="% of people aged 20–64", format="pct1",
         definition="Employed people aged 20–64 as a share of everyone in that age group.",
         breaks=[{"year": 2021, "note": "EU-wide Labour Force Survey methodology change in 2021."}],
         source={"org": EUROSTAT_SRC, "dataset": "lfsa_ergan", "url": LINK("lfsa_ergan"), "upstream": "INE Spain (EPA)"})
-    add("productivity", "economy", eurostat("nama_10_lp_ulc", na_item="RLPR_HW", unit="I15"),
+    prod = eurostat("nama_10_lp_ulc", na_item="RLPR_HW", unit="I15")
+    prod["US"] = rebase1(fred("OPHNFB"), 2015)
+    add("productivity", "economy", prod,
+        geoSources={"US": {"org": "BLS via FRED", "dataset": "OPHNFB", "url": "https://fred.stlouisfed.org/series/OPHNFB",
+                           "note": "US figures are BLS output per hour in the nonfarm business sector, which excludes government, farms and households; the EU figure covers the whole economy."}},
         label="Output per hour worked", short="Productivity", unit="index, 2015 = 100", format="index",
         definition="Real labour productivity per hour worked.",
         source={"org": EUROSTAT_SRC, "dataset": "nama_10_lp_ulc", "url": LINK("nama_10_lp_ulc"), "upstream": "INE Spain"})
 
     # ---------- housing ----------
+    US = {"US": "USA"}
     HP = "OECD.ECO.MPD,DSD_AN_HOUSE_PRICES@DF_HOUSE_PRICES,1.0"
     hp_src = {"org": "OECD", "dataset": "Analytical house prices (DF_HOUSE_PRICES)", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_AN_HOUSE_PRICES%40DF_HOUSE_PRICES&df[ag]=OECD.ECO.MPD", "upstream": "INE / Ministry of Housing (Spain)"}
-    add("house_price_real", "housing", oecd(HP, "{geo}.A.RHP."), label="House prices after inflation", short="Real house prices",
+    add("house_price_real", "housing", oecd(HP, "{geo}.A.RHP.", extra=US), label="House prices after inflation", short="Real house prices",
         unit="index, 2015 = 100", format="index", definition="Nominal house price index deflated by the consumer price index.", source=hp_src)
-    add("house_price_nominal", "housing", oecd(HP, "{geo}.A.HPI."), label="House prices", short="House prices",
+    add("house_price_nominal", "housing", oecd(HP, "{geo}.A.HPI.", extra=US), label="House prices", short="House prices",
         unit="index, 2015 = 100", format="index", definition="Nominal residential property price index.", source=hp_src)
-    rent = oecd(HP, "{geo}.A.RPI.")
+    rent = oecd(HP, "{geo}.A.RPI.", extra=US)
     add("rent_nominal", "housing", rent, label="Rents", short="Rents", unit="index, 2015 = 100", format="index",
         definition="Rent component of the consumer price index.",
         notes="In Spain this index tracks rents paid on all existing contracts, so it rises far more slowly than asking rents for new contracts (e.g. listing portals or INE's experimental rental index).",
         source=hp_src)
     hicp15 = rebase(hicp)
+    hicp15["US"] = rebase1(fred("CPIAUCSL"), 2015)
     add("rent_real", "housing", combine(rebase(rent), hicp15, lambda a, b: a / b * 100), label="Rents after inflation", short="Real rents",
         unit="index, 2015 = 100", format="index",
         definition="Rent index divided by the overall consumer price index (HICP), both 2015 = 100 (our calculation). Above 100 means rents rose faster than prices in general since 2015.",
         notes="In Spain this index tracks rents on all existing contracts, so it understates the rise in rents for new tenants.",
+        geoSources={"US": {"org": "OECD + BLS", "dataset": "DF_HOUSE_PRICES (RPI) ÷ CPI-U (CPIAUCSL)", "url": "https://fred.stlouisfed.org/series/CPIAUCSL",
+                           "note": "US real rents divide the OECD rent index (from the BLS consumer price index, which also covers existing tenancies) by the US consumer price index."}},
         source={"org": "OECD + Eurostat", "dataset": "DF_HOUSE_PRICES (RPI) ÷ prc_hicp_aind", "url": LINK("prc_hicp_aind")}, derived=True)
-    add("price_to_income", "housing", oecd(HP, "{geo}.A.HPI_YDH."), label="House prices relative to incomes", short="Price-to-income",
+    add("price_to_income", "housing", oecd(HP, "{geo}.A.HPI_YDH.", extra=US), label="House prices relative to incomes", short="Price-to-income",
         unit="index, 2015 = 100", format="index",
         definition="Nominal house prices divided by nominal disposable income per person. Higher means housing is less affordable.", source=hp_src)
-    add("price_to_rent", "housing", oecd(HP, "{geo}.A.HPI_RPI."), label="House prices relative to rents", short="Price-to-rent",
+    add("price_to_rent", "housing", oecd(HP, "{geo}.A.HPI_RPI.", extra=US), label="House prices relative to rents", short="Price-to-rent",
         unit="index, 2015 = 100", format="index", definition="Nominal house prices divided by the rent index.", source=hp_src)
 
     # ---------- living standards ----------
-    add("real_wage", "living", oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.EUR.A.Q..."),
+    rw = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.EUR.A.Q...")
+    rw["US"] = oecd("OECD.ELS.SAE,DSD_EARNINGS@AV_AN_WAGE,", "{geo}.WG.USD.A.Q...", extra={"US": "USA"})["US"]
+    add("real_wage", "living", rw,
+        geoUnits={"US": {"unit": "US$ per year, constant prices", "format": "usd"}},
+        geoSources={"US": {"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE), US dollars", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE",
+                           "note": "Same OECD definition, in constant US dollars; compare growth rates, not levels."}},
         label="Average annual wage after inflation", short="Real wages", unit="€ per year, constant prices", format="eur",
         definition="Average annual wages per full-time-equivalent employee, at constant prices (latest-year euros).",
         source={"org": "OECD", "dataset": "Average annual wages (AV_AN_WAGE)", "url": "https://data-explorer.oecd.org/vis?df[ds]=dsDisseminateFinalDMZ&df[id]=DSD_EARNINGS%40AV_AN_WAGE&df[ag]=OECD.ELS.SAE"})
-    add("disp_income_real", "living", eurostat("nasa_10_ki", na_item="B7G_R_HAB_2010", sector="S14_S15", unit="PC"),
+    dir_ = eurostat("nasa_10_ki", na_item="B7G_R_HAB_2010", sector="S14_S15", unit="PC")
+    dir_["US"] = rebase1(fred("A229RX0"), 2010)
+    add("disp_income_real", "living", dir_,
+        geoSources={"US": {"org": "BEA via FRED", "dataset": "A229RX0", "url": "https://fred.stlouisfed.org/series/A229RX0",
+                           "note": "US figures are BEA real disposable personal income per person (2010 = 100). Unlike the EU measure, it does not add the value of public services such as health and education, so compare trends with care."}},
         label="Household income after inflation, per person", short="Real household income", unit="index, 2010 = 100", format="index",
         definition="Real adjusted gross disposable income of households per person: income after taxes and benefits, including the value of public services such as health and education, adjusted for inflation.",
         source={"org": EUROSTAT_SRC, "dataset": "nasa_10_ki", "url": LINK("nasa_10_ki"), "upstream": "INE Spain"})
@@ -313,7 +402,12 @@ def main():
         breaks=[{"year": 2004, "note": "Spain's EU-SILC series starts in 2004; earlier survey (ECHP) figures are excluded as not comparable."}],
         source={"org": EUROSTAT_SRC, "dataset": "ilc_lvho07a", "url": LINK("ilc_lvho07a"), "upstream": "INE Spain (ECV)"}, keep_from=2004)
     ses = eurostat("earn_ses_pub2s", sizeclas="GE10", sex="T", unit="EUR")
-    add("median_earnings_real", "living", combine(ses, hicp15, lambda a, b: a / b * 100),
+    med_pay = combine(ses, hicp15, lambda a, b: a / b * 100)
+    med_pay["US"] = fred("LES1252881600Q")
+    add("median_earnings_real", "living", med_pay,
+        geoUnits={"US": {"unit": "US$ per week, 1982–84 prices", "format": "usd"}},
+        geoSources={"US": {"org": "BLS via FRED", "dataset": "LES1252881600Q (Current Population Survey)", "url": "https://fred.stlouisfed.org/series/LES1252881600Q",
+                           "note": "US figures are BLS median usual weekly earnings of full-time wage and salary workers, adjusted for inflation with the CPI-U and surveyed every year. The EU survey measures hourly pay of all employees in firms with 10 or more staff, every four years. Compare the direction and size of change, not levels."}},
         label="Typical (median) hourly pay after inflation", short="Median hourly pay", unit="€ per hour, 2015 prices", format="eur2",
         definition="Median gross hourly earnings of all employees in firms with 10 or more employees, from the four-yearly Structure of Earnings Survey (2006, 2010, 2014, 2018, 2022), deflated by the HICP (our calculation). Excludes apprentices and the smallest firms.",
         source={"org": EUROSTAT_SRC, "dataset": "earn_ses_pub2s ÷ prc_hicp_aind", "url": LINK("earn_ses_pub2s"), "upstream": "INE Spain (Encuesta de Estructura Salarial)"}, derived=True)

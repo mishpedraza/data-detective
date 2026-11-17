@@ -95,7 +95,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
   const rightOpts = (rel.right.options.length ? rel.right.options : Object.keys(INDICATORS)).filter((id) => rel.id !== 'custom' || INDICATORS[id].dimension === B.dimension)
   const compareOpts = COMPARE_OPTIONS.filter((g) => g === 'none' || (A.data[g] && B.data[g] && comparability(A, g).ok && comparability(B, g).ok)).map((g) => ({ value: g, label: g === 'none' ? 'nothing else' : COUNTRIES[g].name, hint: g === 'none' ? 'Spain only' : undefined }))
   const cmp = compare !== 'none' && compareOpts.some((o) => o.value === compare) ? compare : null
-  const cmpNote = cmp ? [A, B].filter((x) => x.dimension === 'crime').map((x) => comparability(x, cmp).note).filter(Boolean).join(' ') : ''
+  const cmpNote = cmp ? [A, B].filter((x) => x.dimension === 'crime' || x.geoSources?.[cmp]).map((x) => comparability(x, cmp).note).filter(Boolean).join(' ') : ''
   const cmpBlocked = compare !== 'none' && !cmp && COUNTRIES[compare]
     ? [A, B].map((x) => (x.data[compare] ? comparability(x, compare) : { ok: false, note: `No data for ${COUNTRIES[compare].name} on ${x.short.toLowerCase()}.` })).find((c) => !c.ok)?.note
     : undefined

@@ -19,6 +19,11 @@ export function comparability(ind: Indicator, geo: string): { ok: boolean; note?
   const br = ind.geoBreaks?.[geo]
   const brNote = br?.length ? `Eurostat flags a break in ${name}’s ${ind.short.toLowerCase()} series in ${br.join(', ')}: figures before and after are not fully comparable.` : undefined
   if (ind.dimension !== 'crime') return { ok: true, note: [src, brNote].filter(Boolean).join(' ') || undefined }
+  const r = crimeRule(ind, name, brNote)
+  return src && r.ok ? { ok: true, note: `${r.note} ${src}` } : r
+}
+
+function crimeRule(ind: Indicator, name: string, brNote?: string): { ok: boolean; note?: string } {
   if (ind.id === 'crime_homicide_long')
     return { ok: true, note: `Comparable with care: UNODC compiles these homicide rates from national police and health records using one international definition, the most comparable crime measure across countries.` }
   if (brNote) return { ok: false, note: brNote }

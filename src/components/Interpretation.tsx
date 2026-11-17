@@ -281,6 +281,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   }
   const topic = TOPIC[rel.id]
   if (!trend && topic) for (const f of topic.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
+  const cmpTopic = topic && compare ? topic.byCountry?.[compare] : undefined
+  if (!trend && cmpTopic) for (const f of cmpTopic.findings) findings.push({ lead: `In ${COUNTRIES[compare!].name}: ${f.lead.charAt(0).toLowerCase()}${f.lead.slice(1)}`, body: f.text, refs: f.refs ?? [] })
 
   const yearList = (ys: number[]) => (ys.length > 1 ? `${ys.slice(0, -1).join(', ')} and ${ys[ys.length - 1]}` : `${ys[0]}`)
   const breakParts = [A, B].flatMap((ind) => {
@@ -500,6 +502,12 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                     <div className="study-group">
                       <h4>Research on Spain</h4>
                       <ul className="studies">{studyCards(topic.spain)}</ul>
+                    </div>
+                  )}
+                  {cmpTopic && (
+                    <div className="study-group">
+                      <h4>Research on {COUNTRIES[compare!].name}</h4>
+                      <ul className="studies">{studyCards(cmpTopic.studies)}</ul>
                     </div>
                   )}
                 </>
