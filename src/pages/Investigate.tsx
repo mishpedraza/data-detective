@@ -10,7 +10,7 @@ import { TimeChart } from '../components/TimeChart'
 import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
 import { INDICATORS, coverage, formatValue, series } from '../data/indicators'
-import { EditorialNavigation } from '../components/EditorialNavigation'
+import { InvestigationIntro } from '../components/InvestigationIntro'
 import { editorialQuestionForRelationship } from '../data/editorial'
 import { relationshipById } from '../data/relationships'
 import { answerFor } from '../lib/answers'
@@ -98,28 +98,24 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
 
   return (
     <div className="investigate">
-      <EditorialNavigation active={editorial?.id} />
-
-      <AnimatePresence mode="wait">
-        <motion.section key={rel.id} className="question-block" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
-          <p className="eyebrow">{editorial?.status === 'preview' ? 'Supporting evidence' : rel.kicker}</p>
-          <h1 className="question finding">{editorial?.status === 'available' ? editorial.question : answer?.headline ?? rel.shortQuestion}</h1>
-          {editorial?.status === 'available' && answer?.headline && <p className="tell-lead">{answer.headline}</p>}
-          {editorial?.status === 'preview' && <p className="finding-dek"><a href={hrefFor('investigate', { r: editorial.id })}>{editorial.question}</a></p>}
-          {answer?.dek && <p className="finding-dek">{answer.dek}</p>}
-          <details className="investigation-controls">
-            <summary className="tell-more">Change indicators or country</summary>
-            <div className="sentence">
-              Compare{' '}
-              <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
-              with{' '}
-              <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
-              in Spain. Compare with{' '}
-              <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'no other country'} />.
-            </div>
-          </details>
-        </motion.section>
-      </AnimatePresence>
+      <InvestigationIntro
+        active={editorial?.status === 'available' ? editorial.id : undefined}
+        current={{ id: rel.id, label: rel.question }}
+        headline={answer?.headline ?? 'There are too few overlapping years to compare these measures.'}
+        note={answer?.dek}
+      >
+        <details className="investigation-controls">
+          <summary className="tell-more">Change indicators or country</summary>
+          <div className="sentence">
+            Compare{' '}
+            <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
+            with{' '}
+            <InlinePicker label="Right indicator" tone="b" value={b} onChange={(v) => { setB(v); setHoverYear(null) }} options={rightOpts.map(optionFor)} />{' '}
+            in Spain. Compare with{' '}
+            <InlinePicker label="Comparison" value={cmp ?? 'none'} onChange={setCompare} options={compareOpts} display={cmp ? COUNTRIES[cmp].name : 'no other country'} />.
+          </div>
+        </details>
+      </InvestigationIntro>
 
       <div className="toolbar">
         <div className="segmented" role="tablist" aria-label="View">

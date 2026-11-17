@@ -331,7 +331,7 @@ export function answerFor(relId: string, a: string, b: string, compare: string |
   }
   const d = describePair(a, b, from, to)
   const q = DRIVER_Q[relId]
-  const dek = q ? `These figures alone cannot show whether ${q}; the research below weighs the evidence.` : undefined
+  const dek = q ? 'These trends don’t establish causation. The research below examines the relationship.' : undefined
   if (!d) return q ? { headline: `Too little overlapping data in ${from}–${to}`, dek: `Even with more data, national figures alone could not show whether ${q}.`, stats: [], meaning: '', detail: [], covered: [] } : null
   return { headline: `In Spain, ${d.text}`, dek, period: d.period, stats: d.stats, meaning: '', detail: [], covered: [a, b] }
 }
