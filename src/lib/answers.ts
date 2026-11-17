@@ -109,9 +109,9 @@ function growthWages(geo: string, from: number, to: number, short: boolean, _a?:
   const stats = [
     { value: signed(g), label: 'real GDP per person' },
     { value: signed(p), label: T.label(geo) },
-    ...(po != null ? [{ value: signed(po), label: TYPICAL[other].label(geo) }] : avg != null ? [{ value: signed(avg), label: 'real average wages' }] : []),
+    ...(avg != null && (b === 'real_wage' || po == null) ? [{ value: signed(avg), label: 'real average wages' }] : po != null ? [{ value: signed(po), label: TYPICAL[other].label(geo) }] : []),
   ]
-  return { headline, period: span(w), stats, meaning, detail, covered: ['gdp_pc_real', m, ...(po != null ? [other] : avg != null ? ['real_wage'] : [])] }
+  return { headline, period: span(w), stats, meaning, detail, covered: ['gdp_pc_real', m, ...(avg != null && (b === 'real_wage' || po == null) ? ['real_wage'] : po != null ? [other] : [])] }
 }
 
 const WAGE: Record<string, { noun: string; label: string }> = {
@@ -332,3 +332,5 @@ export function answerFor(relId: string, a: string, b: string, compare: string |
 
 export const isDriverQuestion = (relId: string) => relId in DRIVER_Q
 export const isBuiltAnswer = (relId: string) => relId in BUILT
+
+export { window as commonWindow, signed, span, place, moved }

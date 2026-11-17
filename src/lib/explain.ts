@@ -5,6 +5,7 @@ import { BROADER, DRIVER_RESEARCH, TOPIC, countryEvidence, relationshipEvidence,
 import type { Claim, Indicator, Relationship } from '../data/types'
 import { inRange } from './stats'
 import { change } from './compare'
+import { insightFor } from './insights'
 import { answerFor, isBuiltAnswer, isDriverQuestion, statFor, type Stat } from './answers'
 
 type Dir = 'rose' | 'fell' | 'stable'
@@ -60,6 +61,8 @@ export function explain(rel: Relationship, a: string, b: string, compare: string
   const explanations = trend && crimeDir ? trend.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
   const confounders = profile ? profile.confounders.filter((c) => overlaps(c.years)) : []
   const findings: Finding[] = []
+  const insight = insightFor(rel.id, 'ES', from, to, a)
+  if (insight) findings.push(insight)
   const kindLabel = (f: Finding) => {
     const ds = (f.kind ? [f.kind] : f.refs.map((id) => studyById(id)?.design)).filter((d) => d && d !== 'descriptive')
     if (!ds.length) return ''
