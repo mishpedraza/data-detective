@@ -9,7 +9,7 @@ import { TOPIC } from '../src/data/evidence'
 import { change } from '../src/lib/compare'
 import { inRange } from '../src/lib/stats'
 import { answerFor } from '../src/lib/answers'
-import { explain, findingYears, overlapShare } from '../src/lib/explain'
+import { explain, findingYears, overlapShare, MIN_OVERLAP } from '../src/lib/explain'
 
 const PERIODS: [number, number][] = [[2000, 2025], [2000, 2007], [2008, 2013], [2014, 2025], [2010, 2022], [2019, 2021], [2006, 2022], [2023, 2025]]
 const val = (v: string) => Number(v.replace('−', '-').replace(/[^0-9.-]/g, ''))
@@ -224,8 +224,10 @@ test('data insights appear when the pattern is in the data, and are sourced', ()
   const prod = prodAll.find((f) => /jobs were disappearing/.test(f.lead))
   assert.ok(prod, 'job-loss insight present')
   assert.match(prod!.body!, /^In 2008–2013/)
-  const pop = explain(R('immigration-growth'), 'foreign_born_share', 'gdp_real', null, 2000, 2025).findings[0]
-  assert.match(pop.lead, /more people/)
+  const growth = explain(R('immigration-growth'), 'foreign_born_share', 'gdp_real', null, 2000, 2025).findings
+  assert.ok(studyById(growth[0].refs[0]), 'research leads Immigration ↔ Growth')
+  const pop = growth.find((f) => /more people/.test(f.lead))!
+  assert.ok(pop, 'population insight available under Explore the research')
   for (const f of [gap!, prod!, pop]) for (const id of f.refs) assert.ok(REFERENCES[id], id)
   const flat = explain(R('productivity-wages'), 'productivity', 'real_wage', null, 2014, 2025).findings
   assert.ok(!flat.some((f) => /jobs were disappearing/.test(f.lead)), 'no job-loss insight when employment grew')
@@ -248,7 +250,7 @@ test('02 leads with research on the question, never with methodology', () => {
       const y = findingYears(first)
       const ap = ex.ans?.period?.split('–').map(Number)
       const [f0, t0] = ap?.length === 2 ? ap : [from, to]
-      if (y && TOPIC[rel.id].findings[0]?.years && !TOPIC[rel.id].phases?.length) assert.ok(overlapShare(y, f0, t0) >= 0.5, `${where}: "${first.lead}" covers ${y} but leads for ${f0}–${t0}`)
+      if (y && TOPIC[rel.id].findings[0]?.years && !TOPIC[rel.id].phases?.length) assert.ok(overlapShare(y, f0, t0) >= MIN_OVERLAP, `${where}: "${first.lead}" covers ${y} but leads for ${f0}–${t0}`)
     }
     for (const l of ex.shownLimits) assert.ok(l.text.split(/(?<=[.!?])\s+(?=[A-Z])/).length <= 2, `${where}: 03 longer than two sentences`)
   }
@@ -262,5 +264,16 @@ test('verdicts on pay do not overstate: a small real rise is not "did not reach 
     if (!typical) continue
     const v = parseFloat(typical.value.replace('−', '-'))
     if (v >= 0.5) assert.doesNotMatch(`${ex.ans!.headline} ${ex.meaning}`, /did not reach|barely changed|stagnat/, `${from}–${to}: ${typical.value} described as no gain`)
+  }
+})
+
+test('02 leads with a study, not with our own data notes, whenever a study covers the years', () => {
+  for (const { rel, a, b, c, from, to } of selections()) {
+    const t = TOPIC[rel.id]
+    if (!t) continue
+    const ex = explain(rel, a, b, c, from, to)
+    const first = ex.findings[0]
+    if (!first || first.lead === t.gap) continue
+    assert.ok(first.refs.some((id) => studyById(id)), `${rel.id} ${a}/${b} ${from}–${to}: "${first.lead}" cites no study`)
   }
 })
