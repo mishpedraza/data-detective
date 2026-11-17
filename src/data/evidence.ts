@@ -26,6 +26,8 @@ export interface StudyLink {
   relevance: 'direct' | 'indirect'
   /** What the study covers and, for indirect studies, why it may not transfer. */
   note: string
+  /** List under broader evidence, not as the closest research. */
+  broader?: boolean
 }
 
 export interface TrendEvidence {
@@ -264,7 +266,7 @@ export const RELATIONSHIP: Record<string, RelationshipEvidence> = {
       { lead: 'No study isolates homicide.', text: 'None of the causal studies we verified reports homicide on its own; the Spanish study left it out because numbers per province were too small.' },
       { lead: 'Broader results may not apply.', text: 'Studies of overall crime mostly find little or no effect of immigration, with exceptions for particular groups and offences. That should not be assumed to hold for homicide.' },
     ],
-    studies: [{ id: 'huang2026', relevance: 'indirect', note: 'Germany; bodily injury, robbery and sex crimes, not homicide.' }, BELL, ...BROAD],
+    studies: [{ id: 'huang2026', relevance: 'indirect', note: 'Germany; bodily injury, robbery and sex crimes, not homicide.', broader: true }, BELL, ...BROAD],
     gap: 'No causal study of immigration and homicide in Spain or elsewhere in Europe was found.',
     causal: 'No causal study isolates homicide, so research cannot tell us whether immigration affected Spain’s homicide rate in either direction.',
     uncertain: [NATIONAL],

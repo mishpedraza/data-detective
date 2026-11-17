@@ -205,7 +205,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     ? {
         noun: trend.noun, recorded: trend.measurement, explanations: trend.explanations, trend: trend.studies,
         confounders: relEv.confounders, periods: relEv.periods, synthesis: relEv.synthesis,
-        direct: relEv.studies.filter((x) => !BROADER.has(x)), broader: relEv.studies.filter((x) => BROADER.has(x)),
+        direct: relEv.studies.filter((x) => !x.broader && !BROADER.has(x)), broader: relEv.studies.filter((x) => x.broader || BROADER.has(x)),
         gap: relEv.gap, causal: relEv.causal, uncertain: relEv.uncertain, summary: trend.summary, trendGap: trend.gap,
       }
     : null
