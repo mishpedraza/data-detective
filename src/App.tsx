@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Nav } from './components/Nav'
 import { Discover } from './pages/Discover'
+import { editorialQuestionById, DEFAULT_INVESTIGATION } from './data/editorial'
+import { InvestigationPreview } from './pages/InvestigationPreview'
 import { Investigate } from './pages/Investigate'
 import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
@@ -25,13 +27,19 @@ export default function App() {
     window.location.hash = href.replace(/^#/, '')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [])
+  const investigationId = params.get('r') ?? DEFAULT_INVESTIGATION
+  const entry = editorialQuestionById(investigationId)
   return (
     <>
       <Nav route={route} go={(r) => navigate(hrefFor(r))} />
       <AnimatePresence mode="wait">
         <motion.main key={route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           {route === 'discover' && <Discover navigate={navigate} />}
-          {route === 'investigate' && (params.get('r') === 'surgery-waits' ? <SurgeryWaits /> : <Investigate params={params} />)}
+          {route === 'investigate' && (
+            entry?.status === 'preview' ? <InvestigationPreview entry={entry} /> :
+              investigationId === 'surgery-waits' ? <SurgeryWaits /> :
+                <Investigate key={investigationId} params={params} relationshipId={entry?.relationship ?? investigationId} />
+          )}
           {route === 'explore' && <Explore navigate={navigate} />}
         </motion.main>
       </AnimatePresence>

@@ -10,7 +10,9 @@ import { TimeChart } from '../components/TimeChart'
 import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
 import { INDICATORS, coverage, formatValue, series } from '../data/indicators'
-import { RELATIONSHIPS, relationshipById } from '../data/relationships'
+import { EditorialNavigation } from '../components/EditorialNavigation'
+import { editorialQuestionForRelationship } from '../data/editorial'
+import { relationshipById } from '../data/relationships'
 import { answerFor } from '../lib/answers'
 
 const MIN = 1998
@@ -31,9 +33,9 @@ const optionFor = (id: string) => {
   return { value: id, label: lowerFirst(INDICATORS[id].short), hint: c ? `${c[0]}–${c[1]}` : '' }
 }
 
-export function Investigate({ params }: { params: URLSearchParams }) {
-  const [relId, setRelId] = useState(() => params.get('r') ?? 'immigration-crime')
-  const rel = relationshipById(relId)
+export function Investigate({ params, relationshipId }: { params: URLSearchParams; relationshipId: string }) {
+  const rel = relationshipById(relationshipId)
+  const editorial = editorialQuestionForRelationship(rel.id)
   const [a, setA] = useState(() => (params.get('a') && INDICATORS[params.get('a')!] && (!rel.left.options.length || rel.left.options.includes(params.get('a')!)) ? params.get('a')! : rel.left.default))
   const [b, setB] = useState(() => (params.get('b') && INDICATORS[params.get('b')!] && (!rel.right.options.length || rel.right.options.includes(params.get('b')!)) ? params.get('b')! : rel.right.default))
   const [compare, setCompare] = useState<string>(() => params.get('c') ?? rel.defaultCompare ?? 'none')
@@ -48,30 +50,11 @@ export function Investigate({ params }: { params: URLSearchParams }) {
   const [playing, setPlaying] = useState(false)
   const [ctx, setCtx] = useState(false)
   const playRef = useRef<number | null>(null)
-  const tabsRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const box = tabsRef.current
-    const btn = box?.querySelector<HTMLElement>('button.active')
-    if (!box || !btn) return
-    const left = btn.offsetLeft - box.offsetLeft
-    if (left < box.scrollLeft || left + btn.offsetWidth > box.scrollLeft + box.clientWidth - 48) box.scrollTo({ left: Math.max(0, left - 24), behavior: 'smooth' })
-  }, [rel.id])
 
   useEffect(() => {
     const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined, mode: view === 'scatter' && mode === 'changes' ? 'changes' : undefined })
     if (window.location.hash !== q) window.history.replaceState(null, '', q)
   }, [rel.id, a, b, compare, from, to, view, mode])
-
-  function chooseRelationship(id: string) {
-    const r = relationshipById(id)
-    setRelId(id)
-    setA(r.left.default)
-    setB(r.right.default)
-    setCompare(r.defaultCompare ?? 'none')
-    setRange(defaultRange(r.left.default, r.right.default))
-    setHoverYear(null)
-  }
 
   useEffect(() => {
     if (!playing) return
@@ -115,21 +98,14 @@ export function Investigate({ params }: { params: URLSearchParams }) {
 
   return (
     <div className="investigate">
-      <nav className="rel-tabs" aria-label="Relationships">
-        <div className="rel-tabs-inner" ref={tabsRef}>
-          {RELATIONSHIPS.map((r) => (
-            <button key={r.id} className={r.id === rel.id ? 'active' : ''} onClick={() => chooseRelationship(r.id)}>
-              {r.shortQuestion}
-              {r.id === rel.id && <motion.span layoutId="tab-underline" className="tab-underline" />}
-            </button>
-          ))}
-        </div>
-      </nav>
+      <EditorialNavigation active={editorial?.id} />
 
       <AnimatePresence mode="wait">
         <motion.section key={rel.id} className="question-block" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
-          <p className="eyebrow">{rel.kicker}</p>
-          <h1 className="question finding">{answer?.headline ?? rel.question}</h1>
+          <p className="eyebrow">{editorial?.status === 'preview' ? 'Supporting evidence' : rel.kicker}</p>
+          <h1 className="question finding">{editorial?.status === 'available' ? editorial.question : answer?.headline ?? rel.shortQuestion}</h1>
+          {editorial?.status === 'available' && answer?.headline && <p className="tell-lead">{answer.headline}</p>}
+          {editorial?.status === 'preview' && <p className="finding-dek"><a href={hrefFor('investigate', { r: editorial.id })}>{editorial.question}</a></p>}
           {answer?.dek && <p className="finding-dek">{answer.dek}</p>}
           <details className="investigation-controls">
             <summary className="tell-more">Change indicators or country</summary>

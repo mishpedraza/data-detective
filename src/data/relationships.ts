@@ -31,7 +31,7 @@ export const RELATIONSHIPS: Relationship[] = [
   },
   {
     id: 'immigration-crime',
-    question: 'Does immigration increase crime?',
+    question: 'Does immigration really increase crime?',
     shortQuestion: 'Immigration ↔ Crime',
     kicker: 'Immigration and crime',
     left: { dimension: 'immigration', options: IMMIGRATION, default: 'foreign_born_share' },
