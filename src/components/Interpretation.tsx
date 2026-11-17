@@ -202,7 +202,8 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const profile: CrimeProfile | null = isImmCrime && crimeInd && immInd ? crimeProfile(crimeInd.id) : null
   const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
   const crimeDir = sc ? (sc.dir === 'rose' ? 'rise' : sc.dir === 'fell' ? 'fall' : 'stable') : null
-  const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] >= from)
+  // An explanation applies only if the selection has observations both before its end year and from its start year on.
+  const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] > from)
   const explanations = profile && crimeDir ? profile.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
   const sameAmountQ = profile && sc
     ? sc.dir === 'stable' ? `Does that mean ${profile.noun} stayed the same?` : `Does that mean ${profile.noun} ${sc.dir === 'rose' ? 'increased' : 'decreased'} by the same amount?`

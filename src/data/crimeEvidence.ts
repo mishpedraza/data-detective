@@ -144,7 +144,7 @@ export const CRIME_PROFILES: Record<string, CrimeProfile> = {
       { text: 'Spain’s series drops abruptly between 2009 and 2010 and spikes in 2015, the year of the Criminal Code reform. Changes that sudden are more likely to reflect recording than behaviour.', refs: ['lo2015'] },
     ],
     explanations: [
-      { lead: 'A recording change in 2010.', text: 'The fall between 2009 and 2010 is too large to be a real change and most likely reflects how offences were classified. Years before 2010 are not comparable with later ones.', status: 'documented', explains: 'any', years: [2009, 2010] },
+      { lead: 'A recording change in 2010.', text: 'The fall between 2009 and 2010 is too large to be a real change and most likely reflects how offences were classified. Years before 2010 are not comparable with later ones.', status: 'documented', explains: 'any', years: [2010, 2010] },
       { lead: 'The 2015 Criminal Code reform.', text: 'The reform abolished minor offences (“faltas”) and reclassified some as minor crimes. The series spikes in 2015 and falls back in 2016.', status: 'documented', explains: 'any', years: [2015, 2016], refs: ['lo2015'] },
       { lead: 'COVID-19 restrictions in 2020.', text: 'Recorded assault was lowest in 2020, when movement was restricted. Part of the later rise may be a return to earlier patterns; this has not been tested here.', status: 'hypothesis', explains: 'rise', years: [2020, 2021] },
     ],
@@ -225,7 +225,7 @@ export const CRIME_PROFILES: Record<string, CrimeProfile> = {
       { text: 'Spain’s series jumps between 2009 and 2010 and again in 2015, the year of the Criminal Code reform. Changes that sudden are more likely to reflect recording than behaviour.', refs: ['lo2015'] },
     ],
     explanations: [
-      { lead: 'A recording change in 2010.', text: 'The jump between 2009 and 2010 is too large to be a real change and most likely reflects how offences were classified.', status: 'documented', explains: 'any', years: [2009, 2010] },
+      { lead: 'A recording change in 2010.', text: 'The jump between 2009 and 2010 is too large to be a real change and most likely reflects how offences were classified.', status: 'documented', explains: 'any', years: [2010, 2010] },
       { lead: 'The 2015 Criminal Code reform.', text: 'The reform abolished minor offences (“faltas”) and reclassified some as minor crimes. The series spikes in 2015.', status: 'documented', explains: 'any', years: [2015, 2016], refs: ['lo2015'] },
       { lead: 'COVID-19 restrictions in 2020.', text: 'Recorded theft fell sharply in 2020, when movement and tourism collapsed, and recovered by 2022. This has not been tested here.', status: 'hypothesis', explains: 'any', years: [2020, 2022] },
     ],
