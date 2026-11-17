@@ -17,6 +17,7 @@ test('featured predictions have scoped evidence and open actual investigations',
   assert.match(discoveryEvidence(featuredDiscoveries[0])!.result, /13% below/)
   assert.match(discoveryEvidence(featuredDiscoveries[1])!.result, /1\.35.*0\.69/)
   assert.match(discoveryEvidence(featuredDiscoveries[2])!.result, /126.*122/)
+  for (const discovery of featuredDiscoveries) assert.equal(discoveryEvidence(discovery)?.answer, "Lower", discovery.id)
 })
 
 test('a recent immigration and housing gap cites the closest study period', () => {

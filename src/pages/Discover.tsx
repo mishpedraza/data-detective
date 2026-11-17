@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { collection, discoveryEvidence, featuredDiscoveries } from '../data/discoveries'
+import { collection, discoveryEvidence, featuredDiscoveries, predictionOptions, type Prediction } from '../data/discoveries'
 import { RELATIONSHIPS } from '../data/relationships'
 import { hrefFor } from '../lib/route'
 
@@ -14,7 +14,7 @@ function investigationHref(discovery: Featured) {
 }
 
 function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate: (href: string) => void }) {
-  const [prediction, setPrediction] = useState<string>()
+  const [prediction, setPrediction] = useState<Prediction>()
   const href = investigationHref(discovery)
   const evidence = prediction ? discoveryEvidence(discovery) : null
 
@@ -23,7 +23,15 @@ function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate:
       <h2>{discovery.question}</h2>
       {prediction ? (
         <div className="discovery-reveal" aria-live="polite">
-          <p className="tell-fine">Your prediction · {prediction}</p>
+          <div className="discovery-options prediction-feedback">
+            {predictionOptions.filter((option) => option === prediction || option === evidence?.answer).map((option) => {
+              const correct = option === evidence?.answer
+              const chosen = option === prediction
+              return <span key={option} className={correct ? 'prediction-correct' : evidence ? 'prediction-incorrect' : ''}>
+                {option} · {correct ? chosen ? 'Your pick was right' : 'Correct answer' : chosen && evidence ? 'Your pick was off' : 'Your pick'}
+              </span>
+            })}
+          </div>
           {evidence ? <>
             <p className="tell-lead">{evidence.result}</p>
             <p className="tell-text">{discovery.context}</p>
@@ -34,7 +42,7 @@ function DiscoveryCard({ discovery, navigate }: { discovery: Featured; navigate:
         <fieldset className="discovery-prediction">
           <legend>{discovery.prompt}</legend>
           <div className="discovery-options">
-            {['Higher', 'Lower', 'About the same'].map((option) => (
+            {predictionOptions.map((option) => (
               <button type="button" key={option} onClick={() => setPrediction(option)}>{option}</button>
             ))}
           </div>

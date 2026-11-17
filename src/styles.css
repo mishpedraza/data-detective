@@ -578,3 +578,8 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .discovery-card, .discovery-card:first-child, .discovery-card:last-child { padding: 24px 0; }
   .discovery-card + .discovery-card { border-left: 0; border-top: 1px solid var(--rule); }
 }
+
+.prediction-feedback { margin: 0 0 12px; }
+.prediction-feedback span { border: 1px solid currentColor; border-radius: 3px; font-size: 13px; padding: 6px 8px; }
+.prediction-feedback .prediction-correct { color: #225c3c; background: #e8f0e6; }
+.prediction-feedback .prediction-incorrect { color: #8a302b; background: #f7e8e4; }
