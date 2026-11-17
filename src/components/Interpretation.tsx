@@ -9,7 +9,7 @@ import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
 import { change, comparePair, usesPoints, type PairComparison } from '../lib/compare'
-import { answerFor, isDriverQuestion, statFor, type Stat } from '../lib/answers'
+import { answerFor, isBuiltAnswer, isDriverQuestion, statFor, type Stat } from '../lib/answers'
 
 interface Props {
   rel: Relationship
@@ -297,10 +297,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const driver = isDriverQuestion(rel.id)
   const showChange = !ans || !(ans.covered.includes(a) && ans.covered.includes(b))
   const hasCmp = !!compare && compare !== 'none'
-  const showCmp = hasCmp && (driver || showChange)
+  const showCmp = hasCmp && (!isBuiltAnswer(rel.id) || showChange)
   const keyStats: Stat[] = [...(ans?.stats ?? [])]
   if (ans && !driver) for (const ind of [A, B]) {
-    if (ans.covered.includes(ind.id) || keyStats.length >= 4) continue
+    if (ans.covered.includes(ind.id)) continue
     const c = change(ind, 'ES', from, to)
     if (c) keyStats.push(statFor(ind.id, c, true))
   }

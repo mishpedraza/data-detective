@@ -87,7 +87,7 @@ function growthWages(geo: string, from: number, to: number, short: boolean): Bui
         : gap > 2 ? 'Typical workers became better off, but by less than the economy grew.' : 'Typical workers became better off.'
   const yr = (v: number) => `${signed(v)} a year`
   const detail = [`Per year: GDP per person ${yr(gy)}, median pay ${yr(py)}.`]
-  if (avg != null && Math.abs(avg - p) > 2) detail.push(`Average wages, which high earners pull up, rose ${avg > p ? 'faster' : 'more slowly'} than median pay, so pay ${avg > p ? 'at the top grew faster than in the middle' : 'in the middle grew faster than the average'}.`)
+  if (avg != null && Math.abs(avg - p) > 2) detail.push(`Average wages, which high earners pull up, changed ${signed(avg)} against ${signed(p)} for median pay, so pay ${avg > p ? 'at the top did better than in the middle' : 'in the middle did better than the average'}.`)
   if (w[0] > from || w[1] < to) detail.push(`Median pay is surveyed every four years, so these figures cover ${span(w)}.`)
   const stats = [
     { value: signed(g), label: 'real GDP per person' },
@@ -106,7 +106,9 @@ function productivityWages(geo: string, from: number, to: number, short: boolean
   if (short) return `In ${place(geo)} over the same years, output per hour ${moved(q)} and real average wages ${moved(p)}.`
   const gap = q - p
   const headline = Math.abs(gap) <= 2 ? `In ${place(geo)}, average wages kept pace with productivity` : gap > 0 ? `In ${place(geo)}, average wages fell behind productivity` : `In ${place(geo)}, average wages grew faster than productivity`
-  const meaning = Math.abs(gap) <= 2 ? 'Pay rose about as much as the value of an hour’s work.' : `Average pay rose ${pts(gap)} ${gap > 0 ? 'less' : 'more'} than the output of an hour’s work.`
+  const meaning = Math.abs(gap) <= 2
+    ? 'Average pay changed about as much as the output of an hour’s work.'
+    : `The change in average pay was ${pts(gap)} ${gap > 0 ? 'below' : 'above'} the change in output per hour${p < 0 ? ', and pay fell after inflation' : ''}.`
   return {
     headline, period: span(w), meaning,
     stats: [{ value: signed(q), label: 'output per hour worked' }, { value: signed(p), label: 'real average wages' }],
@@ -220,3 +222,4 @@ export function answerFor(relId: string, a: string, b: string, compare: string |
 }
 
 export const isDriverQuestion = (relId: string) => relId in DRIVER_Q
+export const isBuiltAnswer = (relId: string) => relId in BUILT
