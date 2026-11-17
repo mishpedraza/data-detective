@@ -22,23 +22,25 @@ function wageGap(geo: string, from: number, to: number): Finding | null {
   if (Math.abs(gap) < 2) return null
   const dist = mean! - med!
   const measure = avg! - mean!
-  const bottomUp = d1! > d9!
-  if (gap > 0 && dist <= 1) {
+  const topAway = d9! > med! + 0.5
+  const best = d1! >= med! && d1! >= d9! ? 'at the low end' : d9! >= med! ? 'at the high end' : 'in the middle'
+  const spread = `low end ${signed(d1!)}, high end ${signed(d9!)}`
+  if (gap > 0 && !topAway && dist <= 1) {
     return {
       lead: `Average wages outpaced median pay because they are measured differently, not because top earners pulled away.`,
-      body: `In the earnings survey that measures median pay, average hourly pay ${moved(mean!)}, ${dist < -0.5 ? 'less than' : 'about as much as'} the median, and pay did best at the ${bottomUp ? 'low' : 'high'} end (${signed(bottomUp ? d1! : d9!)}, against ${signed(bottomUp ? d9! : d1!)} at the ${bottomUp ? 'high' : 'low'} end). The average-wage figure comes from national accounts, covers all employers and counts pay per full-time job per year; adjusted for the same consumer prices as median pay, it ${moved(cpi!)}.`,
+      body: `In the earnings survey that measures median pay, average hourly pay ${moved(mean!)}, ${dist < -0.5 ? 'less than' : 'about as much as'} the median, and pay grew most ${best} (${spread}). The average-wage figure comes from national accounts, covers all employers and counts pay per full-time job per year; adjusted for the same consumer prices as median pay, it ${moved(cpi!)}.`,
       refs: ['eurostatSes', 'oecdWages'], years: w,
     }
   }
   if (gap > 0) {
     return {
-      lead: d9! > d1! ? 'Part of the gap is pay at the top pulling away from the middle.' : 'Most of the gap is measurement, though the average also held up better than the median within the same survey.',
+      lead: topAway && d1! > d9! ? 'Part of the gap is pay in the middle falling behind both ends.' : topAway ? 'Part of the gap is pay at the top pulling away from the middle.' : 'Most of the gap is measurement, though the average also held up better than the median within the same survey.',
       body: `In the earnings survey that measures median pay, average hourly pay ${moved(mean!)}, high-end pay ${moved(d9!)} and low-end pay ${moved(d1!)}. The average-wage figure comes from national accounts and counts pay per full-time job per year${Math.abs(measure) > 1 ? `; that difference in measurement adds ${Math.abs(measure).toFixed(1)} points ${measure > 0 ? 'to' : 'against'} the average` : ''}.`,
       refs: ['eurostatSes', 'oecdWages'], years: w,
     }
   }
   return {
-    lead: 'Median pay outpaced the average: pay in the middle caught up with the top.',
+    lead: med! > d9! ? 'Median pay outpaced the average: pay in the middle caught up with the top.' : 'Median pay outpaced the average, though pay grew most at the top.',
     body: `In the earnings survey, low-end pay ${moved(d1!)} and high-end pay ${moved(d9!)}, while average hourly pay ${moved(mean!)}.`,
     refs: ['eurostatSes', 'oecdWages'], years: w,
   }
