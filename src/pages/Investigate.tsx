@@ -11,6 +11,7 @@ import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
 import { INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { RELATIONSHIPS, relationshipById } from '../data/relationships'
+import { answerFor } from '../lib/answers'
 
 const MIN = 1998
 const MAX = 2025
@@ -102,6 +103,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
   const sparkB = useMemo(() => series(b, 'ES'), [b])
   const events = EVENTS.filter((e) => e.end >= from && e.start <= to && (!e.only || e.only.includes(A.dimension) || e.only.includes(B.dimension)))
 
+  const answer = answerFor(rel.id, a, b, cmp, from, to)
   const covA = coverage(a)
   const covB = coverage(b)
   const valueAt = (id: string, y: number) => INDICATORS[id].data.ES?.[String(y)]
@@ -127,7 +129,8 @@ export function Investigate({ params }: { params: URLSearchParams }) {
       <AnimatePresence mode="wait">
         <motion.section key={rel.id} className="question-block" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.35 }}>
           <p className="eyebrow">{rel.kicker}</p>
-          <h2 className="question">{rel.question}</h2>
+          <h1 className="question finding">{answer?.headline ?? rel.question}</h1>
+          {answer?.dek && <p className="finding-dek">{answer.dek}</p>}
           <div className="sentence">
             Compare{' '}
             <InlinePicker label="Left indicator" tone="a" value={a} onChange={(v) => { setA(v); setHoverYear(null) }} options={leftOpts.map(optionFor)} />{' '}
