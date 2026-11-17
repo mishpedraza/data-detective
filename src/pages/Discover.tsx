@@ -1,20 +1,28 @@
-import { motion } from 'framer-motion'
-import { predictions } from '../data/discoveries'
-import { DiscoveryPrediction } from '../components/DiscoveryPrediction'
+import { DISCOVER_TEASERS } from '../data/discoverEdition'
+import { DiscoveryInteraction } from '../components/DiscoveryInteraction'
 import { EDITORIAL_QUESTIONS } from '../data/editorial'
 import { hrefFor } from '../lib/route'
 
-type Featured = typeof EDITORIAL_QUESTIONS[number]
+type Entry = typeof EDITORIAL_QUESTIONS[number]
 
-function DiscoveryCard({ entry, navigate }: { entry: Featured; navigate: (href: string) => void }) {
-  const discovery = entry.status === 'available' ? predictions.find(({ id }) => id === entry.relationship) : undefined
-  const href = hrefFor('investigate', { r: entry.id })
-
+function DiscoveryCard({ entry, navigate }: { entry: Entry; navigate: (href: string) => void }) {
+  const teaser = DISCOVER_TEASERS[entry.id]
+  const Heading = entry.featured ? 'h2' : 'h3'
+  const href = hrefFor('investigate', { r: entry.id, ...teaser?.years })
+  const evidenceLink = (label = 'Explore the evidence') => (
+    <a className="discovery-link discovery-open" href={href} onClick={(event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+      event.preventDefault()
+      navigate(href)
+    }}>{label} <span aria-hidden="true">→</span></a>
+  )
   return (
-    <article className="discovery-card">
-      <h2>{entry.question}</h2>
-      {discovery && <DiscoveryPrediction discovery={discovery} navigate={navigate} />}
-      {!discovery && <a className="tell-more discovery-open" href={href}>Explore the evidence →</a>}
+    <article className={entry.featured ? 'discovery-card' : 'discovery-brief'}>
+      <Heading>{entry.question}</Heading>
+      {teaser && <p className="discovery-hook">{teaser.hook}</p>}
+      {teaser?.interaction
+        ? <DiscoveryInteraction interaction={teaser.interaction} evidenceLink={evidenceLink} />
+        : evidenceLink()}
     </article>
   )
 }
@@ -22,28 +30,20 @@ function DiscoveryCard({ entry, navigate }: { entry: Featured; navigate: (href: 
 export function Discover({ navigate }: { navigate: (h: string) => void }) {
   const featured = EDITORIAL_QUESTIONS.filter((entry) => entry.featured)
   const more = EDITORIAL_QUESTIONS.filter((entry) => !entry.featured)
-
   return (
-    <div className="discover">
+    <div className="discover discover-edition">
       <section className="hero">
-        <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          Big questions.<br /> <em>Surprising discoveries.</em>
-        </motion.h1>
-        <p className="hero-sub">Explore what the evidence reveals about the world and how it compares with what we think we know.</p>
+        <h1>Think you know? <em>Look closer.</em></h1>
+        <p className="hero-sub">Test your instincts against the evidence.</p>
       </section>
-
       <section className="discovery-grid" aria-label="Featured discoveries">
         {featured.map((entry) => <DiscoveryCard key={entry.id} entry={entry} navigate={navigate} />)}
       </section>
-
       <section className="more-q" aria-labelledby="discover-more">
-        <h2 id="discover-more" className="section-label">Keep exploring</h2>
+        <h2 id="discover-more">Keep exploring</h2>
         <ol>
-          {more.map(({ id, question }) => (
-            <li key={id}><a href={hrefFor('investigate', { r: id })}>
-              <span className="more-text">{question}</span>
-              <span className="q-go" aria-hidden>→</span>
-            </a></li>
+          {more.map((entry) => (
+            <li key={entry.id}><DiscoveryCard entry={entry} navigate={navigate} /></li>
           ))}
         </ol>
       </section>
