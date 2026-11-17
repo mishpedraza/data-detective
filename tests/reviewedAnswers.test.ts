@@ -5,6 +5,7 @@ import { RELATIONSHIPS } from '../src/data/relationships'
 import { INDICATORS } from '../src/data/indicators'
 import { REFERENCES } from '../src/data/references'
 import { studyById } from '../src/data/research'
+import { storyComparison } from '../src/lib/storyComparison'
 import { answerFor } from '../src/lib/answers'
 import { discoveryEvidence, predictions } from '../src/data/discoveries'
 
@@ -39,7 +40,16 @@ test('fixed housing and wage findings agree with the underlying comparison data'
 test('immigration crime distinguishes overall research, mechanisms and homicide limits', () => {
   const answer = REVIEWED_ANSWERS['immigration-crime']!
   assert.ok(answer.finding.refs.includes('ousey2018'))
-  assert.ok(answer.explanation.some(({ refs }) => refs.includes('alonso2012')))
+  assert.ok(answer.limitation.refs?.includes('alonso2012'))
   assert.ok(answer.explanation.some(({ refs }) => refs.includes('pinotti2017')))
   assert.match(answer.limitation.text, /studies cited here.*homicide in Spain/)
+})
+
+test('main-story comparisons use verified endpoints and a common unit', () => {
+  const house = REVIEWED_ANSWERS['housing-affordability']!.visual!
+  const wages = REVIEWED_ANSWERS['growth-wages']!.visual!
+  assert.deepEqual(storyComparison(house)?.rows.map(({ display }) => display), ['100', '87'])
+  assert.deepEqual(storyComparison(wages)?.rows.map(({ display }) => display), ['+4.8%', '+1.6%'])
+  assert.equal(storyComparison({ ...wages, to: 2021 }), null)
+  assert.equal(REVIEWED_ANSWERS['immigration-crime']!.visual, undefined)
 })

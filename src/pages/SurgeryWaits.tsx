@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { InvestigationStory } from '../components/InvestigationStory'
 import { InvestigationIntro } from '../components/InvestigationIntro'
 import { surgeryQuestion, surgeryRegions, surgerySource, surgeryTrend } from '../data/surgeryWaits'
 
@@ -38,24 +39,27 @@ export function SurgeryWaits() {
         headline="Patients on Spain’s planned surgery list had waited an average of 122 days at the end of 2025."
         note="That’s four days shorter than a year earlier and two days longer than at the end of 2022."
       />
-      <figure>
-        <figcaption>Average days waited by patients on the planned surgery list</figcaption>
-        <SurgeryTrendChart />
-      </figure>
-      <p className="tell-lead">Where you live makes a big difference.</p>
-      <p className="tell-text">In December 2025, the average ranged from 50 days in Madrid to 173 in Andalusia. Nationwide, about one in five people on the list had waited more than six months.</p>
-      <details>
-        <summary className="tell-more">Compare regions</summary>
-        <label>Region <select value={region} onChange={(event) => setRegion(event.target.value)}>
-          {surgeryRegions.map(([name]) => <option key={name}>{name}</option>)}
-        </select></label>
-        <p className="tell-text" aria-live="polite">{region} · {days} days. Spain overall · 122 days.</p>
-      </details>
-      <details>
-        <summary className="tell-more">About the data</summary>
-        <p className="tell-text">These are twice-yearly snapshots of how long people still on the public health system’s planned surgery list had already waited. A patient’s eventual wait can be longer. The averages combine different procedures.</p>
-        <a href={surgerySource}>Ministry of Health · corrected December 2025 report (PDF)</a>
-      </details>
+      <InvestigationStory
+        evidence={<figure>
+          <figcaption>Average days already waited by patients on the planned surgery list</figcaption>
+          <SurgeryTrendChart />
+          <ul className="story-sources"><li><a href={surgerySource}>Ministry of Health waiting-list report</a></li></ul>
+        </figure>}
+        explanation={<>
+          <h2>Where you live makes a big difference</h2>
+          <p>In December 2025, the average ranged from 50 days in Madrid to 173 in Andalusia. Nationwide, about one in five people on the list had waited more than six months.</p>
+        </>}
+        exploration={<>
+          <label>Region <select value={region} onChange={(event) => setRegion(event.target.value)}>
+            {surgeryRegions.map(([name]) => <option key={name}>{name}</option>)}
+          </select></label>
+          <p className="tell-text" aria-live="polite">{region} · {days} days. Spain overall · 122 days.</p>
+        </>}
+        research={<>
+          <p className="tell-text">These are twice-yearly snapshots of how long people still on the public health system’s planned surgery list had already waited. A patient’s eventual wait can be longer. The averages combine different procedures.</p>
+          <a href={surgerySource}>Ministry of Health · corrected December 2025 report (PDF)</a>
+        </>}
+      />
     </article>
   )
 }

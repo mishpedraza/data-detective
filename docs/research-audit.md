@@ -24,3 +24,13 @@ The reviewed answers specify a scope, a sourced finding, a sourced explanation a
 - Housing. Regional household formation and completions, new-lease rents, and the upfront and monthly costs faced by first-time buyers. National home prices and average income cannot describe those groups by themselves.
 - Pay. A harmonised series for mean, median and percentiles of hourly pay from the same population, plus hours and inflation-adjusted household income by decile.
 - The remaining editorial previews need evidence specific to their questions. They remain unavailable.
+
+## Shared story presentation
+
+The former page gave interactive trends, chart statistics and study lists similar weight. It could visualise what was easy to chart while repeating the same result in the study table, findings and explanation.
+
+Lead with one answer. Use the opening scope note only for facts needed to interpret it. Put the strongest evidence in `finding` and reserve `explanation` for an additional mechanism, contrast, or reason the result might differ elsewhere. Link each claim to its sources and keep disagreements and full study details in the research disclosure. An investigation with only descriptive data should identify that boundary.
+
+Use `visual` only when the central claim has comparable values. Set the same unit, clearly label dates and measures, and give the reader a reason to care beyond the bar lengths. The housing story uses 2007 as an index baseline. Growth and wages uses cumulative inflation-adjusted percentage changes over a common window. The remaining eight chart investigations lead with prose because the available headline evidence is better expressed as a scoped study result, an accounting estimate or a comparison across unlike settings. The surgery story keeps its trend chart because it directly shows wait times over the period. The detailed Spain, Italy and UK study comparison remains available in immigration and crime, with the outcome definitions visible.
+
+The latest audit retained the research verdicts and rewrote their presentation. Recheck the on-page answer against the source when editing. Citation and chart tests catch missing records and inconsistent calculations. They cannot assess a study's credibility or determine whether a sentence is warranted.
