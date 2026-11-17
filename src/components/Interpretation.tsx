@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { COUNTRIES } from '../data/countries'
 import { INDICATORS, formatValue, series } from '../data/indicators'
@@ -20,6 +20,7 @@ interface Props {
   from: number
   to: number
   reviewed?: ReviewedAnswer
+  secondaryExploration?: ReactNode
 }
 
 
@@ -133,7 +134,7 @@ function StudyCard({ s, note, period, open, onToggle }: { s: Study; note?: strin
   )
 }
 
-export function Interpretation({ rel, a, b, compare, from, to, reviewed }: Props) {
+export function Interpretation({ rel, a, b, compare, from, to, reviewed, secondaryExploration }: Props) {
   const [why, setWhy] = useState(false)
   const [stats, setStats] = useState(false)
   const [caveats, setCaveats] = useState(false)
@@ -433,6 +434,8 @@ export function Interpretation({ rel, a, b, compare, from, to, reviewed }: Props
           )}
         </div>
       </div>
+
+      {secondaryExploration}
 
       <div className="tell-part">
         <div className="tell-label">
