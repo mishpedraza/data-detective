@@ -9,6 +9,7 @@ import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
 import { comparePair, usesPoints, type PairComparison } from '../lib/compare'
+import { answerFor, isDriverQuestion } from '../lib/answers'
 
 interface Props {
   rel: Relationship
@@ -205,7 +206,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     if (pts.length < 4) return null
     const hi = pts.reduce((m, p) => (p.value > m.value ? p : m)), lo = pts.reduce((m, p) => (p.value < m.value ? p : m))
     // Percentages are meaningless when a series is zero or negative, so use absolute changes there.
-    const useAbs = pts.some((p) => p.value <= 0)
+    const useAbs = pts.some((p) => p.value <= 0) || usesPoints(T)
     let big: { year: number; pct: number } | null = null
     for (let k = 1; k < pts.length; k++) if (pts[k].year === pts[k - 1].year + 1) {
       const d = pts[k].value - pts[k - 1].value
@@ -281,7 +282,6 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const topic = TOPIC[rel.id]
   if (!trend && topic) for (const f of topic.findings) findings.push({ lead: f.lead, body: f.text, refs: f.refs ?? [] })
 
-  const moveTogether = immInd && profile ? `Moving together over the same years cannot by itself show that ${nm(immInd)} affected ${profile.noun}.` : ''
   const yearList = (ys: number[]) => (ys.length > 1 ? `${ys.slice(0, -1).join(', ')} and ${ys[ys.length - 1]}` : `${ys[0]}`)
   const breakParts = [A, B].flatMap((ind) => {
     const ys = ind.breaks.filter((x) => x.year > from && x.year <= to).map((x) => x.year)
@@ -293,9 +293,12 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   })
   const breakItems: Claim[] = breakParts.length ? [{ text: `Series breaks: ${breakParts.join('; ')}. Figures either side are not fully comparable.`, refs: [A, B].filter((ind) => ind.breaks.some((x) => x.year > from && x.year <= to)).map((ind) => `data:${ind.id}`) }] : []
   const trendGapText = trend && crimeDir ? (trend.summaryDir === 'any' || trend.summaryDir === crimeDir ? trend.gap : `No verified study explains this ${crimeDir === 'stable' ? 'flat trend' : crimeDir} in recorded ${trend.noun} in the selected years.`) : null
-  const relevantCannot = rel.cannot.filter((c) => !c.only || c.only.includes(a) || c.only.includes(b))
+  const ans = answerFor(rel.id, compare, from, to)
+  const driver = isDriverQuestion(rel.id)
+  const showChange = !ans || !(ans.covered.includes(a) && ans.covered.includes(b))
+  const relevantCannot = rel.cannot.filter((c) => (!c.only || c.only.includes(a) || c.only.includes(b)) && !(driver && c.text.startsWith('Two lines moving together')))
   const uncertain: Claim[] = profile
-    ? [...(trendGapText ? [{ text: trendGapText }] : []), { text: `${profile.gap} ${moveTogether}` }, ...breakItems].slice(0, 3)
+    ? [...(trendGapText ? [{ text: trendGapText }] : []), { text: profile.gap }, ...breakItems].slice(0, 3)
     : trend
       ? [...(trendGapText ? [{ text: trendGapText }] : []), ...relevantCannot.slice(0, 1), ...breakItems].slice(0, 3)
       : [...(topic ? [{ text: topic.gap }] : []), ...breakItems, ...relevantCannot].slice(0, 3)
@@ -311,7 +314,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           <h3>What happened?</h3>
         </div>
         <div className="tell-body">
-          <ChangeText A={A} B={B} compare={compare} from={from} to={to} />
+          {ans && !driver && <p className="ti-answer">{ans.text}</p>}
+          {showChange && <ChangeText A={A} B={B} compare={compare} from={from} to={to} />}
+          {ans && driver && <p className="ti-answer ti-answer-sm">{ans.text}</p>}
           {tp && <p className="ti-counts">{tp}</p>}
           {trend && <p className="ti-note">{firstSentence(trend.measurement[0].text)}</p>}
           <button className="tell-more" onClick={() => setStats((v) => !v)} aria-expanded={stats}>
