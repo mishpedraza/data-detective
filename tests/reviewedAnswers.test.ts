@@ -1,5 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
+import { EDITORIAL_STORIES } from '../src/data/editorialStories'
+import { EDITORIAL_QUESTIONS } from '../src/data/editorial'
 import { REVIEWED_ANSWERS } from '../src/data/reviewedAnswers'
 import { RELATIONSHIPS } from '../src/data/relationships'
 import { INDICATORS } from '../src/data/indicators'
@@ -11,7 +13,8 @@ import { discoveryEvidence, predictions } from '../src/data/discoveries'
 
 test('each working relationship has a scoped reviewed answer with resolvable citations', () => {
   assert.deepEqual(Object.keys(REVIEWED_ANSWERS).sort(), RELATIONSHIPS.map(({ id }) => id).sort())
-  for (const [id, answer] of Object.entries(REVIEWED_ANSWERS)) {
+  assert.deepEqual(Object.keys(EDITORIAL_STORIES).sort(), EDITORIAL_QUESTIONS.filter(({ status }) => status === 'research').map(({ id }) => id).sort())
+  for (const [id, answer] of Object.entries({ ...REVIEWED_ANSWERS, ...EDITORIAL_STORIES })) {
     assert.ok(answer, id)
     assert.ok(answer.headline && answer.scope && answer.limitation.text, id)
     assert.notEqual(answer.limitation.text, answer.finding.text)

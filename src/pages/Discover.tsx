@@ -13,10 +13,8 @@ function DiscoveryCard({ entry, navigate }: { entry: Featured; navigate: (href: 
   return (
     <article className="discovery-card">
       <h2>{entry.question}</h2>
-      {entry.status === 'preview' && <p className="tell-text">Investigation not yet available.</p>}
       {discovery && <DiscoveryPrediction discovery={discovery} navigate={navigate} />}
-      {entry.status === 'preview' && <a className="tell-more" href={href}>Read preview →</a>}
-      {entry.status === 'available' && !discovery && <a className="tell-more discovery-open" href={href}>Explore the evidence →</a>}
+      {!discovery && <a className="tell-more discovery-open" href={href}>Explore the evidence →</a>}
     </article>
   )
 }
@@ -41,9 +39,9 @@ export function Discover({ navigate }: { navigate: (h: string) => void }) {
       <section className="more-q" aria-labelledby="discover-more">
         <h2 id="discover-more" className="section-label">Keep exploring</h2>
         <ol>
-          {more.map(({ id, question, status }) => (
+          {more.map(({ id, question }) => (
             <li key={id}><a href={hrefFor('investigate', { r: id })}>
-              <span className="more-text">{question}{status === 'preview' && <span className="feat-note">Preview · Investigation not yet available</span>}</span>
+              <span className="more-text">{question}</span>
               <span className="q-go" aria-hidden>→</span>
             </a></li>
           ))}

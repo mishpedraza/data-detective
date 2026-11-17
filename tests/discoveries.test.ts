@@ -2,6 +2,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { discoveryEvidence, predictions, predictionOptions } from '../src/data/discoveries'
 import { EDITORIAL_QUESTIONS, editorialQuestionById } from '../src/data/editorial'
+import { EDITORIAL_STORIES } from '../src/data/editorialStories'
 import { RELATIONSHIPS } from '../src/data/relationships'
 import { explain } from '../src/lib/explain'
 
@@ -10,10 +11,14 @@ test('featured predictions have scoped evidence and open actual investigations',
   assert.equal(EDITORIAL_QUESTIONS.length, 9)
   assert.equal(EDITORIAL_QUESTIONS.filter(({ featured }) => featured).length, 2)
   assert.equal(new Set(EDITORIAL_QUESTIONS.map(({ question }) => question)).size, 9)
+  assert.deepEqual(EDITORIAL_QUESTIONS.map(({ id }) => id), [
+    'housing-affordability', 'children-and-happiness', 'working-hours', 'immigration-crime', 'education-and-pay',
+    'global-danger', 'generational-wealth', 'crime-perceptions', 'wealth-and-fertility',
+  ])
   for (const entry of EDITORIAL_QUESTIONS) {
     assert.equal(editorialQuestionById(entry.id), entry)
     if (entry.status === 'available') assert.ok(ids.has(entry.relationship), entry.id)
-    else if (entry.related) assert.ok(ids.has(entry.related.relationship), entry.id)
+    else assert.ok(EDITORIAL_STORIES[entry.id], entry.id)
   }
   assert.equal(editorialQuestionById('loneliness-and-connection'), undefined)
   assert.equal(editorialQuestionById('growth-and-prosperity'), undefined)
