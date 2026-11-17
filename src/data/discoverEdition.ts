@@ -6,14 +6,14 @@ import { workingHours } from './workingHours'
 type Reveal = {
   finding: string
   note: string
-  next: string
+  measure?: string
   refs: string[]
   facts?: { label: string; value: string }[]
   comparison?: { label: string; value: string; amount: number }[]
 }
 
 export type Interaction =
-  | { kind: 'prediction'; label: string; choices: readonly string[]; answer?: string; reveal: Reveal }
+  | { kind: 'prediction'; label: string; choices: readonly string[]; answer: string; reveal: Reveal }
   | { kind: 'contrast'; label: string; reveal: Reveal }
 
 interface Teaser {
@@ -48,25 +48,24 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
         finding: housingEvidence.result,
         comparison: housingBars,
         note: 'That compares national purchase prices. A buyer’s monthly budget also depends on income and the cost of borrowing.',
-        next: 'See what the price index leaves out',
         refs: ['data:house_price_real'],
       },
     } : undefined,
   },
   'children-and-happiness': {
-    hook: 'The weeks around a first birth and the years that follow can tell different stories.',
+    hook: 'Follow the same people from five years before their first child to the years after.',
     interaction: {
-      kind: 'prediction',
-      label: 'Several years after a first birth, how does average happiness compare with before?',
-      choices: ['Higher', 'Back where it was', 'Lower'],
+      kind: 'contrast',
+      label: 'Trace happiness around a first birth',
       reveal: {
-        finding: 'The lift in happiness was temporary on average.',
-        facts: [
-          { label: 'Around the first birth', value: 'Average happiness rose' },
-          { label: 'Later on', value: 'Ratings returned to roughly their earlier level' },
+        finding: 'Happiness rose before the first birth, then returned close to its earlier level.',
+        measure: 'Change in reported happiness on a 0–10 scale · German panel',
+        comparison: [
+          { label: 'One year before', value: '+0.30', amount: 0.30 },
+          { label: 'Year of birth', value: '+0.32', amount: 0.32 },
+          { label: 'One to two years after', value: '+0.05', amount: 0.05 },
         ],
-        note: 'In the British and German surveys, the rise began before birth. The study leaves open how much of the change came from parenthood itself.',
-        next: 'Follow the story before and after birth',
+        note: 'The baseline was four to five years before birth. The survey tracks changes over time without isolating the effect of parenthood.',
         refs: ['myrskyla2014'],
       },
     },
@@ -79,82 +78,84 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       choices: [...hourCountries, 'About the same'],
       answer: Math.round(spain.drop) === Math.round(us.drop) ? 'About the same' : spain.drop > us.drop ? 'Spain' : 'United States',
       reveal: {
-        finding: 'The annual hours that disappeared',
+        finding: Math.round(spain.drop) === Math.round(us.drop)
+          ? `Both countries saw a drop of about ${hours.format(spain.drop)} hours per worker a year.`
+          : `${spain.drop > us.drop ? 'Spain' : 'The United States'} saw the larger decline: ${hours.format(Math.max(spain.drop, us.drop))} fewer annual hours per worker, compared with ${hours.format(Math.min(spain.drop, us.drop))} in ${spain.drop > us.drop ? 'the United States' : 'Spain'}.`,
         comparison: hourChanges.map(({ country, earlier, later, drop }) => ({
           label: country,
           value: `${hours.format(earlier)} → ${hours.format(later)} hours`,
           amount: Math.abs(drop),
         })),
         note: 'The bars show the drop in hours per worker. They leave unpaid household work outside the comparison.',
-        next: 'See where the working week went',
         refs: ['pwt11'],
       },
     },
   },
   'immigration-crime': {
-    hook: 'If one offence rises, what does that tell you about crime overall?',
+    hook: 'In Italy, a permit deadline gave researchers an unusual way to compare otherwise similar applicants.',
     interaction: {
       kind: 'contrast',
-      label: 'Compare robbery with overall crime',
+      label: 'Compare applicants at the cutoff',
       reveal: {
-        finding: 'One offence rose even though the change in overall crime was unclear.',
-        facts: [
-          { label: 'Robbery', value: 'The study estimated an increase' },
-          { label: 'Overall crime', value: 'The study found no statistically clear change' },
+        finding: 'Getting a residence permit roughly halved the recorded crime rate among applicants near the cutoff.',
+        measure: 'Estimated crime rates near Italy’s permit cutoff',
+        comparison: [
+          { label: 'Baseline rate', value: '1.1%', amount: 1.1 },
+          { label: 'With legal status', value: '≈0.5%', amount: 0.5 },
         ],
-        note: 'These results come from one study of Italian provinces, 1990–2003. Robbery made up a small share of recorded offences, and this estimate tells us about that place and period.',
-        next: 'See how results vary across settings',
-        refs: ['bianchi2012'],
+        note: 'The study estimated a drop of 0.6 percentage points. It measures crime among these applicants, leaving the effect of immigration on national crime open.',
+        refs: ['pinotti2017'],
       },
     },
   },
   'education-and-pay': {
-    hook: 'Qualifications are one thing employers reward. Being available at a particular hour can be another.',
+    hook: 'What happens to mothers’ and fathers’ earnings after a first child arrives?',
     interaction: {
       kind: 'contrast',
-      label: 'Look at the two measures',
+      label: 'Compare earnings ten years later',
       reveal: {
-        finding: 'An advantage in education can coexist with a gap in pay.',
-        facts: [
-          { label: 'Tertiary qualifications · EU ages 25–34, 2024', value: '49.8% of women and 38.6% of men' },
-          { label: 'Overall hourly pay gap · EU, 2022', value: '12.2%' },
+        finding: 'A decade after a first birth, Danish mothers faced a lasting earnings hit.',
+        measure: 'Estimated effect on gross earnings after ten years · Denmark, 1980–2013 data',
+        comparison: [
+          { label: 'Mothers', value: 'About 20% lower', amount: 20 },
+          { label: 'Fathers', value: 'Little change', amount: 0 },
         ],
-        note: 'These figures cover different groups and years. They show why education alone leaves part of the pay story open.',
-        next: 'See why degrees and earnings can diverge',
-        refs: ['eurostatGender'],
+        note: 'Employment, hours and wage rates all contributed. This helps explain why qualifications alone cannot account for the earnings gap.',
+        refs: ['kleven2019'],
       },
     },
   },
   'global-danger': {
-    hook: 'A tally of wars and a measure of child survival can send different signals about the same world.',
+    hook: 'A year can look very different depending on how you measure the toll of war.',
     interaction: {
       kind: 'contrast',
-      label: 'Reveal two measures of danger',
+      label: 'Compare conflicts and battle deaths',
       reveal: {
-        finding: 'More active conflicts can coexist with better child survival.',
+        finding: 'There were more armed conflicts in 2023, and battle deaths more than halved.',
+        measure: 'Global state-based conflicts · change from 2022 to 2023',
         facts: [
-          { label: 'Active state-based conflicts · 2023', value: '59, the most in the 1946–2023 series' },
-          { label: 'Deaths before age five · 2024', value: '37.4 per 1,000 live births, less than half the 2000 rate' },
+          { label: 'Conflicts ↑', value: '59 active conflicts' },
+          { label: 'Battle deaths ↓', value: 'About 122,000' },
         ],
-        note: 'The count of conflicts and the risk of dying in childhood answer different questions. Neither is a score for how dangerous the world is.',
-        next: 'Follow the two trends',
-        refs: ['rustad2024', 'whoChildMortality'],
+        note: 'Even with the decline, 2023 had the third-highest battle death toll since 1989. Counting conflicts and counting deaths capture different aspects of war.',
+        refs: ['rustad2024'],
       },
     },
   },
   'generational-wealth': {
-    hook: 'Compare generations at the same age and a balance sheet can tell a different story from a payslip.',
+    hook: 'Compare what three generations owned after subtracting what they owed, at similar ages.',
     interaction: {
       kind: 'contrast',
-      label: 'Open the generational balance sheet',
+      label: 'Compare wealth at ages 25–34',
       reveal: {
-        finding: 'US millennials had fewer assets at comparable ages.',
-        facts: [
-          { label: 'Assets', value: 'Fewer than earlier generations' },
-          { label: 'Debt', value: 'Similar to Generation X and above baby boomers' },
+        finding: 'Millennials had the lowest average net worth of the three US cohorts at ages 25–34.',
+        measure: 'Mean household net worth · US · in 2016 dollars',
+        comparison: [
+          { label: 'Baby boomers · 1989', value: '$114,000', amount: 113.9 },
+          { label: 'Generation X · 2001', value: '$148,000', amount: 148 },
+          { label: 'Millennials · 2016', value: '$92,000', amount: 91.7 },
         ],
-        note: 'The comparison was published in 2018. Looking at similar ages accounts for the extra years older people have had to save, and leaves open whether millennials caught up later.',
-        next: 'See what the age-matched comparison can tell us',
+        note: 'These are historical averages. They leave open whether millennials caught up later or how Gen Z compares at the same ages.',
         refs: ['kurz2018'],
       },
     },
@@ -167,30 +168,31 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       choices: ['It rose', 'It fell', 'It barely changed'],
       answer: 'It fell',
       reveal: {
-        finding: 'Recorded violent crime fell while the sense of rising crime kept returning.',
+        finding: 'Recorded violent crime fell 49%, even as Americans frequently said crime was rising.',
         facts: [
           { label: 'The record · 1993–2022', value: '49% lower recorded violent crime rate' },
           { label: 'The perception · Gallup polls since 1993', value: 'In 23 of 27 polls, at least 60% said crime had risen from the year before' },
         ],
         note: 'The annual opinion polls and the long-run crime series tell different stories. The long-run decline doesn’t tell us whether any single year felt safer locally.',
-        next: 'Compare public perceptions with recorded trends',
         refs: ['pewCrime2024', 'gallupCrime'],
       },
     },
   },
   'wealth-and-fertility': {
-    hook: 'Having a child can change what you can do at work. That trade-off varies even among rich countries.',
+    hook: 'France and Germany had roughly similar GDP per person in 2000. Compare their birth rates.',
     interaction: {
-      kind: 'contrast',
-      label: 'Reveal the trade-off',
+      kind: 'prediction',
+      label: 'Which country had the higher fertility rate?',
+      choices: ['France', 'Germany'],
+      answer: 'France',
       reveal: {
-        finding: 'The career cost of having children can vary even at similar incomes.',
-        facts: [
-          { label: 'When care and work clash', value: 'Parents may have to cut hours or pass up opportunities' },
-          { label: 'When care and work fit together', value: 'Childcare, flexible schedules and shared care can ease that choice' },
+        finding: 'France had the higher fertility rate in 2000.',
+        measure: 'Total fertility rate · births per woman · approximate',
+        comparison: [
+          { label: 'France', value: '1.9', amount: 1.9 },
+          { label: 'Germany', value: '1.4', amount: 1.4 },
         ],
-        note: 'The fertility review identifies these as possible reasons countries with similar incomes can have different birth rates. It leaves room for other explanations.',
-        next: 'See why income tells only part of the story',
+        note: 'Similar incomes can coexist with different fertility rates. Researchers point to childcare, work flexibility and how parents share care. Housing costs and family preferences may matter too.',
         refs: ['doepke2022'],
       },
     },

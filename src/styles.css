@@ -670,7 +670,8 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .discovery-link, .discovery-clue { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 550; text-decoration: underline; text-underline-offset: 4px; }
 .discovery-clue { border: 0; padding: 0; color: var(--ink); margin-right: 12px; }
 .discover-edition .discovery-reveal { width: 100%; border-left: 2px solid var(--b); padding: 8px 0 4px 12px; margin: 3px 0 0; }
-.discovery-guess { color: var(--ink-2); font-size: 13px; margin: 0 0 5px; }
+.discovery-guess { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; margin: 0 0 5px; }
+.discovery-measure { color: var(--ink-2); font-size: 12px; margin: 0; }
 .discovery-result { font: 450 clamp(19px, 2.8vw, 26px)/1.2 var(--serif); margin: 0 0 6px; }
 .discovery-note { color: var(--ink-2); line-height: 1.45; font-size: 14px; margin: 0; }
 .discover-edition .discovery-bars { margin: 6px 0; }
@@ -683,9 +684,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 @media (max-width: 640px) {
   .discover-edition .discovery-card, .discover-edition .discovery-card:first-child, .discover-edition .discovery-card:last-child { grid-template-columns: 1fr; gap: 8px; padding: 16px 0 12px; }
   .discover-edition .discovery-options { margin-top: 4px; }
-}
-@media (max-width: 360px) {
-  .discovery-facts { grid-template-columns: 1fr; }
+  .discovery-facts { grid-template-columns: 1fr; gap: 4px; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .discover-edition .discovery-reveal { animation: discovery-appear 180ms ease-out; }
