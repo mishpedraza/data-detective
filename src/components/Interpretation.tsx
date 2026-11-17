@@ -3,7 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { COUNTRIES } from '../data/countries'
 import { DIMENSIONS, INDICATORS, formatValue, series } from '../data/indicators'
 import { REFERENCES } from '../data/references'
-import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, outcomesFor, type Study } from '../data/research'
+import { DESIGN_LABEL, OUTCOME_LABEL, STATUS_LABEL, STUDIES, SYNTHESIS, studyById, type Study } from '../data/research'
+import { crimeProfile, type CrimeProfile, type ExplStatus, type StudyLink } from '../data/crimeEvidence'
 import type { Claim, Indicator, Point, Relationship } from '../data/types'
 import { changeMode, correlations } from '../lib/narrative'
 import { MIN_CORR_YEARS, describeR, inRange } from '../lib/stats'
@@ -66,7 +67,17 @@ function Tag({ kind }: { kind: 'descriptive' | 'association' | 'causal' }) {
   return <span className={`ti-tag ti-tag-${kind}`}>{label}</span>
 }
 
-function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolean; open: boolean; onToggle: () => void }) {
+const EXPL_LABEL: Record<ExplStatus, string> = { documented: 'Documented change', evidence: 'Supported by evidence', method: 'How the figures work', hypothesis: 'Hypothesis, not tested here' }
+
+function periodNote(s: Study, from: number, to: number) {
+  if (!s.years) return null
+  const [y0, y1] = s.years
+  if (y1 < from || y0 > to) return `Studies ${y0}–${y1}, outside your selected years`
+  if (y0 > from || y1 < to) return `Studies ${y0}–${y1}, only part of your selected years`
+  return null
+}
+
+function StudyCard({ s, note, period, open, onToggle }: { s: Study; note?: string; period?: string | null; open: boolean; onToggle: () => void }) {
   const [lim, setLim] = useState(false)
   const names = s.authors.split(/, | & /)
   const cite = names.length > 2 ? `${names[0].split(' ').slice(-1)[0]} et al.` : names.map((n) => n.split(' ').slice(-1)[0]).join(' & ')
@@ -76,7 +87,8 @@ function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolea
         <span className="study-meta">
           <span className="study-place">{s.place}</span>
           <span className="study-period">{s.period}</span>
-          {relevant && <span className="study-relevant">Covers this crime type</span>}
+          {note && <span className="study-relevant">{note}</span>}
+          {period && <span className="study-outside">{period}</span>}
         </span>
         <span className="study-headline">{s.headline}</span>
         <span className="study-cite">{cite} ({s.year}) · {STATUS_LABEL[s.status]}</span>
@@ -92,6 +104,12 @@ function StudyCard({ s, relevant, open, onToggle }: { s: Study; relevant: boolea
               <dd>{s.method}</dd>
               <dt>Outcomes studied</dt>
               <dd>{s.outcomes.map((o) => OUTCOME_LABEL[o]).join(', ')}</dd>
+              {s.measure && (
+                <>
+                  <dt>Migrants studied</dt>
+                  <dd>{s.measure}</dd>
+                </>
+              )}
               <dt>Evidence type</dt>
               <dd>{STATUS_LABEL[s.status]} · {DESIGN_LABEL[s.design]}</dd>
             </dl>
@@ -114,6 +132,10 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   const [stats, setStats] = useState(false)
   const [caveats, setCaveats] = useState(false)
   const [openStudy, setOpenStudy] = useState<string | null>(null)
+  const [broad, setBroad] = useState(false)
+  const [who, setWho] = useState(false)
+  const [conf, setConf] = useState(false)
+  const [openExpl, setOpenExpl] = useState<string | null>(null)
   const A = INDICATORS[a]
   const B = INDICATORS[b]
   const sa = summarise(A, 'ES', from, to)
@@ -151,7 +173,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
     const big = (x0: number, x1: number) => Math.abs((x1 - x0) / Math.abs(x0 || 1)) >= 0.4
     const vA = da === 'stable' ? 'stayed broadly stable' : `${da}${big(f.x, l.x) ? ' substantially' : ''}`
     const vB = db === 'stable' ? 'stayed broadly stable' : `${db}${big(f.y, l.y) ? ' substantially' : ''}`
-    keyLead = `Between ${f.year} and ${l.year}, ${nm(A)} ${vA} (${formatValue(f.x, A.format)} → ${formatValue(l.x, A.format)}) ${da === db ? 'and' : 'while'} ${nm(B)} ${vB} (${formatValue(f.y, B.format)} → ${formatValue(l.y, B.format)}).`
+    keyLead = `Between ${f.year} and ${l.year}, ${nm(A)} ${vA} (${formatValue(f.x, A.format)} → ${formatValue(l.x, A.format)}) ${da === db ? 'and' : 'while'} ${B.dimension === 'crime' ? 'recorded ' : ''}${nm(B)} ${vB} (${formatValue(f.y, B.format)} → ${formatValue(l.y, B.format)}).`
   }
   let keyTurn = ''
   if (okL && okC) {
@@ -175,8 +197,33 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
   if (compare && [A, B].some((x) => x.dimension === 'crime'))
     whyItems.push({ text: `Crime levels in Spain and ${COUNTRIES[compare].name} are not directly comparable because legal definitions and recording practices differ. Compare the direction of trends, not the levels.`, refs: ['eurostatCrime'] })
 
-  const relevantOutcomes = outcomesFor(B.dimension === 'crime' ? b : a)
   const crimeInd = B.dimension === 'crime' ? B : A.dimension === 'crime' ? A : null
+  const immInd = A.dimension === 'immigration' ? A : B.dimension === 'immigration' ? B : null
+  const profile: CrimeProfile | null = isImmCrime && crimeInd && immInd ? crimeProfile(crimeInd.id) : null
+  const sc = crimeInd === B ? sb : crimeInd === A ? sa : null
+  const crimeDir = sc ? (sc.dir === 'rose' ? 'rise' : sc.dir === 'fell' ? 'fall' : 'stable') : null
+  const overlaps = (y?: [number, number]) => !y || (y[0] <= to && y[1] >= from)
+  const explanations = profile && crimeDir ? profile.explanations.filter((e) => (e.explains === 'any' || e.explains === crimeDir) && overlaps(e.years)) : []
+  const sameAmountQ = profile && sc
+    ? sc.dir === 'stable' ? `Does that mean ${profile.noun} stayed the same?` : `Does that mean ${profile.noun} ${sc.dir === 'rose' ? 'increased' : 'decreased'} by the same amount?`
+    : profile ? `Do recorded figures measure actual ${profile.noun}?` : ''
+  const parts = crimeInd?.parts
+    ?.map((pt) => {
+      const pts = Object.entries(pt.data).map(([y, v]) => ({ year: +y, value: v })).filter((x) => x.year >= from && x.year <= to).sort((x, y) => x.year - y.year)
+      return pts.length >= 2 ? { label: pt.label, first: pts[0], last: pts[pts.length - 1] } : null
+    })
+    .filter((x): x is NonNullable<typeof x> => x != null)
+  const periodStats = profile?.periods
+    ?.map(([p0, p1]) => [Math.max(p0, from), Math.min(p1, to)] as const)
+    .filter(([p0, p1]) => p1 - p0 >= 1)
+    .map(([p0, p1]) => ({ p0, p1, c: correlations(a, b, 'ES', p0, p1) }))
+  const studyCards = (links: StudyLink[]) =>
+    links.flatMap(({ id, note }) => {
+      const s = studyById(id)
+      return s ? [<StudyCard key={id} s={s} note={note} period={periodNote(s, from, to)} open={openStudy === id} onToggle={() => setOpenStudy((o) => (o === id ? null : id))} />] : []
+    })
+  const rText = (v: number | null, n: number) => (n < MIN || v == null ? `too few (${n})` : `r = ${r(v)} (${n})`)
+  const posLevels = okL && corr.rLevels! >= 0.5
   const changeLabel = (ind: Indicator) => (changeMode(ind.id) === 'abs' ? 'change in points' : '% change')
 
   return (
@@ -266,6 +313,16 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
               </article>
             ))}
           </div>
+          {profile && crimeInd && (
+            <p className="ti-counts">
+              <strong>What the crime figures count:</strong> {crimeInd.definition}
+              {parts && parts.length > 0 && (
+                <>
+                  {' '}By component: {parts.map((pt) => `${pt.label.toLowerCase()} ${formatValue(pt.first.value, crimeInd.format)} → ${formatValue(pt.last.value, crimeInd.format)} (${pt.first.year}–${pt.last.year})`).join('; ')} per 100,000 residents.
+                </>
+              )}
+            </p>
+          )}
           {compare && (
             <p className="ti-compare">
               {(() => {
@@ -299,6 +356,195 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
         </div>
       </div>
 
+      {profile && (
+        <>
+          <div className="tell-part">
+            <div className="tell-label">
+              <span className="evidence-num">02</span>
+              <h3>{sameAmountQ}</h3>
+              <Tag kind="descriptive" />
+            </div>
+            <div className="tell-body">
+              <ul className="synthesis">
+                {profile.recorded.map((c, i) => (
+                  <li key={i}>
+                    {c.text}
+                    {fn(c.refs)}
+                  </li>
+                ))}
+              </ul>
+              {sc && (
+                <>
+                  <h4 className="ti-sub">Why might recorded {nm(crimeInd!)} have {sc.dir === 'stable' ? 'stayed broadly stable' : sc.dir === 'rose' ? 'risen' : 'fallen'} in {sc.first.year}–{sc.last.year}?</h4>
+                  {explanations.length ? (
+                    <ul className="expl">
+                      {explanations.map((e) => (
+                        <li key={e.lead} className={`expl-${e.status}`}>
+                          <span className={`expl-tag expl-tag-${e.status}`}>{EXPL_LABEL[e.status]}</span>
+                          <button className="expl-head" onClick={() => setOpenExpl((o) => (o === e.lead ? null : e.lead))} aria-expanded={openExpl === e.lead}>
+                            <strong>{e.lead}</strong> <span aria-hidden>{openExpl === e.lead ? '−' : '+'}</span>
+                          </button>
+                          {openExpl === e.lead && (
+                            <p className="expl-text">
+                              {e.text}
+                              {fn(e.refs)}
+                            </p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="tell-text">No verified explanation is available for this movement in the selected years.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="tell-part">
+            <div className="tell-label">
+              <span className="evidence-num">03</span>
+              <h3>Did immigration contribute?</h3>
+              <Tag kind="association" />
+            </div>
+            <div className="tell-body">
+              <p className="tell-text">
+                {okL && okC
+                  ? `In ${span(corr.levels)}, the levels of ${nm(immInd!)} and recorded ${nm(crimeInd!)} show ${describeR(corr.rLevels)} (r = ${r(corr.rLevels)}), and their annual changes ${describeR(corr.rChanges)} (r = ${r(corr.rChanges)}). `
+                  : okL
+                    ? `In ${span(corr.levels)}, their levels show ${describeR(corr.rLevels)} (r = ${r(corr.rLevels)}), but there are too few consecutive years (${corr.changes.length}) to check annual changes. `
+                    : 'There are too few shared years in this period for a meaningful correlation. '}
+                {posLevels
+                  ? 'A positive correlation in levels arises whenever two series trend upward over the same years, whether or not they are connected, so it cannot show that immigration raised recorded offences.'
+                  : okL && corr.rLevels! <= -0.5
+                    ? 'A negative correlation in levels arises whenever one series rises while the other falls, whether or not they are connected, so it cannot show that immigration lowered recorded offences.'
+                    : 'Even a strong correlation would not show cause and effect.'}
+              </p>
+              {periodStats && periodStats.length > 0 && (
+                <dl className="ti-stats">
+                  {periodStats.map(({ p0, p1, c }) => (
+                    <div key={p0} className="ti-period">
+                      <dt>{p0}–{p1}</dt>
+                      <dd>Levels: {rText(c.rLevels, c.levels.length)} · Annual changes: {rText(c.rChanges, c.changes.length)}</dd>
+                    </div>
+                  ))}
+                  <dd className="ti-period-note">Shared years in brackets. Correlations need at least {MIN}; sub-periods are short and legal changes fall within them, so treat these as rough checks.</dd>
+                </dl>
+              )}
+              <button className="tell-more" onClick={() => setConf((v) => !v)} aria-expanded={conf}>
+                {conf ? '− Hide other factors' : `+ Other factors that could make the two move together (${profile.confounders.length})`}
+              </button>
+              {conf && (
+                <ul className="tell-list">
+                  {profile.confounders.map((c, i) => (
+                    <li key={i}>
+                      {c.text}
+                      {fn(c.refs)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <button className="tell-more" onClick={() => setWho((v) => !v)} aria-expanded={who}>
+                {who ? '− Hide' : '+ Which immigrants does this measure?'}
+              </button>
+              {who && (
+                <div className="tell-who">
+                  <p>
+                    <strong>{immInd!.short}:</strong> {immInd!.definition}
+                    {fn([`data:${immInd!.id}`])}
+                  </p>
+                  <p>Foreign-born residents, foreign nationals, recent arrivals, asylum seekers and people without legal residence are different groups. Many foreign-born residents of Spain are Spanish citizens, and many foreign nationals have lived there for years. Studies below say which group they measure; their results apply to that group only.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="tell-part">
+            <div className="tell-label">
+              <span className="evidence-num">04</span>
+              <h3>What does the research actually say?</h3>
+              <Tag kind="causal" />
+            </div>
+            <div className="tell-body">
+              <ul className="synthesis">
+                {profile.synthesis.map((x) => (
+                  <li key={x.lead}>
+                    <strong>{x.lead}</strong> {x.text}
+                  </li>
+                ))}
+              </ul>
+              <div className="study-group">
+                <h4>Studies reporting results for {profile.noun}{profile.direct.length && !profile.direct.every((d) => /separately/.test(d.note)) ? ' or the closest category' : ''}</h4>
+                {profile.direct.length ? <ul className="studies">{studyCards(profile.direct)}</ul> : <p className="unavailable-note">None found.</p>}
+              </div>
+              <p className="synthesis-note"><strong>Research gap:</strong> {profile.gap}</p>
+              <button className="tell-more" onClick={() => setBroad((v) => !v)} aria-expanded={broad}>
+                {broad ? '− Hide broader studies' : `+ Broader studies that do not isolate ${profile.noun} (${profile.broader.length})`}
+              </button>
+              {broad && <ul className="studies">{studyCards(profile.broader)}</ul>}
+              <p className="tell-fine">
+                Studies were checked against the original publication or its official abstract. Results apply to the country, period, offences and migrant group each study covers, not to Spain today unless stated.
+              </p>
+            </div>
+          </div>
+
+          <div className="tell-part">
+            <div className="tell-label">
+              <span className="evidence-num">05</span>
+              <h3>What can we conclude, and what remains uncertain?</h3>
+            </div>
+            <div className="tell-body">
+              <dl className="conclude">
+                <dt><Tag kind="descriptive" /></dt>
+                <dd>
+                  {sa && sb
+                    ? `${uc(nm(A))} ${verb(sa.dir)} and recorded ${nm(B)} ${verb(sb.dir)} over the selected years. Recorded offences are not the same as actual ${profile.noun}.`
+                    : 'One of the series has too few observations in the selected years to describe a trend.'}
+                </dd>
+                <dt><Tag kind="association" /></dt>
+                <dd>
+                  {okL && okC
+                    ? `Levels: r = ${r(corr.rLevels)}; annual changes: r = ${r(corr.rChanges)}. This describes how the national totals moved together, not whether immigration affected ${profile.noun}.`
+                    : 'Too few shared years for a meaningful correlation.'}
+                </dd>
+                <dt><Tag kind="causal" /></dt>
+                <dd>{profile.causal}</dd>
+              </dl>
+              <h4 className="ti-sub">What remains uncertain</h4>
+              <ul className="tell-list">
+                {profile.uncertain.map((c, i) => (
+                  <li key={i}>
+                    {c.text}
+                    {fn(c.refs)}
+                  </li>
+                ))}
+              </ul>
+          {whyItems.length > 0 && (
+              <>
+                <button className="tell-more" onClick={() => setCaveats((w) => !w)} aria-expanded={caveats}>
+                  {caveats ? '− Hide' : '+ Why two trends aren’t enough'} <span>({whyItems.length})</span>
+                </button>
+                <AnimatePresence initial={false}>
+                  {caveats && (
+                    <motion.ul className="tell-list" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
+                      {whyItems.map((c, i) => (
+                        <li key={i}>
+                          {c.text}
+                          {fn(c.refs)}
+                        </li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
+              </>
+            )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {!profile && (
+        <>
       <div className="tell-part">
         <div className="tell-label">
           <span className="evidence-num">02</span>
@@ -306,7 +552,7 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           {isImmCrime && <Tag kind="causal" />}
         </div>
         <div className="tell-body">
-          {isImmCrime ? (
+          {isImmCrime && !profile ? (
             <>
               <ul className="synthesis">
                 {SYNTHESIS.map((p) => (
@@ -315,28 +561,18 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
                   </li>
                 ))}
               </ul>
-              {crimeInd && (
-                <p className="synthesis-note">
-                  You are looking at <strong>{nm(crimeInd)}</strong>.{' '}
-                  {relevantOutcomes.length
-                    ? `Studies marked “Covers this crime type” report results for ${new Intl.ListFormat('en', { type: 'disjunction' }).format(relevantOutcomes.map((o) => OUTCOME_LABEL[o].toLowerCase()))}.`
-                    : /homicide/.test(crimeInd.id)
-                      ? 'None of the studies below reports results for homicide separately; some cover violent crime as a broader group.'
-                      : 'None of the studies below reports results for this specific category.'}
-                </p>
-              )}
               {(['Spain', 'Europe', 'Review'] as const).map((scope) => (
                 <div key={scope} className="study-group">
                   <h4>{scope === 'Spain' ? 'Studies of Spain' : scope === 'Europe' ? 'Studies elsewhere in Europe' : 'Reviews of the research'}</h4>
                   <ul className="studies">
                     {STUDIES.filter((s) => s.scope === scope).map((s) => (
-                      <StudyCard key={s.id} s={s} relevant={s.outcomes.some((o) => relevantOutcomes.includes(o))} open={openStudy === s.id} onToggle={() => setOpenStudy((o) => (o === s.id ? null : s.id))} />
+                      <StudyCard key={s.id} s={s} period={periodNote(s, from, to)} open={openStudy === s.id} onToggle={() => setOpenStudy((o) => (o === s.id ? null : s.id))} />
                     ))}
                   </ul>
                 </div>
               ))}
               <p className="tell-fine">
-                All studies were checked against the original publication or its official abstract. “Peer-reviewed article” means an original study in a refereed journal; “invited review article” means a commissioned survey of the evidence. No working papers are included.
+                All studies were checked against the original publication or its official abstract. “Peer-reviewed article” means an original study in a refereed journal; “invited review article” means a commissioned survey of the evidence. 
               </p>
             </>
           ) : (
@@ -410,6 +646,9 @@ export function Interpretation({ rel, a, b, compare, from, to }: Props) {
           )}
         </div>
       </div>
+
+        </>
+      )}
 
       {footOrder.length > 0 && (
         <ol className="footnotes">

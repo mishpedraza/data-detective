@@ -165,7 +165,7 @@ def main():
     cats = [
         ("crime_homicide", "ICCS0101", "Intentional homicide", "Homicide", "Unlawful death inflicted on a person with the intent to cause death or serious injury.", []),
         ("crime_assault", "ICCS020111", "Serious assault", "Serious assault", "Intentional or reckless application of force causing serious bodily injury.", [jump_2010, sp_break_2015]),
-        ("crime_sexual", "ICCS0301", "Sexual violence", "Sexual violence", "Rape and sexual assault (ICCS 0301).", [sp_break_2015, {"year": 2022, "note": "Organic Law 10/2022 ('only yes means yes') redefined sexual offences, merging 'sexual abuse' into 'sexual assault'. Reporting has also risen with greater awareness."}]),
+        ("crime_sexual", "ICCS0301", "Sexual violence", "Sexual violence", "Offences of rape (ICCS 03011) and sexual assault (ICCS 03012) recorded by police. Counts offences known to police, not victims, arrests, prosecutions or convictions.", [{"year": 2015, "note": "Spain's Criminal Code reform (LO 1/2015) raised the age of sexual consent to 16 and abolished minor offences ('faltas')."}, {"year": 2022, "note": "Organic Law 10/2022 ('only yes means yes', in force October 2022) removed the legal distinction between sexual 'abuse' and sexual 'aggression': all non-consensual sexual acts became sexual aggression."}]),
         ("crime_robbery", "ICCS0401", "Robbery", "Robbery", "Taking property from a person using force or threat of force.", [sp_break_2015]),
         ("crime_burglary", "ICCS0501", "Burglary", "Burglary", "Gaining unauthorised access to premises with intent to commit a crime.", [sp_break_2015]),
         ("crime_theft", "ICCS0502", "Theft", "Theft", "Taking property without consent and without force against a person (e.g. pickpocketing, shoplifting).", [jump_2010, sp_break_2015]),
@@ -174,8 +174,12 @@ def main():
         ("crime_drugs", "ICCS0601", "Drug offences", "Drug offences", "Unlawful possession, use, production or trafficking of controlled drugs. Strongly driven by police activity.", []),
     ]
     for id, code, label, short, definition, breaks in cats:
+        extra = {}
+        if id == "crime_sexual":
+            extra["parts"] = [{"label": lab, "code": c, "data": {str(y): round(v, 4) for y, v in sorted(eurostat("crim_off_cat", iccs=c, unit="P_HTHAB").get("ES", {}).items())}}
+                              for c, lab in (("ICCS03011", "Rape"), ("ICCS03012", "Sexual assault"))]
         add(id, data=eurostat("crim_off_cat", iccs=code, unit="P_HTHAB"), label=f"{label} recorded by police", short=short,
-            definition=definition, breaks=breaks, **crime_meta)
+            definition=definition, breaks=breaks, **crime_meta, **extra)
     add("crime_homicide_long", "crime", worldbank("VC.IHR.PSRC.P5"), label="Intentional homicide (long series)", short="Homicide (UNODC)",
         unit="per 100,000 residents", format="decimal2",
         definition="Intentional homicides per 100,000 people, compiled by UNODC from national criminal justice and public-health sources.",

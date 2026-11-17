@@ -436,3 +436,21 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .conclude { grid-template-columns: 1fr; gap: 4px; }
   .conclude dd { margin-bottom: 12px; }
 }
+
+/* Indicator-specific evidence */
+.study-outside { color: var(--muted); font-style: italic; }
+.ti-sub { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin: 24px 0 4px; }
+.ti-counts { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin: 14px 0 0; }
+.expl { list-style: none; padding: 0; margin: 8px 0 0; }
+.expl li { padding: 12px 0; border-top: 1px solid var(--rule); font-size: 15px; line-height: 1.6; color: var(--ink-2); }
+.expl-tag { display: block; width: fit-content; font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; margin-bottom: 6px; border: 1px solid var(--rule-strong); color: var(--ink-2); }
+.expl-tag-documented { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.expl-tag-evidence { border-color: var(--a); color: var(--a); }
+.expl-tag-method { border-color: var(--rule-strong); }
+.expl-tag-hypothesis { border-style: dashed; color: var(--muted); }
+.ti-period { display: contents; }
+.ti-stats dd.ti-period-note { grid-column: 1 / -1; font-size: 13px; color: var(--muted); }
+.tell-who p { font-size: 14px; line-height: 1.6; color: var(--ink-2); margin: 10px 0 0; }
+.expl-head { display: flex; justify-content: space-between; gap: 12px; width: 100%; text-align: left; font-size: 15px; color: var(--ink); padding: 0; }
+.expl-head span { color: var(--muted); }
+.expl-text { margin: 6px 0 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); }

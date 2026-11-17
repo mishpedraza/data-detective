@@ -1,4 +1,4 @@
-export type Outcome = 'total' | 'property' | 'violent' | 'robbery' | 'victimisation' | 'reoffending'
+export type Outcome = 'total' | 'property' | 'violent' | 'robbery' | 'sexual' | 'fraud' | 'drugs' | 'victimisation' | 'reoffending'
 export type Status = 'peer-reviewed' | 'review'
 export type Design = 'causal' | 'association' | 'review'
 
@@ -14,6 +14,10 @@ export interface Study {
   scope: 'Spain' | 'Europe' | 'Review'
   place: string
   period: string
+  /** First and last year of data analysed, where the paper states it. */
+  years?: [number, number]
+  /** Which migrant population the study measures. */
+  measure?: string
   outcomes: Outcome[]
   headline: string
   finding: string
@@ -26,6 +30,9 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   property: 'Property crime',
   violent: 'Violent crime',
   robbery: 'Robbery',
+  sexual: 'Sexual offences',
+  fraud: 'Fraud',
+  drugs: 'Drug offences',
   victimisation: 'Survey-reported victimisation',
   reoffending: 'Reoffending by immigrants',
 }
@@ -63,6 +70,7 @@ export const STUDIES: Study[] = [
     scope: 'Spain',
     place: 'Spain, 50 provinces',
     period: '1999–2009',
+    years: [1999, 2009],
     outcomes: ['total', 'property'],
     headline: 'Recorded crime rose with immigration, but the link depended on who the immigrants were.',
     finding: 'Provinces where the immigrant share grew more saw more recorded crime in most models. Spanish-speaking immigrants, mostly from Latin America, and to a lesser extent EU15 immigrants were associated with lower crime than other groups. The authors link this to education and cultural proximity, and note that Spain’s crime rose less than in other European countries with similar migration.',
@@ -81,6 +89,8 @@ export const STUDIES: Study[] = [
     scope: 'Spain',
     place: 'Spain, provinces',
     period: '1993–1999',
+    years: [1993, 1999],
+    measure: 'Fraction of foreigners (foreign nationals)',
     outcomes: ['total', 'property'],
     headline: 'Before the main immigration wave, the share of foreigners was one of several factors correlated with crime.',
     finding: 'Past crime, clearance rates, urbanisation and the fraction of foreigners were positively correlated with crime rates. Property crime was better explained by youth unemployment and education.',
@@ -99,6 +109,7 @@ export const STUDIES: Study[] = [
     scope: 'Europe',
     place: 'Italy, provinces',
     period: '1990–2003',
+    years: [1990, 2003],
     outcomes: ['total', 'property', 'robbery', 'violent'],
     headline: 'A correlation with crime appeared in the raw data, but mostly vanished when isolating cause and effect.',
     finding: 'Immigrant population size was positively correlated with property crime and total crime. Once the authors isolated the effect of immigration, only robberies increased, and the effect on total crime was not significantly different from zero.',
@@ -117,6 +128,7 @@ export const STUDIES: Study[] = [
     scope: 'Europe',
     place: 'United Kingdom',
     period: 'Late-1990s asylum wave; post-2004 EU accession wave',
+    measure: 'Asylum seekers, and workers from countries that joined the EU in 2004',
     outcomes: ['property', 'violent'],
     headline: 'Two migration waves, two different effects on property crime, and no effect on violent crime.',
     finding: 'The asylum-seeker wave of the late 1990s and early 2000s led to a modest rise in property crime. The post-2004 wave from new EU member states had a small negative effect. Neither changed violent crime.',
@@ -153,6 +165,8 @@ export const STUDIES: Study[] = [
     scope: 'Europe',
     place: 'Italy',
     period: '2006–2007',
+    years: [2006, 2007],
+    measure: 'Foreign prisoners released in a 2006 clemency, by legal status',
     outcomes: ['reoffending'],
     headline: 'Gaining legal status cut reoffending by about half.',
     finding: 'Legal status reduced reoffending by about 50%, and explained one half to two thirds of the gap in crime rates between legal and undocumented immigrants.',
@@ -171,6 +185,7 @@ export const STUDIES: Study[] = [
     scope: 'Europe',
     place: 'Italy',
     period: 'Residence-permit “click days”',
+    measure: 'Applicants for a residence permit',
     outcomes: ['reoffending'],
     headline: 'Immigrants who obtained a residence permit committed less crime afterwards.',
     finding: 'Legalisation reduced the crime rate of legalised immigrants by 0.6 percentage points, from a baseline of 1.1%.',
@@ -189,11 +204,52 @@ export const STUDIES: Study[] = [
     scope: 'Europe',
     place: 'Germany, regions',
     period: 'Refugee inflow peaking 2015–16',
+    measure: 'Refugees assigned to regions',
     outcomes: ['total', 'property', 'violent'],
     headline: 'Crime did not change in the year refugees arrived, but rose a little a year later.',
     finding: 'No effect on crime rates in the year of arrival, then an increase one year later. The effect is small per refugee but large in absolute terms, and strongest for property and violent crime. The authors also find some sign of over-reporting.',
     method: 'Uses the official quotas that assigned refugees to German regions to separate the effect of refugee arrivals from where refugees chose to go.',
     limitations: 'Refugees are a distinct group from most migrants to Spain. Possible over-reporting means part of the rise may reflect recording rather than offending.',
+  },
+  {
+    id: 'huang2026',
+    authors: 'Yue Huang & Michael Kvasnicka',
+    year: 2026,
+    title: 'Immigration and crimes against natives: the 2015 refugee crisis in Germany',
+    outlet: 'Journal of Population Economics 39: 54',
+    url: doi('10.1007/s00148-026-01194-8'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'Europe',
+    place: 'Germany, counties',
+    period: '2015–2016',
+    years: [2015, 2016],
+    measure: 'Refugees arriving in each county',
+    outcomes: ['violent', 'robbery', 'sexual'],
+    headline: 'Germans were not victimised more often by refugee suspects, including in sex crimes.',
+    finding: 'Counties that took in more refugees during the 2015 crisis did not see more Germans victimised in crimes with refugee suspects. This held separately for robbery, for bodily injury, and for rape and sexual coercion.',
+    method: 'Compares changes across German counties, and uses the 2014 location of refugee reception centres, which shaped where refugees were placed, to separate the effect of arrivals from other local factors.',
+    limitations: 'Counts only police-recorded crimes with a German victim and a refugee suspect; victim details are recorded for selected offences, about 14% of all recorded crime in 2015. Covers the first two years after arrival, and refugees in Germany, a different population from most migrants to Spain.',
+  },
+  {
+    id: 'dehos2021',
+    authors: 'Fabian T. Dehos',
+    year: 2021,
+    title: 'The refugee wave to Germany and its impact on crime',
+    outlet: 'Regional Science and Urban Economics, article 103640',
+    url: doi('10.1016/j.regsciurbeco.2020.103640'),
+    status: 'peer-reviewed',
+    design: 'causal',
+    scope: 'Europe',
+    place: 'Germany, counties',
+    period: '2010–2015',
+    years: [2010, 2015],
+    measure: 'Asylum seekers and recognised refugees, analysed separately',
+    outcomes: ['total', 'property', 'robbery', 'violent', 'sexual', 'fraud', 'drugs'],
+    headline: 'Asylum seekers did not raise crime; recognised refugees were linked to more non-violent property crime.',
+    finding: 'Asylum seekers, who are placed by dispersal rules, had no effect on crime apart from migration-specific offences. A higher share of recognised refugees was associated with more crime, driven by non-violent offences such as theft and fraud. For sexual abuse, a police category that includes rape, a zero effect could not be ruled out, and the estimate changed sign across specifications.',
+    method: 'For asylum seekers, uses dispersal policies and residence restrictions. For recognised refugees, who can choose where to live, uses where earlier compatriots had settled. Outcomes are police-recorded suspects across German counties.',
+    limitations: 'Summarised from the 2017 working-paper version (Ruhr Economic Papers No. 737); the published version may differ in detail. The author describes the recognised-refugee results as an association. Covers Germany up to 2015.',
   },
   {
     id: 'marie2024',
@@ -233,10 +289,4 @@ export const STUDIES: Study[] = [
   },
 ]
 
-export function outcomesFor(indicatorId: string): Outcome[] {
-  if (/homicide/.test(indicatorId)) return []
-  if (/assault|sexual/.test(indicatorId)) return ['violent']
-  if (/robbery/.test(indicatorId)) return ['robbery', 'violent', 'property']
-  if (/theft|burglary/.test(indicatorId)) return ['property']
-  return []
-}
+export const studyById = (id: string) => STUDIES.find((s) => s.id === id)

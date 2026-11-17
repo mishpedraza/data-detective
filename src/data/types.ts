@@ -26,6 +26,7 @@ export interface Indicator {
   source: Source
   breaks: SeriesBreak[]
   derived?: boolean
+  parts?: { label: string; code: string; data: Record<string, number> }[]
   retrieved: string
   data: Record<string, Record<string, number>>
 }

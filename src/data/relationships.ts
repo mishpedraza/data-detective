@@ -26,7 +26,7 @@ export const RELATIONSHIPS: Relationship[] = [
     cannot: [
       correlation,
       { text: 'These charts show totals for the whole country. They cannot tell us who committed offences, or whether crime changed in the places where migrants settled.' },
-      { text: 'Police-recorded crime depends on how often victims report and how police record offences. Changes in reporting, such as more sexual-violence reports, or in recording practice can look like changes in crime.', refs: ['eurostatCrime'] },
+      { text: 'Police-recorded crime depends on how often victims report and how police record offences. Changes in how often victims report offences, or in how police record them, can look like changes in crime.', refs: ['eurostatCrime'] },
     ],
   },
   {
