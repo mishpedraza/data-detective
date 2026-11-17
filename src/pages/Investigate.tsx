@@ -9,7 +9,7 @@ import { ScatterChart } from '../components/ScatterChart'
 import { TimeChart } from '../components/TimeChart'
 import { COMPARE_OPTIONS, COUNTRIES, comparability } from '../data/countries'
 import { EVENTS } from '../data/events'
-import { DIMENSIONS, INDICATORS, coverage, formatValue, series } from '../data/indicators'
+import { INDICATORS, coverage, formatValue, series } from '../data/indicators'
 import { RELATIONSHIPS, relationshipById } from '../data/relationships'
 
 const MIN = 1998
@@ -45,6 +45,7 @@ export function Investigate({ params }: { params: URLSearchParams }) {
   const [mode, setMode] = useState<'levels' | 'changes'>(() => (params.get('mode') === 'changes' ? 'changes' : 'levels'))
   const [hoverYear, setHoverYear] = useState<number | null>(null)
   const [playing, setPlaying] = useState(false)
+  const [ctx, setCtx] = useState(false)
   const playRef = useRef<number | null>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
 
@@ -191,20 +192,30 @@ export function Investigate({ params }: { params: URLSearchParams }) {
                 </>
               )}
             </div>
-            <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels />
-            <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" />
-            {covA && covB && (covA[0] !== covB[0] || covA[1] !== covB[1]) && (
-              <p className="coverage-note">
-                The two series cover different years: <strong className="tone-a-text">{lowerFirst(A.short)}</strong> {covA[0]}–{covA[1]}, <strong className="tone-b-text">{lowerFirst(B.short)}</strong> {covB[0]}–{covB[1]}. Hatched areas mark years with no observation; they are gaps, not zero values, and nothing is estimated to fill them.
+            <TimeChart indicator={A} compare={cmp && A.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="a" showEventLabels showEvents={ctx} />
+            <TimeChart indicator={B} compare={cmp && B.data[cmp] ? cmp : null} from={from} to={to} hoverYear={hoverYear} onHover={handleHover} tone="b" showEvents={ctx} />
+            {covA && covB && (
+              <p className="chart-notes">
+                Data availability: <span className="tone-a-text">{lowerFirst(A.short)}</span> {covA[0]}–{covA[1]}; <span className="tone-b-text">{lowerFirst(B.short)}</span> {covB[0]}–{covB[1]}. Hatched areas mark missing data. Each chart has its own scale.
               </p>
             )}
-            <ul className="event-legend">
-              {events.map((e) => (
-                <li key={e.id}>
-                  <strong>{e.start === e.end ? e.start : `${e.start}–${String(e.end).slice(2)}`}</strong> {e.detail}
-                </li>
-              ))}
-            </ul>
+            {events.length > 0 && (
+              <>
+                <button className="tell-more ctx-toggle" onClick={() => setCtx((v) => !v)} aria-expanded={ctx}>
+                  {ctx ? '− Hide historical context' : `+ Historical context (${events.length})`}
+                </button>
+                {ctx && (
+                  <ul className="event-legend">
+                    {events.map((e) => (
+                      <li key={e.id}>
+                        <strong>{e.start === e.end ? e.start : `${e.start}–${String(e.end).slice(2)}`}</strong> {e.detail}
+                      </li>
+                    ))}
+                    <li className="event-caveat">Shown as background; an event in the same years is not evidence that it caused a change.</li>
+                  </ul>
+                )}
+              </>
+            )}
           </motion.div>
         ) : (
           <motion.div key="scatter" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
@@ -212,10 +223,6 @@ export function Investigate({ params }: { params: URLSearchParams }) {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <p className="dims-line">
-        Showing <span className="tone-a-text">{DIMENSIONS[A.dimension].label.toLowerCase()}</span> and <span className="tone-b-text">{DIMENSIONS[B.dimension].label.toLowerCase()}</span> on separate scales, because they are measured in different units.
-      </p>
 
       <Interpretation rel={rel} a={a} b={b} compare={cmp} from={from} to={to} />
       <DataNotes ids={[a, b]} />

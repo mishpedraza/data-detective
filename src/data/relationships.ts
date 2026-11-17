@@ -101,8 +101,8 @@ export const RELATIONSHIPS: Relationship[] = [
       correlation,
       { text: 'Average wages, median income and household income measure different things. A rising average can coexist with stagnant pay for many workers.' },
       { text: 'Inflation measures are national averages. Households that spend more on rent or energy may have lost more purchasing power than these figures show.' },
-      { text: 'The at-risk-of-poverty rate is relative to each year’s median income, so it cannot show whether people became poorer in absolute terms; severe deprivation and real income are better guides to that.' },
-      { text: 'Median hourly pay comes from a survey run every four years, so it shows five points rather than a year-by-year trend, and it excludes firms with fewer than 10 employees.' },
+      { text: 'The at-risk-of-poverty rate is relative to each year’s median income, so it cannot show whether people became poorer in absolute terms; severe deprivation and real income are better guides to that.', only: ['poverty_rate'] },
+      { text: 'Median hourly pay comes from a survey run every four years, so it shows five points rather than a year-by-year trend, and it excludes firms with fewer than 10 employees.', only: ['median_earnings_real'] },
     ],
   },
   {
