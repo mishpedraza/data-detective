@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { InvestigationIntro } from '../components/InvestigationIntro'
 import { surgeryQuestion, surgeryRegions, surgerySource, surgeryTrend } from '../data/surgeryWaits'
 
 export function SurgeryTrendChart({ compact = false }: { compact?: boolean }) {
@@ -32,10 +33,11 @@ export function SurgeryWaits() {
 
   return (
     <article className="investigate surgery-story">
-      <header className="hero">
-        <h1>{surgeryQuestion}</h1>
-        <p className="hero-sub">The average wait was 122 days at the end of 2025. That’s four days shorter than a year earlier and two days longer than at the end of 2022.</p>
-      </header>
+      <InvestigationIntro
+        current={{ id: 'surgery-waits', label: surgeryQuestion }}
+        headline="Patients on Spain’s planned surgery list had waited an average of 122 days at the end of 2025."
+        note="That’s four days shorter than a year earlier and two days longer than at the end of 2022."
+      />
       <figure>
         <figcaption>Average days waited by patients on the planned surgery list</figcaption>
         <SurgeryTrendChart />
