@@ -1,4 +1,5 @@
 import type { StoryComparison } from '../lib/storyComparison'
+import { INVESTIGATION_FIGURES, type EvidenceFigure } from './investigationFigures'
 import type { Claim } from './types'
 
 interface SourcedClaim extends Claim {
@@ -13,11 +14,13 @@ export interface ReviewedAnswer {
   limitation: Claim
   explanationTitle: string
   visual?: StoryComparison
+  figure?: EvidenceFigure
 }
 
 /** Question-level conclusions. Chart selections change descriptive context, not the scope of a study. */
 export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>> = {
   'immigration-crime': {
+    figure: INVESTIGATION_FIGURES['immigration-crime'],
     headline: 'Research finds no consistent rise in overall crime when immigration rises',
     scope: 'The strongest answer is about overall crime. Particular offences and migration waves can look different.',
     finding: {
@@ -26,7 +29,7 @@ export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>>
     },
     explanationTitle: 'Legal status can change the choices people have',
     explanation: [
-      { text: 'In Italy, applicants who just qualified for a residence permit had lower recorded crime than similar applicants who just missed out. A permit changes more than one thing. Access to legal work is one plausible explanation, and the UK research suggests it may help explain why different migration waves had different outcomes.', refs: ['pinotti2017', 'bell2013'] },
+      { text: 'In Italy, applicants who just qualified for a residence permit had lower recorded crime than similar applicants who just missed out. A permit opens up legal work, which may change the alternatives people have. Research on two UK migration waves also found different property-crime results under different labour-market conditions. Neither study isolates how much of the effect came from access to work.', refs: ['pinotti2017', 'bell2013'] },
     ],
     limitation: {
       text: 'Police records depend on what gets reported and recorded. The estimates apply to specific offences, places and migration waves. The studies cited here leave open what effect immigration had on homicide in Spain.',
@@ -45,7 +48,7 @@ export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>>
     },
     explanationTitle: 'The price is only one part of the monthly bill',
     explanation: [
-      { text: 'The purchase price tells you what the seller gets. The mortgage rate helps determine what the buyer pays each month. Even a home that has fallen in price may strain the budget if borrowing is dearer or incomes have lagged.', refs: ['data:mortgage_rate'] },
+      { text: 'A lower sale price can still mean a higher monthly payment if mortgage rates rise enough. And a buyer must save for a deposit before monthly payments even enter the picture.', refs: ['data:mortgage_rate'] },
       { text: 'You also have to find a home where you need one. Through 2023, new construction was slow to respond to demand, with especially acute pressure in cities and tourist areas. Households unable to get a mortgage faced a tight rental market too.', refs: ['bde2024'] },
     ],
     limitation: { text: 'A national average leaves out local prices and the deposit a buyer needs. A rental index covering existing contracts can move differently from asking rents for new lets.', refs: ['bde2024', 'data:rent_real'] },
@@ -60,10 +63,10 @@ export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>>
       refs: ['data:gdp_pc_real', 'data:median_earnings_real'], measure: 'change', from: 2006, to: 2022,
       rows: [{ indicator: 'gdp_pc_real', label: 'GDP per person' }, { indicator: 'median_earnings_real', label: 'Median hourly pay' }],
     },
-    explanationTitle: 'Why more output doesn’t guarantee a bigger pay rise',
+    explanationTitle: 'Why average and typical pay can move apart',
     explanation: [
-      { text: 'Part of the extra output can go to profits. Among workers, an average can also rise when more jobs are well paid or when pay rises near the top. The typical hourly wage can barely move in either case. The annual average and hourly median here cover different groups.', refs: ['eurostatNA', 'eurostatSes', 'oecdWages'] },
-      { text: 'From 2007 to 2024, employers’ costs also rose through social contributions, which don’t go directly into wages. And the prices workers paid rose faster than the prices of what Spain produced. Those two gaps help explain why higher labour costs translated into little extra buying power for average pay.', refs: ['bosca2025'] },
+      { text: 'A rise in high earners’ pay can lift the average without moving the middle wage much. Annual pay also depends on hours worked. These Spanish series use different populations and units, so the figures cannot tell us which explanation accounts for the gap.', refs: ['eurostatNA', 'eurostatSes', 'oecdWages'] },
+      { text: 'Boscá and Ferri explain a separate gap in 2007–2024. Employer social contributions added to labour costs, while consumer prices rose faster than the prices Spanish businesses received. Together those factors help explain why higher labour costs translated into little extra purchasing power for average pay per employee.', refs: ['bosca2025'] },
     ],
     limitation: { text: 'The Spanish labour-cost study does not isolate the reasons median hourly pay lagged. Household living standards also depend on hours worked, other earners, taxes and benefits.', refs: ['bosca2025'] },
   },

@@ -10,7 +10,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
   const [opened, setOpened] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
-  const choiceIndex = useRef(0)
+  const [choiceIndex, setChoiceIndex] = useState(0)
   const returning = useRef(false)
   useEffect(() => {
     if (opened) panel.current?.focus({ preventScroll: true })
@@ -27,7 +27,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
           <legend>{interaction.label}</legend>
           <div className="discovery-options">
             {interaction.choices.map((choice, index) => (
-              <button key={choice} ref={index === choiceIndex.current ? trigger : undefined} type="button" onClick={() => { choiceIndex.current = index; setPick(choice); setOpened(true) }}>{choice}</button>
+              <button key={choice} ref={index === choiceIndex ? trigger : undefined} type="button" onClick={() => { setChoiceIndex(index); setPick(choice); setOpened(true) }}>{choice}</button>
             ))}
           </div>
         </fieldset>

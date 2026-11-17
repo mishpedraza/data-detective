@@ -692,3 +692,30 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 }
 .discovery-match { color: #225c3c; }
 .discovery-mismatch { color: #8a302b; }
+
+.investigation-figure figcaption { margin-bottom: 12px; }
+.story-figure-list, .story-segment-labels, .story-trajectory-labels { list-style: none; padding: 0; margin: 0; }
+.story-figure-list > li { margin: 0 0 10px; }
+.story-figure-values, .story-figure-axis, .story-segment-labels { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 3px 12px; font-size: 13px; }
+.story-figure-axis, .story-segment-labels { color: var(--ink-2); font-size: 12px; }
+.story-figure-axis { padding: 0 6px; }
+.story-dot-track { position: relative; margin: 10px 8px 6px; height: 4px; background: var(--rule); }
+.story-dot-range, .story-dot { position: absolute; background: var(--b); }
+.story-dot-range { height: 4px; }
+.story-dot { top: 50%; width: 10px; height: 10px; border-radius: 50%; transform: translate(-50%, -50%); }
+.story-dot-start { background: var(--paper); border: 2px solid var(--b); }
+.story-trajectory { display: block; width: 100%; height: auto; }
+.story-trajectory line { stroke: var(--rule); }
+.story-trajectory polyline { fill: none; stroke: var(--b); stroke-width: 2; }
+.story-trajectory circle { fill: var(--b); }
+.story-trajectory text { fill: var(--ink-2); font-size: 10px; }
+.story-trajectory .story-trajectory-value { fill: var(--ink); font-weight: 650; }
+.story-trajectory-labels { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.story-segments { display: flex; height: 8px; margin: 6px 0 4px; gap: 1px; }
+.story-segments span, .story-segment-swatch, .story-poll-mark-filled { background: var(--b); }
+.story-segment-swatch { display: inline-block; width: 8px; height: 8px; margin-right: 4px; }
+.story-segments span:nth-child(2), .story-segment-labels li:nth-child(2) .story-segment-swatch { background: var(--ink-2); opacity: .66; }
+.story-segments span:nth-child(3), .story-segment-labels li:nth-child(3) .story-segment-swatch { background: var(--rule); }
+.story-poll-marks { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; margin-bottom: 6px; }
+.story-poll-marks span { height: 9px; border: 1px solid var(--rule); }
+.story-poll-marks ~ .story-figure-list { margin-top: 14px; }

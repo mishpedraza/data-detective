@@ -2,6 +2,7 @@ import { INDICATORS } from '../data/indicators'
 import { REFERENCES } from '../data/references'
 import { studyById } from '../data/research'
 import type { ReviewedAnswer } from '../data/reviewedAnswers'
+import { StoryFigure } from './StoryFigure'
 import { storyComparison } from '../lib/storyComparison'
 
 export function StorySources({ refs }: { refs: readonly string[] }) {
@@ -21,6 +22,17 @@ export function StorySources({ refs }: { refs: readonly string[] }) {
 }
 
 export function StoryEvidence({ answer }: { answer: ReviewedAnswer }) {
+  if (answer.figure) {
+    return (
+      <figure className="story-comparison investigation-figure">
+        <figcaption>{answer.figure.caption}</figcaption>
+        <StoryFigure figure={answer.figure} />
+        {answer.figure.context && <p className="tell-text">{answer.figure.context}</p>}
+        <StorySources refs={answer.figure.refs} />
+      </figure>
+    )
+  }
+
   const visual = answer.visual && storyComparison(answer.visual)
 
   if (!visual) return <><p className="story-evidence-copy">{answer.finding.text}</p><StorySources refs={answer.finding.refs} /></>

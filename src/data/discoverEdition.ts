@@ -1,6 +1,7 @@
 import { discoveryEvidence, predictionOptions, predictions } from './discoveries'
 import { storyComparison } from '../lib/storyComparison'
 import { REVIEWED_ANSWERS } from './reviewedAnswers'
+import { cohortWealth, danishEarnings, fertilityRates, happinessEstimates, permitCrime, usCrime } from './studyEvidence'
 import { workingHours } from './workingHours'
 
 type Reveal = {
@@ -60,11 +61,9 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       reveal: {
         finding: 'Happiness rose before the first birth, then returned close to its earlier level.',
         measure: 'Change in reported happiness on a 0–10 scale · German panel',
-        comparison: [
-          { label: 'One year before', value: '+0.30', amount: 0.30 },
-          { label: 'Year of birth', value: '+0.32', amount: 0.32 },
-          { label: 'One to two years after', value: '+0.05', amount: 0.05 },
-        ],
+        comparison: happinessEstimates.slice(1).map(({ label, value }) => ({
+          label, value: `+${value.toFixed(2)}`, amount: value,
+        })),
         note: 'The baseline was four to five years before birth. The survey tracks changes over time without isolating the effect of parenthood.',
         refs: ['myrskyla2014'],
       },
@@ -100,8 +99,8 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
         finding: 'Getting a residence permit roughly halved the recorded crime rate among applicants near the cutoff.',
         measure: 'Estimated crime rates near Italy’s permit cutoff',
         comparison: [
-          { label: 'Baseline rate', value: '1.1%', amount: 1.1 },
-          { label: 'With legal status', value: '≈0.5%', amount: 0.5 },
+          { label: 'Baseline rate', value: `${permitCrime.baseline}%`, amount: permitCrime.baseline },
+          { label: 'With legal status', value: `≈${(permitCrime.baseline - permitCrime.reduction).toFixed(1)}%`, amount: permitCrime.baseline - permitCrime.reduction },
         ],
         note: 'The study estimated a drop of 0.6 percentage points. It measures crime among these applicants, leaving the effect of immigration on national crime open.',
         refs: ['pinotti2017'],
@@ -116,17 +115,14 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       reveal: {
         finding: 'A decade after a first birth, Danish mothers faced a lasting earnings hit.',
         measure: 'Estimated effect on gross earnings after ten years · Denmark, 1980–2013 data',
-        comparison: [
-          { label: 'Mothers', value: 'About 20% lower', amount: 20 },
-          { label: 'Fathers', value: 'Little change', amount: 0 },
-        ],
+        comparison: danishEarnings.map(({ label, value, display }) => ({ label, value: display, amount: -value })),
         note: 'Employment, hours and wage rates all contributed. This helps explain why qualifications alone cannot account for the earnings gap.',
         refs: ['kleven2019'],
       },
     },
   },
   'global-danger': {
-    hook: 'A year can look very different depending on how you measure the toll of war.',
+    hook: 'A war count gives a small conflict and a deadly one the same weight. What happened when researchers counted the deaths too?',
     interaction: {
       kind: 'contrast',
       label: 'Compare conflicts and battle deaths',
@@ -143,19 +139,15 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'generational-wealth': {
-    hook: 'Compare what three generations owned after subtracting what they owed, at similar ages.',
+    hook: 'If two generations own about as much at the same age, what could leave one with less wealth?',
     interaction: {
       kind: 'contrast',
       label: 'Compare wealth at ages 25–34',
       reveal: {
         finding: 'Millennials had the lowest average net worth of the three US cohorts at ages 25–34.',
         measure: 'Mean household net worth · US · in 2016 dollars',
-        comparison: [
-          { label: 'Baby boomers · 1989', value: '$114,000', amount: 113.9 },
-          { label: 'Generation X · 2001', value: '$148,000', amount: 148 },
-          { label: 'Millennials · 2016', value: '$92,000', amount: 91.7 },
-        ],
-        note: 'These are historical averages. They leave open whether millennials caught up later or how Gen Z compares at the same ages.',
+        comparison: cohortWealth.map(({ label, net }) => ({ label, value: `$${hours.format(Math.round(net) * 1000)}`, amount: net })),
+        note: 'Millennials owned about as much as boomers at that age, but owed more. The comparison ends in 2016.',
         refs: ['kurz2018'],
       },
     },
@@ -170,8 +162,8 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       reveal: {
         finding: 'Recorded violent crime fell 49%, even as Americans frequently said crime was rising.',
         facts: [
-          { label: 'The record · 1993–2022', value: '49% lower recorded violent crime rate' },
-          { label: 'The perception · Gallup polls since 1993', value: 'In 23 of 27 polls, at least 60% said crime had risen from the year before' },
+          { label: 'The record · 1993–2022', value: `${usCrime.decline}% lower recorded violent crime rate` },
+          { label: 'The perception · Gallup polls since 1993', value: `In ${usCrime.pollsAboveThreshold} of ${usCrime.polls} polls, at least ${usCrime.publicThreshold}% said crime had risen from the year before` },
         ],
         note: 'The annual opinion polls and the long-run crime series tell different stories. The long-run decline doesn’t tell us whether any single year felt safer locally.',
         refs: ['pewCrime2024', 'gallupCrime'],
@@ -188,10 +180,7 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
       reveal: {
         finding: 'France had the higher fertility rate in 2000.',
         measure: 'Total fertility rate · births per woman · approximate',
-        comparison: [
-          { label: 'France', value: '1.9', amount: 1.9 },
-          { label: 'Germany', value: '1.4', amount: 1.4 },
-        ],
+        comparison: fertilityRates.map(({ label, value }) => ({ label, value: value.toFixed(1), amount: value })),
         note: 'Similar incomes can coexist with different fertility rates. Researchers point to childcare, work flexibility and how parents share care. Housing costs and family preferences may matter too.',
         refs: ['doepke2022'],
       },

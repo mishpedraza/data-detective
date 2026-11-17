@@ -56,3 +56,18 @@ test('main-story comparisons use verified endpoints and a common unit', () => {
   assert.equal(storyComparison({ ...wages, to: 2021 }), null)
   assert.equal(REVIEWED_ANSWERS['immigration-crime']!.visual, undefined)
 })
+
+test('every Discover question has a sourced lead figure in its investigation', () => {
+  for (const { id, status } of EDITORIAL_QUESTIONS) {
+    const answer = status === 'available' ? REVIEWED_ANSWERS[id] : EDITORIAL_STORIES[id]
+    assert.ok(answer, id)
+    const figure = answer.figure ?? (answer.visual && storyComparison(answer.visual))
+    assert.ok(figure?.refs.length, id)
+    for (const ref of figure.refs) {
+      const url = ref.startsWith('data:')
+        ? INDICATORS[ref.slice(5)]?.source.url
+        : (studyById(ref) ?? REFERENCES[ref])?.url
+      assert.match(url ?? '', /^https:\/\//, `${id} references ${ref}`)
+    }
+  }
+})
