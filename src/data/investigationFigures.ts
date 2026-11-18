@@ -85,7 +85,7 @@ const figures = {
   'wealth-and-fertility': {
     kind: 'dots',
     caption: 'Fertility in France and Germany, 2000 · births per woman (approximate)',
-    refs: ['doepke2022'],
+    refs: ['doepke2022', 'oecdFertility'],
     domain: [0, 2],
     unit: '',
     points: fertilityRates.map(({ label, value }) => ({ label, value, display: value.toFixed(1) })),
