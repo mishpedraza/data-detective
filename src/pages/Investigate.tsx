@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { hrefFor } from '../lib/route'
 import { DataNotes } from '../components/DataNotes'
 import { InvestigationStory } from '../components/InvestigationStory'
-import { StoryEvidence, StoryExplanation } from '../components/StoryEvidence'
+import { StoryEvidence, StoryExplanation, StorySources } from '../components/StoryEvidence'
 import { ImmigrationResearchComparison } from '../components/ImmigrationResearchComparison'
 import { Interpretation } from '../components/Interpretation'
 import { InlinePicker } from '../components/InlinePicker'
@@ -224,6 +224,11 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
               {rel.id === 'immigration-crime' && (
                 <details className="story-study-comparison">
                   <summary>Compare the immigration and crime studies</summary>
+                  <details>
+                    <summary>Did immigration increase overall crime in the Italian provinces studied?</summary>
+                    <p className="tell-text">Researchers estimated an increase in robbery. The estimated effect on overall crime was too uncertain to distinguish from zero. This study examined immigration across Italian provinces from 1990 to 2003.</p>
+                    <StorySources refs={['bianchi2012']} />
+                  </details>
                   <ImmigrationResearchComparison />
                 </details>
               )}

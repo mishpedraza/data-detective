@@ -11,3 +11,13 @@ test('only a first prediction is recorded and contrast reveals have no score', (
   assert.equal(revisit['housing-affordability']?.pick, 'Higher')
   assert.equal(Object.keys(revisit).length, 2)
 })
+
+test('a new quiz edition can be attempted once without inheriting the previous score', () => {
+  const old = revealDiscovery({}, 'housing-affordability', 'Higher', 'Lower')
+  assert.equal(old['housing-affordability']?.edition, undefined)
+  const next = revealDiscovery(old, 'housing-affordability', 'Lower', 'Lower', 'new-edition')
+  const retry = revealDiscovery(next, 'housing-affordability', 'Higher', 'Lower', 'new-edition')
+  assert.equal(retry['housing-affordability']?.correct, true)
+  assert.equal(retry['housing-affordability']?.pick, 'Lower')
+  assert.equal(retry['housing-affordability']?.edition, 'new-edition')
+})

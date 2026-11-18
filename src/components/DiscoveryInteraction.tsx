@@ -28,9 +28,8 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
 
   if (!opened) return (
     <>
-      {interaction.kind === 'prediction' && !visit ? (
-        <fieldset className="discovery-prediction">
-          <legend>{interaction.label}</legend>
+      {!visit ? (
+        <fieldset className="discovery-prediction" aria-label="Choose your answer">
           <div className="discovery-options">
             {interaction.choices.map((choice) => (
               <button key={choice} type="button" onClick={() => { revealing.current = true; onReveal(choice, interaction.answer) }}>{interaction.choiceLabels?.[choice] ?? choice}</button>
@@ -38,7 +37,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
           </div>
         </fieldset>
       ) : (
-        <button ref={trigger} className="discovery-clue" type="button" onClick={() => { revealing.current = true; onReveal(pick) }}>{visit ? 'Show the evidence again' : interaction.label} <span aria-hidden="true">↓</span></button>
+        <button ref={trigger} className="discovery-clue" type="button" onClick={() => { revealing.current = true; onReveal(pick) }}>Show the evidence again <span aria-hidden="true">↓</span></button>
       )}
       {evidenceLink()}
     </>

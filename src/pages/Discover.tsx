@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
-import { DISCOVER_TEASERS } from '../data/discoverEdition'
+import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from '../data/discoverEdition'
 import { DiscoveryInteraction } from '../components/DiscoveryInteraction'
 import { EDITORIAL_QUESTIONS } from '../data/editorial'
 import { DISCOVERY_PROGRESS_KEY, readDiscoveryProgress, revealDiscovery } from '../lib/discoveryProgress'
@@ -19,11 +19,11 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
   const entry = EDITORIAL_QUESTIONS[index]
   const next = EDITORIAL_QUESTIONS[index + 1]
   const teaser = DISCOVER_TEASERS[entry.id]
-  const visit = progress[entry.id]
+  const visit = progress[entry.id]?.edition === DISCOVERY_QUIZ_EDITION ? progress[entry.id] : undefined
   const explored = EDITORIAL_QUESTIONS.filter(({ id }) => Object.hasOwn(progress, id)).length
   const predictions = EDITORIAL_QUESTIONS.flatMap(({ id }) => {
     const result = progress[id]?.correct
-    return DISCOVER_TEASERS[id]?.interaction?.kind === 'prediction' && typeof result === 'boolean' ? [result] : []
+    return progress[id]?.edition === DISCOVERY_QUIZ_EDITION && typeof result === 'boolean' ? [result] : []
   })
   const correct = predictions.filter(Boolean).length
   const completed = explored === total
@@ -106,12 +106,12 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
 
       <article className="discovery-reading" key={entry.id} onPointerDown={startSwipe} onPointerUp={finishSwipe}
         onPointerCancel={() => { touch.current = null }}>
-        <h1 ref={headline} tabIndex={-1}>{entry.question}</h1>
+        <h1 ref={headline} tabIndex={-1}>{teaser?.interaction?.label ?? entry.question}</h1>
         <div className="discovery-card-evidence">
           {teaser?.context && <p className="discovery-context">{teaser.context}</p>}
           {teaser?.interaction
             ? <DiscoveryInteraction interaction={teaser.interaction} evidenceLink={evidenceLink} visit={visit}
-                onReveal={(pick, answer) => setProgress((current) => revealDiscovery(current, entry.id, pick, answer))}
+                onReveal={(pick, answer) => setProgress((current) => revealDiscovery(current, entry.id, pick, answer, DISCOVERY_QUIZ_EDITION))}
                 onClose={() => setProgress((current) => ({ ...current, [entry.id]: { ...visit!, closed: true } }))} />
             : evidenceLink()}
         </div>
@@ -119,7 +119,7 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
         {visit && !visit.closed && next && (
           <button className="discovery-next-preview" type="button" onClick={() => goTo(index + 1)}>
             <span className="discovery-kicker">Up next</span>
-            <span className="discovery-preview-title">{next.question}</span>
+            <span className="discovery-preview-title">{DISCOVER_TEASERS[next.id]?.interaction?.label ?? next.question}</span>
             <span className="discovery-preview-link">Discover <span aria-hidden="true">→</span></span>
           </button>
         )}
@@ -148,7 +148,7 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
             <li key={id}><button type="button" aria-current={index === position ? 'step' : undefined}
               onClick={() => { dialog.current?.close(); goTo(position) }}>
               <span className="discovery-position" aria-hidden="true">{number(position + 1)}</span>
-              <span>{question}</span>
+              <span>{DISCOVER_TEASERS[id]?.interaction?.label ?? question}</span>
               {Object.hasOwn(progress, id) && <span className="discovery-explored">Explored</span>}
             </button></li>
           ))}
