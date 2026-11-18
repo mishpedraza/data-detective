@@ -29,7 +29,7 @@ export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>>
     },
     explanationTitle: 'Legal status can change the choices people have',
     explanation: [
-      { text: 'In Italy, applicants who just qualified for a residence permit had lower recorded crime than similar applicants who just missed out. A permit opens up legal work, which may change the alternatives people have. Research on two UK migration waves also found different property-crime results under different labour-market conditions. Neither study isolates how much of the effect came from access to work.', refs: ['pinotti2017', 'bell2013'] },
+      { text: 'Applicants who just made the Italian cutoff were comparable to those who just missed it. A permit opened access to legal work, one reason the crime rate might have fallen. The study estimates the effect of the permit as a whole and leaves the contribution of legal work open. It changes the status of people already in Italy, so the wider question of how immigration affects crime needs separate evidence.', refs: ['pinotti2017'] },
     ],
     limitation: {
       text: 'Police records depend on what gets reported and recorded. The estimates apply to specific offences, places and migration waves. The studies cited here leave open what effect immigration had on homicide in Spain.',
@@ -46,10 +46,10 @@ export const REVIEWED_ANSWERS: Readonly<Partial<Record<string, ReviewedAnswer>>>
       refs: ['data:house_price_real'], measure: 'index', from: 2007, to: 2025,
       rows: [{ indicator: 'house_price_real', label: '2007', endpoint: 'start' }, { indicator: 'house_price_real', label: '2025' }],
     },
-    explanationTitle: 'The price is only one part of the monthly bill',
+    explanationTitle: 'Why a lower national price can still feel out of reach',
     explanation: [
-      { text: 'A lower sale price can still mean a higher monthly payment if mortgage rates rise enough. And a buyer must save for a deposit before monthly payments even enter the picture.', refs: ['data:mortgage_rate'] },
-      { text: 'You also have to find a home where you need one. Through 2023, new construction was slow to respond to demand, with especially acute pressure in cities and tourist areas. Households unable to get a mortgage faced a tight rental market too.', refs: ['bde2024'] },
+      { text: 'Spain’s real prices can sit below the 2007 boom and still be well above the post-crash trough. The index also leaves out what it takes to buy. A deposit has to be paid upfront, and a higher mortgage rate can leave a buyer with a bigger monthly bill even at a lower price.', refs: ['data:house_price_real', 'data:mortgage_rate'] },
+      { text: 'Location matters too. Banco de España found that new construction responded slowly as demand recovered, with stronger price pressure in large cities and tourist areas. Someone buying in those areas can face a very different market from the national average shown here.', refs: ['bde2024'] },
     ],
     limitation: { text: 'A national average leaves out local prices and the deposit a buyer needs. A rental index covering existing contracts can move differently from asking rents for new lets.', refs: ['bde2024', 'data:rent_real'] },
   },
