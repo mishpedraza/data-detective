@@ -126,6 +126,11 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
         {!challenge && <button className="discovery-contents-trigger" type="button" onClick={openChallenge}>
           {complete ? 'Challenge results' : answers.length ? 'Resume challenge' : 'Take the challenge'}
         </button>}
+        {challenge && !results && answers.length > 0 && (
+          <button className="discovery-contents-trigger" type="button" onClick={() => {
+            if (window.confirm('Reset the quiz? This clears your answers and score for this attempt.')) restart()
+          }}>Reset quiz</button>
+        )}
         {!results && <div className="discovery-pager">
           <button type="button" aria-label="Previous discovery" disabled={index === 0} onClick={() => goTo(index - 1)}>←</button>
           <span className="discovery-position" aria-label={`Discovery ${index + 1} of ${total}`}>{number(index + 1)} / {number(total)}</span>
