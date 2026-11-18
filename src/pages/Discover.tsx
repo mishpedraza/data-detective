@@ -79,12 +79,12 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
   }
 
   const href = hrefFor('investigate', { r: entry.id, ...teaser?.years })
-  const evidenceLink = () => (
+  const evidenceLink = (label = 'Explore the evidence') => (
     <a className="discovery-link discovery-open" href={href} onClick={(event) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
       event.preventDefault()
       navigate(href)
-    }}>Explore the evidence <span aria-hidden="true">→</span></a>
+    }}>{label} <span aria-hidden="true">→</span></a>
   )
   const record = (
     <>
@@ -96,20 +96,19 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
   return (
     <div className="discover discover-edition discovery-reader">
       <nav className="discovery-reader-nav" aria-label="Discovery navigation">
-        <button type="button" onClick={() => dialog.current?.showModal()}>Browse all questions</button>
+        <button className="discovery-contents-trigger" type="button" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>All discoveries</button>
         <div className="discovery-pager">
-          <button type="button" disabled={index === 0} onClick={() => goTo(index - 1)}><span aria-hidden="true">← </span>Previous</button>
+          <button type="button" aria-label="Previous discovery" disabled={index === 0} onClick={() => goTo(index - 1)}>←</button>
           <span className="discovery-position" aria-label={`Discovery ${index + 1} of ${total}`}>{number(index + 1)} / {number(total)}</span>
-          <button type="button" disabled={!next} onClick={() => goTo(index + 1)}>Next<span aria-hidden="true"> →</span></button>
+          <button type="button" aria-label="Next discovery" disabled={!next} onClick={() => goTo(index + 1)}>→</button>
         </div>
       </nav>
-      <p className="discovery-progress" role="status">{explored} of {total} discoveries explored</p>
 
       <article className="discovery-reading" key={entry.id} onPointerDown={startSwipe} onPointerUp={finishSwipe}
         onPointerCancel={() => { touch.current = null }}>
         <h1 ref={headline} tabIndex={-1}>{entry.question}</h1>
         <div className="discovery-card-evidence">
-          {teaser && <p className="discovery-hook">{teaser.hook}</p>}
+          {teaser?.context && <p className="discovery-context">{teaser.context}</p>}
           {teaser?.interaction
             ? <DiscoveryInteraction interaction={teaser.interaction} evidenceLink={evidenceLink} visit={visit}
                 onReveal={(pick, answer) => setProgress((current) => revealDiscovery(current, entry.id, pick, answer))}
@@ -129,7 +128,7 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
             <h2 id="discovery-finish-title">{completed ? `You’ve explored all ${total} discoveries.` : 'Your detective record'}</h2>
             {record}
             <button className="discovery-clue" type="button" onClick={() => dialog.current?.showModal()}>
-              {completed ? 'Revisit discoveries' : 'Browse all questions'} <span aria-hidden="true">→</span>
+              {completed ? 'Revisit discoveries' : 'All discoveries'} <span aria-hidden="true">→</span>
             </button>
           </section>
         )}
@@ -137,7 +136,7 @@ export function Discover({ navigate, selected }: { navigate: (href: string) => v
 
       <dialog ref={dialog} className="discovery-contents" aria-labelledby="discovery-contents-title">
         <div className="discovery-contents-heading">
-          <h2 id="discovery-contents-title">Browse all questions</h2>
+          <h2 id="discovery-contents-title">All discoveries</h2>
           <button className="discovery-clue" type="button" onClick={() => dialog.current?.close()}>Close</button>
         </div>
         <div className="discovery-record">
