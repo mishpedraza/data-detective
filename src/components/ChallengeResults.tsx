@@ -76,7 +76,7 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
       <p className="challenge-result-score">{correct} out of {answers.length}</p>
       <p className="discovery-note">{result.supporting}</p>
       <div className="challenge-result-actions">
-        <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover'))}>Discover more →</button>
+        <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover', { mode: 'browse' }))}>Discover more →</button>
         <button className="discovery-clue" type="button" onClick={share}>Share my result ↗</button>
         <button className="discovery-clue" type="button" onClick={() => navigate(hrefFor('discover', { mode: 'review' }))}>Review my answers →</button>
         <button className="discovery-clue" type="button" onClick={restart}>Try again</button>
