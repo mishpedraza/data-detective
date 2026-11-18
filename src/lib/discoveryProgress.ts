@@ -1,4 +1,4 @@
-export type DiscoveryVisit = { pick: string; edition?: string; correct?: boolean; closed?: boolean }
+export type DiscoveryVisit = { pick: string; edition?: string; correct?: boolean; closed?: boolean; reactionVariant?: 0 | 1 }
 export type DiscoveryProgress = Partial<Record<string, DiscoveryVisit>>
 
 export const DISCOVERY_PROGRESS_KEY = 'data-detective.discovery-progress.v1'
@@ -11,6 +11,7 @@ export function readDiscoveryProgress(key = DISCOVERY_PROGRESS_KEY): DiscoveryPr
       visit && typeof visit.pick === 'string' &&
       (visit.edition === undefined || typeof visit.edition === 'string') &&
       (visit.correct === undefined || typeof visit.correct === 'boolean') &&
+      (visit.reactionVariant === undefined || visit.reactionVariant === 0 || visit.reactionVariant === 1) &&
       (visit.closed === undefined || typeof visit.closed === 'boolean'),
     ))
   } catch {
@@ -18,11 +19,11 @@ export function readDiscoveryProgress(key = DISCOVERY_PROGRESS_KEY): DiscoveryPr
   }
 }
 
-export function revealDiscovery(progress: DiscoveryProgress, id: string, pick: string, answer?: string, edition?: string): DiscoveryProgress {
+export function revealDiscovery(progress: DiscoveryProgress, id: string, pick: string, answer?: string, edition?: string, reactionVariant?: 0 | 1): DiscoveryProgress {
   const prior = progress[id]
   const first = prior?.edition === edition ? prior : undefined
   return {
     ...progress,
-    [id]: first ? { ...first, closed: false } : { pick, edition, correct: answer === undefined ? undefined : pick === answer },
+    [id]: first ? { ...first, closed: false } : { pick, edition, reactionVariant, correct: answer === undefined ? undefined : pick === answer },
   }
 }

@@ -17,13 +17,17 @@ test('all nine challenge answers use existing verified choices and first attempt
   assert.deepEqual(challengeAnswers({ 'generational-wealth': { pick: 'About as much', edition: DISCOVERY_QUIZ_EDITION } }), [])
 })
 
-test('challenge summaries rotate and occasional reactions are distinct', () => {
+test('challenge summaries rotate and every question has distinct reaction variants', () => {
   for (const score of [0, 4, 9]) {
     const pool = new Set(Array.from({ length: 8 }, (_, index) => pickResult(score, 9, undefined, () => index / 8).headline))
     assert.equal(pool.size, 8)
     const first = pickResult(score, 9, undefined, () => 0)
     assert.notEqual(first.headline, pickResult(score, 9, first.headline, () => 0).headline)
   }
-  assert.equal(challengeReaction(1, false), undefined)
-  assert.notEqual(challengeReaction(0, true), challengeReaction(2, true))
+  const reactions = EDITORIAL_QUESTIONS.flatMap((_, index) =>
+    [challengeReaction(index, true, 0), challengeReaction(index, true, 1),
+      challengeReaction(index, false, 0), challengeReaction(index, false, 1)],
+  )
+  assert.ok(reactions.every(Boolean))
+  assert.equal(new Set(reactions).size, 36)
 })
