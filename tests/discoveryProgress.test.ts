@@ -21,3 +21,10 @@ test('a new quiz edition can be attempted once without inheriting the previous s
   assert.equal(retry['housing-affordability']?.pick, 'Lower')
   assert.equal(retry['housing-affordability']?.edition, 'new-edition')
 })
+
+test('reopening a saved answer preserves its reaction variant', () => {
+  const first = revealDiscovery({}, 'housing-affordability', 'Higher', 'Lower', 'quiz', 1)
+  const reopened = revealDiscovery(first, 'housing-affordability', 'Lower', 'Lower', 'quiz', 0)
+  assert.equal(reopened['housing-affordability']?.reactionVariant, 1)
+  assert.equal(reopened['housing-affordability']?.pick, 'Higher')
+})

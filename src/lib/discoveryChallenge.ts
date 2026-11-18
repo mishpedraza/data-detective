@@ -38,10 +38,50 @@ export function pickResult(correct: number, total: number, previous?: string, ra
   return { headline: pool[Math.floor(random() * pool.length)], supporting: support[Math.floor(random() * support.length)] }
 }
 
-export function challengeReaction(index: number, correct: boolean) {
-  const slot = [0, 2, 6, 8].indexOf(index)
-  if (slot < 0) return undefined
-  return (correct
-    ? ['Nicely spotted.', 'Your intuition came through.', 'Look at you, knowing things.', 'Okay, impressive.']
-    : ['A reasonable guess. Reality had other plans.', 'Honestly, fair guess.', 'The plot thickens.', 'Well, now you know.'])[slot]
+const correctReactions = [
+  'Look at you, knowing things.',
+  'Okay, show-off.',
+  'We see you.',
+  'Someone’s been paying attention.',
+  'Your brain understood the assignment.',
+  'You and reality are getting along.',
+  'Okay, impressive.',
+  'Well played.',
+  'You’re suspiciously good at this.',
+  'Save some knowledge for the rest of us.',
+  'Your hunch brought receipts.',
+  'The facts are on your side today.',
+  'That guess had excellent timing.',
+  'Your intuition came prepared.',
+  'You called it before the chart did.',
+  'A quiet victory for your inner nerd.',
+  'The evidence backs you up.',
+  'That was a very well-informed hunch.',
+] as const
+
+const incorrectReactions = [
+  'It’s okay. Nobody saw that.',
+  'Honestly, fair guess.',
+  'Reality had other plans.',
+  'Well, that was educational.',
+  'Your confidence was admirable.',
+  'A plot twist nobody ordered.',
+  'Let’s pretend that was a warm-up.',
+  'The universe respectfully disagrees.',
+  'That was a very convincing guess.',
+  'Nobody’s keeping receipts.',
+  'So much for the obvious answer.',
+  'Your hunch took the scenic route.',
+  'Well, that wasn’t on the bingo card.',
+  'The chart had a different answer.',
+  'Fair guess. Uncooperative facts.',
+  'Reality likes to keep us guessing.',
+  'The plot thickens.',
+  'The evidence has entered the chat.',
+] as const
+
+// Each question owns two distinct slots in each pool, so a run never repeats a line.
+export function challengeReaction(index: number, correct: boolean, variant: 0 | 1 = 0) {
+  const pool = correct ? correctReactions : incorrectReactions
+  return pool[index * 2 + variant]
 }

@@ -45,9 +45,28 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
   )
 
   const { finding, lead, comparison, facts, note, measure, refs } = interaction.reveal
+  const correct = pick === interaction.answer
+  const choiceLabel = (choice: string) => interaction.choiceLabels?.[choice] ?? choice
   const largest = comparison && Math.max(...comparison.map(({ amount }) => amount))
   return (
     <div className="discovery-reveal" ref={panel} tabIndex={-1} aria-live="polite">
+      {reaction && (
+        <div className="challenge-feedback">
+          <p className={`challenge-verdict ${correct ? 'challenge-correct' : 'challenge-incorrect'}`}>
+            {correct && <span className="challenge-check" aria-hidden="true">✓</span>}
+            {correct ? 'Correct!' : 'Not quite!'}
+          </p>
+          <p className="challenge-reaction">{reaction}</p>
+          <div className="challenge-answers">
+            <p className={`challenge-answer ${correct ? 'challenge-correct' : 'challenge-incorrect'}`}>
+              <span>Your answer</span> <strong>{choiceLabel(pick)}</strong>
+            </p>
+            {!correct && <p className="challenge-answer challenge-correct">
+              <span>Correct answer</span> <strong>{choiceLabel(interaction.answer)}</strong>
+            </p>}
+          </div>
+        </div>
+      )}
       <p className="discovery-result">{lead ?? finding}</p>
       {lead && <p className="discovery-note discovery-result-detail">{finding}</p>}
       {measure && <p className="discovery-measure">{measure}</p>}
@@ -66,7 +85,6 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
       </dl>}
       <p className="discovery-note">{note}</p>
       <StorySources refs={refs} />
-      {reaction && <p className="challenge-reaction">{reaction}</p>}
       <div className="discovery-reveal-actions">
         {evidenceLink('Explore why')}
         <button type="button" className="discovery-clue" onClick={() => {

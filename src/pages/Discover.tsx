@@ -163,8 +163,11 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
           {teaser?.context && <p className="discovery-context">{teaser.context}</p>}
           {teaser?.interaction
             ? <DiscoveryInteraction interaction={teaser.interaction} evidenceLink={evidenceLink} visit={visit}
-                reaction={challenge && visit ? challengeReaction(index, visit.pick === teaser.interaction.answer) : undefined}
-                onReveal={(pick, answer) => setActiveProgress((current) => revealDiscovery(current, entry.id, pick, answer, DISCOVERY_QUIZ_EDITION))}
+                reaction={challenge && visit ? challengeReaction(index, visit.pick === teaser.interaction.answer, visit.reactionVariant) : undefined}
+                onReveal={(pick, answer) => {
+                  const variant = challenge && answer !== undefined ? (Math.random() < 0.5 ? 0 : 1) : undefined
+                  setActiveProgress((current) => revealDiscovery(current, entry.id, pick, answer, DISCOVERY_QUIZ_EDITION, variant))
+                }}
                 onClose={() => setActiveProgress((current) => ({ ...current, [entry.id]: { ...visit!, closed: true } }))} />
             : evidenceLink()}
         </div>

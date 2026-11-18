@@ -744,7 +744,25 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 }
 
 .challenge-progress { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; margin: 0 0 .9rem; color: var(--ink-2); font-size: .8rem; }
-.challenge-reaction { margin: .85rem 0 .15rem; color: var(--ink-2); font: italic .98rem/1.4 var(--serif); }
+.challenge-feedback { margin: 0 0 1.2rem; padding: .2rem 0 1rem; border-bottom: 1px solid var(--rule); }
+.challenge-correct { --feedback-ink: #245c42; --feedback-fill: #e4eee4; color: var(--feedback-ink); }
+.challenge-incorrect { --feedback-ink: #8d4528; --feedback-fill: #f5e4d9; color: var(--feedback-ink); }
+.challenge-verdict { display: flex; align-items: center; gap: .38rem; margin: 0 0 .4rem; font-size: .83rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+.challenge-check { display: inline-block; font-size: 1.2em; }
+.challenge-reaction { margin: 0 0 .7rem; color: var(--ink); font: 500 clamp(26px, 4vw, 34px)/1.12 var(--serif); }
+.challenge-answers { display: flex; flex-wrap: wrap; gap: .4rem; }
+.challenge-answer { display: flex; align-items: baseline; flex-wrap: wrap; gap: .15rem .45rem; max-width: 100%; margin: 0; padding: .4rem .6rem; border-radius: 3px; background: var(--feedback-fill); font-size: .85rem; }
+.challenge-answer span { font-size: .76rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .challenge-feedback { animation: challenge-feedback-in 220ms ease-out both; }
+  .challenge-check { animation: challenge-check-in 280ms ease-out both; }
+}
+@keyframes challenge-feedback-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@keyframes challenge-check-in {
+  from { opacity: 0; transform: scale(.72); }
+}
 .challenge-primary { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem .9rem; border: 1px solid var(--b); background: var(--b); color: #fff; font: 600 .9rem/1.25 var(--sans); }
 .challenge-primary:hover { filter: brightness(.88); }
 .challenge-continue { margin-top: 1rem; }
