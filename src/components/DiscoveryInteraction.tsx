@@ -1,20 +1,26 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
+import type { DiscoveryVisit } from '../lib/discoveryProgress'
 import type { Interaction } from '../data/discoverEdition'
 import { StorySources } from './StoryEvidence'
 
-export function DiscoveryInteraction({ interaction, evidenceLink }: {
+export function DiscoveryInteraction({ interaction, evidenceLink, visit, onReveal, onClose }: {
   interaction: Interaction
-  evidenceLink: (label?: string) => ReactNode
+  evidenceLink: () => ReactNode
+  visit?: DiscoveryVisit
+  onReveal: (pick: string, answer?: string) => void
+  onClose: () => void
 }) {
-  const [pick, setPick] = useState('')
-  const [opened, setOpened] = useState(false)
+  const pick = visit?.pick ?? ''
+  const opened = !!visit && !visit.closed
+  const revealing = useRef(false)
   const panel = useRef<HTMLDivElement>(null)
   const trigger = useRef<HTMLButtonElement>(null)
-  const [choiceIndex, setChoiceIndex] = useState(0)
   const returning = useRef(false)
   useEffect(() => {
-    if (opened) panel.current?.focus({ preventScroll: true })
-    else if (returning.current) {
+    if (opened && revealing.current) {
+      panel.current?.focus({ preventScroll: true })
+      revealing.current = false
+    } else if (!opened && returning.current) {
       trigger.current?.focus()
       returning.current = false
     }
@@ -22,17 +28,17 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
 
   if (!opened) return (
     <>
-      {interaction.kind === 'prediction' ? (
+      {interaction.kind === 'prediction' && !visit ? (
         <fieldset className="discovery-prediction">
           <legend>{interaction.label}</legend>
           <div className="discovery-options">
-            {interaction.choices.map((choice, index) => (
-              <button key={choice} ref={index === choiceIndex ? trigger : undefined} type="button" onClick={() => { setChoiceIndex(index); setPick(choice); setOpened(true) }}>{choice}</button>
+            {interaction.choices.map((choice) => (
+              <button key={choice} type="button" onClick={() => { revealing.current = true; onReveal(choice, interaction.answer) }}>{choice}</button>
             ))}
           </div>
         </fieldset>
       ) : (
-        <button ref={trigger} className="discovery-clue" type="button" onClick={() => setOpened(true)}>{interaction.label} <span aria-hidden="true">↓</span></button>
+        <button ref={trigger} className="discovery-clue" type="button" onClick={() => { revealing.current = true; onReveal(pick) }}>{visit ? 'Show the evidence again' : interaction.label} <span aria-hidden="true">↓</span></button>
       )}
       {evidenceLink()}
     </>
@@ -69,8 +75,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink }: {
         {evidenceLink()}
         <button type="button" className="discovery-clue" onClick={() => {
           returning.current = true
-          setPick('')
-          setOpened(false)
+          onClose()
         }}>Close reveal</button>
       </div>
     </div>
