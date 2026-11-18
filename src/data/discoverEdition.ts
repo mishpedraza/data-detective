@@ -145,18 +145,19 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'generational-wealth': {
-    context: 'U.S. households headed by adults aged 25–34 · Average assets after inflation',
+    context: 'U.S. households aged 25–34 · Inflation-adjusted assets',
     interaction: {
-      label: 'At the same age, did U.S. millennials own less than baby boomers before subtracting debt?',
-      choices: ['Substantially less', 'About as much', 'Substantially more'],
-      answer: 'About as much',
+      label: 'At the same age, did millennials own more or less than baby boomers?',
+      choices: ['More', 'Less', 'About the same'],
+      answer: 'About the same',
       reveal: {
-        finding: 'They owned about as much, but millennials owed more.',
+        lead: 'Plot twist: about the same.',
+        finding: 'Millennials had approximately $176,000 in assets, compared with $173,000 for baby boomers. But here’s the catch: millennials had more debt.',
         measure: 'Average assets before subtracting debt · 2016 dollars',
         comparison: [cohortWealth[0], cohortWealth[2]].map(({ label, net, debt }) => ({
           label, value: `$${hours.format(Math.round(net + debt) * 1000)}`, amount: net + debt,
         })),
-        note: 'Average net worth was about $92,000 for millennials and $114,000 for boomers at the same age. This historical comparison ends in 2016.',
+        note: 'Once debt was taken into account, millennials had approximately $92,000 in net worth, compared with $114,000 for baby boomers.',
         refs: ['kurz2018'],
       },
     },

@@ -3,9 +3,9 @@ export type DiscoveryProgress = Partial<Record<string, DiscoveryVisit>>
 
 export const DISCOVERY_PROGRESS_KEY = 'data-detective.discovery-progress.v1'
 
-export function readDiscoveryProgress(): DiscoveryProgress {
+export function readDiscoveryProgress(key = DISCOVERY_PROGRESS_KEY): DiscoveryProgress {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(DISCOVERY_PROGRESS_KEY) ?? '{}')
+    const saved: unknown = JSON.parse(localStorage.getItem(key) ?? '{}')
     if (!saved || typeof saved !== 'object') return {}
     return Object.fromEntries(Object.entries(saved).filter(([, visit]) =>
       visit && typeof visit.pick === 'string' &&

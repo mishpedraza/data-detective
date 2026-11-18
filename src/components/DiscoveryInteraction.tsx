@@ -3,10 +3,11 @@ import type { DiscoveryVisit } from '../lib/discoveryProgress'
 import type { Interaction } from '../data/discoverEdition'
 import { StorySources } from './StoryEvidence'
 
-export function DiscoveryInteraction({ interaction, evidenceLink, visit, onReveal, onClose }: {
+export function DiscoveryInteraction({ interaction, evidenceLink, visit, onReveal, onClose, reaction }: {
   interaction: Interaction
   evidenceLink: (label?: string) => ReactNode
   visit?: DiscoveryVisit
+  reaction?: string
   onReveal: (pick: string, answer?: string) => void
   onClose: () => void
 }) {
@@ -65,6 +66,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
       </dl>}
       <p className="discovery-note">{note}</p>
       <StorySources refs={refs} />
+      {reaction && <p className="challenge-reaction">{reaction}</p>}
       <div className="discovery-reveal-actions">
         {evidenceLink('Explore why')}
         <button type="button" className="discovery-clue" onClick={() => {
