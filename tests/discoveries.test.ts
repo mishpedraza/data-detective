@@ -62,17 +62,19 @@ test('Discover has one sourced teaser per existing question and grades only defi
       const source = ref.startsWith('data:') ? INDICATORS[ref.slice(5)]?.source : studyById(ref) ?? REFERENCES[ref]
       assert.match(source?.url ?? '', /^https:\/\//, ref)
     }
-    if (interaction.kind === 'prediction') assert.ok(interaction.choices.includes(interaction.answer), id)
+    assert.ok(interaction.choices.includes(interaction.answer), id)
   }
-  const parent = DISCOVER_TEASERS['children-and-happiness']!.interaction
-  assert.ok(parent?.kind === 'contrast' && parent.reveal.comparison?.length === 3)
-  const housing = DISCOVER_TEASERS['housing-affordability']!.interaction
-  assert.ok(housing?.kind === 'prediction' && housing.answer === 'Lower')
+  const parent = DISCOVER_TEASERS['children-and-happiness']!.interaction!
+  assert.equal(parent.answer, 'Back near their earlier level')
+  assert.equal(parent.reveal.comparison?.length, 3)
+  const housing = DISCOVER_TEASERS['housing-affordability']!.interaction!
+  assert.equal(housing.answer, 'Lower')
   assert.match(housing.reveal.finding, /13% below/)
-  assert.equal(housing.choiceLabels?.[housing.answer], 'No')
-  assert.equal(housing.reveal.lead, 'Actually, lower.')
-  const crime = DISCOVER_TEASERS['crime-perceptions']!.interaction
-  assert.ok(crime?.kind === 'prediction' && crime.answer === 'It fell')
-  assert.match(crime.reveal.facts?.[0].value ?? '', /49% lower/)
-  assert.match(crime.reveal.facts?.[1].value ?? '', /23 of 27/)
+  assert.equal(housing.choiceLabels?.[housing.answer], 'About 13% lower')
+  const crime = DISCOVER_TEASERS['crime-perceptions']!.interaction!
+  assert.equal(crime.answer, 'Across the country')
+  assert.deepEqual(crime.reveal.comparison?.map(({ amount }) => amount), [77, 55])
+  const fertility = DISCOVER_TEASERS['wealth-and-fertility']!.interaction!
+  assert.equal(fertility.answer, 'The pattern flipped')
+  assert.deepEqual(fertility.reveal.facts?.map(({ label }) => label), ['1980', '2000'])
 })

@@ -61,6 +61,7 @@ export function discoveryEvidence(discovery: Discovery) {
     const showChange = (value: number) => value === 0 ? 'was unchanged' : `${value > 0 ? 'rose' : 'fell'} ${Math.abs(value)}%`
     return {
       result: `After inflation, typical hourly pay ${showChange(change)}, while GDP per person ${showChange(benchmark)}.`,
+      change,
       answer: answerFor(change - benchmark, options),
       source,
       publisher,
@@ -69,5 +70,5 @@ export function discoveryEvidence(discovery: Discovery) {
 
   const difference = change === 0 ? 'about the same as' : `${Math.abs(change)}% ${change < 0 ? 'below' : 'above'}`
   const result = `After inflation, ${comparison.subject} in ${to} were ${difference} the ${from} level.`
-  return { result, answer: answerFor(change, options), source, publisher }
+  return { result, change, answer: answerFor(change, options), source, publisher }
 }
