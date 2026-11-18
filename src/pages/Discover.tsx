@@ -8,7 +8,6 @@ import { DISCOVERY_PROGRESS_KEY, readDiscoveryProgress, revealDiscovery } from '
 import { hrefFor } from '../lib/route'
 
 const total = EDITORIAL_QUESTIONS.length
-const number = (index: number) => String(index).padStart(2, '0')
 const controls = 'a, button, input, select, textarea, [contenteditable], .discovery-reveal, [role="slider"]'
 
 export function Discover({ navigate, selected, mode }: { navigate: (href: string) => void; selected: string | null; mode: string | null }) {
@@ -19,6 +18,8 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
   const complete = answers.length === total
   const results = complete && (mode === 'results' || mode === 'review')
   const challenge = mode === 'challenge' || mode === 'results' || mode === 'review'
+  const browse = mode === 'browse' || (!challenge && selected !== null)
+  const welcome = !challenge && !browse
   const firstUnanswered = EDITORIAL_QUESTIONS.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
   const lastReachable = firstUnanswered < 0 ? total - 1 : firstUnanswered
   const dialog = useRef<HTMLDialogElement>(null)
@@ -34,8 +35,6 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
   const setActiveProgress = challenge ? setAttempt : setProgress
   const recorded = activeProgress[entry.id]
   const visit = recorded?.edition === DISCOVERY_QUIZ_EDITION && (!challenge || answers.some(({ id }) => id === entry.id)) ? recorded : undefined
-  const explored = EDITORIAL_QUESTIONS.filter(({ id }) => Object.hasOwn(progress, id)).length
-  const completed = explored === total
 
   useEffect(() => {
     try {
@@ -54,18 +53,18 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
       headline.current?.focus({ preventScroll: true })
       focusQuestion.current = false
     }
-  }, [challenge, entry.id, results])
+  }, [challenge, entry.id, results, welcome])
 
   const goTo = useCallback((position: number) => {
     const question = EDITORIAL_QUESTIONS[position]
     if (!question || position === index || (challenge && position > lastReachable)) return
     focusQuestion.current = true
-    navigate(hrefFor('discover', { q: question.id, mode: challenge ? 'challenge' : undefined }))
+    navigate(hrefFor('discover', { q: question.id, mode: challenge ? 'challenge' : 'browse' }))
   }, [challenge, index, lastReachable, navigate])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (results) return
+      if (!browse) return
       if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         dialog.current?.open || (event.target instanceof Element && event.target.closest(controls))) return
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -75,11 +74,11 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [goTo, index, results])
+  }, [browse, goTo, index])
 
   function startSwipe(event: PointerEvent<HTMLElement>) {
     touch.current = null
-    if (event.pointerType !== 'touch' || !event.isPrimary || (event.target as Element).closest(controls)) return
+    if (!browse || event.pointerType !== 'touch' || !event.isPrimary || (event.target as Element).closest(controls)) return
     touch.current = { id: event.pointerId, x: event.clientX, y: event.clientY }
   }
 
@@ -100,13 +99,6 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
       navigate(href)
     }}>{label} <span aria-hidden="true">→</span></a>
   )
-  const record = (
-    <>
-      <p>{explored} of {total} discoveries explored</p>
-
-    </>
-  )
-
   function openChallenge() {
     focusQuestion.current = true
     navigate(complete ? hrefFor('discover', { mode: 'results' })
@@ -119,22 +111,43 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
     navigate(hrefFor('discover', { mode: 'challenge', q: EDITORIAL_QUESTIONS[0].id }))
   }
 
+  if (welcome) return (
+    <div className="discover discover-edition discovery-reader">
+      <section className="discovery-reading discovery-welcome">
+        <h1 ref={headline} tabIndex={-1}>How Well Do You Know the World?</h1>
+        <p className="discovery-context">9 questions. A few surprises. Absolutely no judgment.</p>
+        <div className="discovery-welcome-actions">
+          <button className="challenge-primary" type="button" onClick={openChallenge}>
+            {complete ? 'See challenge results' : answers.length ? 'Resume the challenge' : 'Take the challenge'} →
+          </button>
+          <a className="discovery-link" href={hrefFor('discover', { mode: 'browse' })} onClick={(event) => {
+            if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+            event.preventDefault()
+            focusQuestion.current = true
+            navigate(hrefFor('discover', { mode: 'browse' }))
+          }}>Or browse all discoveries →</a>
+        </div>
+      </section>
+    </div>
+  )
+
   return (
     <div className="discover discover-edition discovery-reader">
       <nav className="discovery-reader-nav" aria-label="Discovery navigation">
-        <button className="discovery-contents-trigger" type="button" aria-haspopup="dialog" onClick={() => dialog.current?.showModal()}>All discoveries</button>
-        {!challenge && <button className="discovery-contents-trigger" type="button" onClick={openChallenge}>
-          {complete ? 'Challenge results' : answers.length ? 'Resume challenge' : 'Take the challenge'}
-        </button>}
+        <button className="discovery-contents-trigger" type="button" onClick={() => {
+          focusQuestion.current = true
+          navigate(hrefFor('discover'))
+        }}>← Discover home</button>
+        {browse && <button className="discovery-contents-trigger" type="button" aria-haspopup="dialog"
+          onClick={() => dialog.current?.showModal()}>All discoveries</button>}
         {challenge && !results && answers.length > 0 && (
           <button className="discovery-contents-trigger" type="button" onClick={() => {
             if (window.confirm('Reset the quiz? This clears your answers and score for this attempt.')) restart()
           }}>Reset quiz</button>
         )}
-        {!results && <div className="discovery-pager">
+        {browse && <div className="discovery-pager">
           <button type="button" aria-label="Previous discovery" disabled={index === 0} onClick={() => goTo(index - 1)}>←</button>
-          <span className="discovery-position" aria-label={`Discovery ${index + 1} of ${total}`}>{number(index + 1)} / {number(total)}</span>
-          <button type="button" aria-label="Next discovery" disabled={!next || (challenge && index >= lastReachable)} onClick={() => goTo(index + 1)}>→</button>
+          <button type="button" aria-label="Next discovery" disabled={!next} onClick={() => goTo(index + 1)}>→</button>
         </div>}
       </nav>
 
@@ -169,41 +182,25 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
             <span className="discovery-preview-link">Discover <span aria-hidden="true">→</span></span>
           </button>
         )}
-        {!challenge && !next && (visit || completed) && (
-          <section className="discovery-finish" aria-labelledby="discovery-finish-title">
-            <h2 id="discovery-finish-title">{completed ? `You’ve explored all ${total} discoveries.` : 'Your detective record'}</h2>
-            {record}
-            <button className="discovery-clue" type="button" onClick={() => dialog.current?.showModal()}>
-              {completed ? 'Revisit discoveries' : 'All discoveries'} <span aria-hidden="true">→</span>
-            </button>
-          </section>
-        )}
       </article>}
 
-      <dialog ref={dialog} className="discovery-contents" aria-labelledby="discovery-contents-title">
+      {browse && <dialog ref={dialog} className="discovery-contents" aria-labelledby="discovery-contents-title">
         <div className="discovery-contents-heading">
           <h2 id="discovery-contents-title">All discoveries</h2>
           <button className="discovery-clue" type="button" onClick={() => dialog.current?.close()}>Close</button>
-        </div>
-        <div className="discovery-record">
-          <h3 className="discovery-kicker">Your detective record</h3>
-          {record}
         </div>
         <ol>
           {EDITORIAL_QUESTIONS.map(({ id, question }, position) => (
             <li key={id}><button type="button" aria-current={index === position ? 'step' : undefined}
               onClick={() => {
                 dialog.current?.close()
-                if (challenge) navigate(hrefFor('discover', { q: id }))
-                else goTo(position)
+                goTo(position)
               }}>
-              <span className="discovery-position" aria-hidden="true">{number(position + 1)}</span>
               <span>{DISCOVER_TEASERS[id]?.interaction?.label ?? question}</span>
-              {Object.hasOwn(progress, id) && <span className="discovery-explored">Explored</span>}
             </button></li>
           ))}
         </ol>
-      </dialog>
+      </dialog>}
     </div>
   )
 }
