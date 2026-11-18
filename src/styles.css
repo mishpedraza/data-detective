@@ -746,3 +746,17 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 @media (prefers-reduced-motion: no-preference) {
   .discovery-reading { animation: discovery-appear 200ms ease-out; }
 }
+
+.challenge-progress { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .25rem 1rem; margin: 0 0 .9rem; color: var(--ink-2); font-size: .8rem; }
+.challenge-reaction { margin: .85rem 0 .15rem; color: var(--ink-2); font: italic .98rem/1.4 var(--serif); }
+.challenge-primary { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem .9rem; border: 1px solid var(--b); background: var(--b); color: #fff; font: 600 .9rem/1.25 var(--sans); }
+.challenge-primary:hover { filter: brightness(.88); }
+.challenge-continue { margin-top: 1rem; }
+.challenge-result-score { font: 450 clamp(1.7rem, 5vw, 2.6rem)/1.1 var(--serif); margin: 0 0 .7rem; }
+.challenge-result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1rem; margin-top: 1.25rem; }
+.challenge-result-actions .discovery-clue { margin: 0; }
+.challenge-review { list-style: none; padding: 0; margin: 0 0 1rem; }
+.challenge-review li { border-top: 1px solid var(--rule); padding: .8rem 0 .25rem; }
+.challenge-review h2 { font: 450 1.2rem/1.3 var(--serif); margin: 0 0 .35rem; }
+.challenge-review p { margin: .2rem 0; font-size: .9rem; }
+.challenge-share-copy { display: block; max-width: 100%; width: 32rem; margin-top: .5rem; }
