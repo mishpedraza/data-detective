@@ -32,6 +32,8 @@ a { color: inherit; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
 :focus-visible { outline: 2px solid var(--a); outline-offset: 3px; border-radius: 3px; }
 main { min-height: 70vh; }
+main:has(.discovery-reader) { min-height: 0; }
+main:has(.discovery-reader) + .footer { margin-top: 0; }
 
 .tone-a-text { color: var(--a); }
 .tone-b-text { color: var(--b); }
@@ -651,7 +653,6 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 
 /* Discover's editorial front page */
 .discovery-card-evidence { min-width: 0; }
-.discovery-hook { margin: 0 0 12px; max-width: 54ch; font-size: 15px; line-height: 1.5; color: var(--ink-2); }
 .discover-edition .discovery-prediction { margin: 1px 0 7px; width: 100%; }
 .discover-edition .discovery-options { gap: 6px; }
 .discover-edition .discovery-options button { min-height: 44px; padding: 6px 10px; text-align: left; }
@@ -659,7 +660,6 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .discovery-link, .discovery-clue { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 550; text-decoration: underline; text-underline-offset: 4px; }
 .discovery-clue { border: 0; padding: 0; color: var(--ink); margin-right: 12px; }
 .discover-edition .discovery-reveal { width: 100%; border-left: 2px solid var(--b); padding: 8px 0 4px 12px; margin: 3px 0 0; }
-.discovery-guess { display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: 13px; margin: 0 0 5px; }
 .discovery-measure { color: var(--ink-2); font-size: 12px; margin: 0; }
 .discovery-result { font: 450 clamp(19px, 2.8vw, 26px)/1.2 var(--serif); margin: 0 0 6px; }
 .discovery-note { color: var(--ink-2); line-height: 1.45; font-size: 14px; margin: 0; }
@@ -678,8 +678,6 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .discover-edition .discovery-reveal { animation: discovery-appear 180ms ease-out; }
   @keyframes discovery-appear { from { opacity: 0; } to { opacity: 1; } }
 }
-.discovery-match { color: #225c3c; }
-.discovery-mismatch { color: #8a302b; }
 
 .investigation-figure figcaption { margin-bottom: 12px; }
 .story-figure-list, .story-segment-labels, .story-trajectory-labels { list-style: none; padding: 0; margin: 0; }
@@ -714,12 +712,15 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .discovery-reader-nav button { min-height: 44px; border: 0; padding: 0; color: var(--ink); font: inherit; font-size: .86rem; }
 .discovery-reader-nav button:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 4px; }
 .discovery-reader-nav button:disabled { opacity: .42; cursor: default; }
-.discovery-position, .discovery-progress { font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
-.discovery-progress { margin: .75rem 0 0; }
-.discovery-reading { max-width: var(--reading-width); margin: 0 auto; padding: clamp(2.2rem, 6vw, 5rem) 0 clamp(3rem, 8vw, 6rem); touch-action: pan-y pinch-zoom; }
+.discovery-position { font-size: .78rem; font-variant-numeric: tabular-nums; color: var(--ink-2); white-space: nowrap; }
+
+.discovery-reading { max-width: var(--reading-width); margin: 0 auto; padding: clamp(1.8rem, 5vw, 4rem) 0 clamp(1.4rem, 4vw, 3rem); touch-action: pan-y pinch-zoom; }
 .discovery-reading h1 { margin: 0 0 clamp(1.15rem, 4vw, 2rem); max-width: 22ch; font: 450 clamp(2.35rem, 6vw, 4.55rem)/1.04 var(--serif); letter-spacing: -.035em; }
 .discovery-reading h1:focus { outline: none; }
-.discovery-reading .discovery-hook { font-size: clamp(.98rem, 2vw, 1.15rem); }
+.discovery-context { margin: 0 0 .5rem; font-size: .9rem; color: var(--ink-2); }
+.discovery-reader-nav .discovery-contents-trigger { text-decoration: underline; text-underline-offset: 4px; }
+.discovery-reader-nav .discovery-pager button { min-width: 44px; font-size: 1.2rem; }
+.discovery-result-detail { margin-bottom: .55rem; }
 .discovery-next-preview, .discovery-finish { display: block; width: 100%; margin: 1.8rem 0 0; padding: 1.1rem 0 0; text-align: left; border: 0; border-top: 1px solid var(--rule); color: var(--ink); }
 .discovery-kicker { display: block; margin: 0 0 .35rem; color: var(--ink-2); text-transform: uppercase; letter-spacing: .11em; font: 550 .68rem/1.35 var(--sans); }
 .discovery-preview-title, .discovery-finish h2 { display: block; margin: 0 0 .35rem; font: 450 clamp(1.35rem, 3vw, 2rem)/1.16 var(--serif); }

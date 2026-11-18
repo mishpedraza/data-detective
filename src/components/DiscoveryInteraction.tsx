@@ -5,7 +5,7 @@ import { StorySources } from './StoryEvidence'
 
 export function DiscoveryInteraction({ interaction, evidenceLink, visit, onReveal, onClose }: {
   interaction: Interaction
-  evidenceLink: () => ReactNode
+  evidenceLink: (label?: string) => ReactNode
   visit?: DiscoveryVisit
   onReveal: (pick: string, answer?: string) => void
   onClose: () => void
@@ -33,7 +33,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
           <legend>{interaction.label}</legend>
           <div className="discovery-options">
             {interaction.choices.map((choice) => (
-              <button key={choice} type="button" onClick={() => { revealing.current = true; onReveal(choice, interaction.answer) }}>{choice}</button>
+              <button key={choice} type="button" onClick={() => { revealing.current = true; onReveal(choice, interaction.answer) }}>{interaction.choiceLabels?.[choice] ?? choice}</button>
             ))}
           </div>
         </fieldset>
@@ -44,17 +44,12 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
     </>
   )
 
-  const { finding, comparison, facts, note, measure, refs } = interaction.reveal
-  const answer = interaction.kind === 'prediction' ? interaction.answer : undefined
+  const { finding, lead, comparison, facts, note, measure, refs } = interaction.reveal
   const largest = comparison && Math.max(...comparison.map(({ amount }) => amount))
   return (
     <div className="discovery-reveal" ref={panel} tabIndex={-1} aria-live="polite">
-      {answer && <p className="discovery-guess">
-        {pick === answer
-          ? <strong className="discovery-match">Correct</strong>
-          : <><span className="discovery-mismatch">Your guess · {pick}</span><span className="discovery-match">Answer · {answer}</span></>}
-      </p>}
-      <p className="discovery-result">{finding}</p>
+      <p className="discovery-result">{lead ?? finding}</p>
+      {lead && <p className="discovery-note discovery-result-detail">{finding}</p>}
       {measure && <p className="discovery-measure">{measure}</p>}
       {comparison && largest && (
         <ul className="story-bars discovery-bars">
@@ -72,7 +67,7 @@ export function DiscoveryInteraction({ interaction, evidenceLink, visit, onRevea
       <p className="discovery-note">{note}</p>
       <StorySources refs={refs} />
       <div className="discovery-reveal-actions">
-        {evidenceLink()}
+        {evidenceLink('Explore why')}
         <button type="button" className="discovery-clue" onClick={() => {
           returning.current = true
           onClose()

@@ -55,7 +55,7 @@ test('a recent immigration and housing gap cites the closest study period', () =
 test('Discover has one sourced teaser per existing question and grades only defined comparisons', () => {
   assert.deepEqual(Object.keys(DISCOVER_TEASERS), EDITORIAL_QUESTIONS.map(({ id }) => id))
   for (const [id, teaser] of Object.entries(DISCOVER_TEASERS)) {
-    assert.ok(teaser?.hook, id)
+    assert.ok(teaser, id)
     const interaction = teaser.interaction
     assert.ok(interaction, id)
     for (const ref of interaction.reveal.refs) {
@@ -69,6 +69,8 @@ test('Discover has one sourced teaser per existing question and grades only defi
   const housing = DISCOVER_TEASERS['housing-affordability']!.interaction
   assert.ok(housing?.kind === 'prediction' && housing.answer === 'Lower')
   assert.match(housing.reveal.finding, /13% below/)
+  assert.equal(housing.choiceLabels?.[housing.answer], 'No')
+  assert.equal(housing.reveal.lead, 'Actually, lower.')
   const crime = DISCOVER_TEASERS['crime-perceptions']!.interaction
   assert.ok(crime?.kind === 'prediction' && crime.answer === 'It fell')
   assert.match(crime.reveal.facts?.[0].value ?? '', /49% lower/)

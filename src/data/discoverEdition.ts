@@ -6,6 +6,7 @@ import { workingHours } from './workingHours'
 
 type Reveal = {
   finding: string
+  lead?: string
   note: string
   measure?: string
   refs: string[]
@@ -14,11 +15,11 @@ type Reveal = {
 }
 
 export type Interaction =
-  | { kind: 'prediction'; label: string; choices: readonly string[]; answer: string; reveal: Reveal }
+  | { kind: 'prediction'; label: string; choices: readonly string[]; choiceLabels?: Readonly<Record<string, string>>; answer: string; reveal: Reveal }
   | { kind: 'contrast'; label: string; reveal: Reveal }
 
 interface Teaser {
-  hook: string
+  context?: string
   years?: { from: number; to: number }
   interaction?: Interaction
 }
@@ -39,13 +40,15 @@ const [spain, us] = hourChanges
 export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
   'housing-affordability': {
     years: { from: housing.comparison.from, to: housing.comparison.to },
-    hook: 'Spain’s housing boom set a high benchmark. See how today’s prices look once you take inflation out.',
     interaction: housingEvidence ? {
       kind: 'prediction',
       label: housing.comparisonLabel,
       choices: predictionOptions(housing),
+      choiceLabels: { Higher: 'Yes', Lower: 'No' },
       answer: housingEvidence.answer,
       reveal: {
+        lead: housingEvidence.answer === 'Lower' ? 'Actually, lower.'
+          : housingEvidence.answer === 'Higher' ? 'Yes, higher.' : 'About the same.',
         finding: housingEvidence.result,
         comparison: housingBars,
         note: 'That compares national purchase prices. A buyer’s monthly budget also depends on income and the cost of borrowing.',
@@ -54,7 +57,6 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     } : undefined,
   },
   'children-and-happiness': {
-    hook: 'Follow the same people from five years before their first child to the years after.',
     interaction: {
       kind: 'contrast',
       label: 'Trace happiness around a first birth',
@@ -70,7 +72,6 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'working-hours': {
-    hook: 'Compare two countries over a generation. Then consider the work that never makes it onto a payslip.',
     interaction: {
       kind: 'prediction',
       label: 'Where was the drop in annual hours per worker larger, from 1970 to 2023?',
@@ -91,7 +92,7 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'immigration-crime': {
-    hook: 'In Italy, a permit deadline gave researchers an unusual way to compare otherwise similar applicants.',
+    context: 'Residence permits and recorded crime in Italy',
     interaction: {
       kind: 'contrast',
       label: 'Compare applicants at the cutoff',
@@ -108,7 +109,7 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'education-and-pay': {
-    hook: 'What happens to mothers’ and fathers’ earnings after a first child arrives?',
+    context: 'Earnings after a first birth in Denmark',
     interaction: {
       kind: 'contrast',
       label: 'Compare earnings ten years later',
@@ -122,7 +123,6 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'global-danger': {
-    hook: 'A war count gives a small conflict and a deadly one the same weight. What happened when researchers counted the deaths too?',
     interaction: {
       kind: 'contrast',
       label: 'Compare conflicts and battle deaths',
@@ -139,7 +139,6 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'generational-wealth': {
-    hook: 'If two generations own about as much at the same age, what could leave one with less wealth?',
     interaction: {
       kind: 'contrast',
       label: 'Compare wealth at ages 25–34',
@@ -153,11 +152,11 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'crime-perceptions': {
-    hook: 'Americans often felt crime was rising. What does the longer record show?',
     interaction: {
       kind: 'prediction',
       label: 'How did the US police-recorded violent crime rate change from 1993 to 2022?',
       choices: ['It rose', 'It fell', 'It barely changed'],
+      choiceLabels: { 'It rose': 'Went up', 'It fell': 'Went down', 'It barely changed': 'About the same' },
       answer: 'It fell',
       reveal: {
         finding: 'Recorded violent crime fell 49%, even as Americans frequently said crime was rising.',
@@ -171,7 +170,7 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'wealth-and-fertility': {
-    hook: 'France and Germany had roughly similar GDP per person in 2000. Compare their birth rates.',
+    context: 'France and Germany, 2000 · Similar GDP per person',
     interaction: {
       kind: 'prediction',
       label: 'Which country had the higher fertility rate?',
