@@ -6,6 +6,7 @@ import { DiscoveryInteraction } from '../components/DiscoveryInteraction'
 import { EDITORIAL_QUESTIONS } from '../data/editorial'
 import { DISCOVERY_PROGRESS_KEY, readDiscoveryProgress, revealDiscovery } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
+import { track } from '../lib/analytics'
 
 const total = EDITORIAL_QUESTIONS.length
 const controls = 'a, button, input, select, textarea, [contenteditable], .discovery-reveal, [role="slider"]'
@@ -97,16 +98,19 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
     <a className="discovery-link discovery-open" href={href} onClick={(event) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
       event.preventDefault()
+      track('evidence_opened', { question_id: entry.id, from_quiz: challenge })
       navigate(href)
     }}>{label} <span aria-hidden="true">→</span></a>
   )
   function openChallenge() {
+    track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { answered_count: answers.length })
     focusQuestion.current = true
     navigate(complete ? hrefFor('discover', { mode: 'results' })
       : hrefFor('discover', { mode: 'challenge', q: EDITORIAL_QUESTIONS[lastReachable].id }))
   }
 
   function restart() {
+    track('quiz_restarted')
     setAttempt({})
     focusQuestion.current = true
     navigate(hrefFor('discover', { mode: 'challenge', q: EDITORIAL_QUESTIONS[0].id }))
@@ -176,6 +180,10 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
                 reaction={challenge && visit ? challengeReaction(index, visit.pick === teaser.interaction.answer, visit.reactionVariant) : undefined}
                 onReveal={(pick, answer) => {
                   const variant = challenge && answer !== undefined ? (Math.random() < 0.5 ? 0 : 1) : undefined
+                  if (challenge && answer !== undefined && !visit) {
+                    track('quiz_question_answered', { question_id: entry.id, question_number: index + 1, correct: pick === answer })
+                    if (answers.length + 1 === total) track('quiz_completed', { score: score + Number(pick === answer), total_questions: total })
+                  }
                   setActiveProgress((current) => revealDiscovery(current, entry.id, pick, answer, DISCOVERY_QUIZ_EDITION, variant))
                 }}
                 onClose={() => setActiveProgress((current) => ({ ...current, [entry.id]: { ...visit!, closed: true } }))} />
