@@ -765,6 +765,9 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 }
 .challenge-primary { display: inline-flex; align-items: center; min-height: 44px; padding: .5rem .9rem; border: 1px solid var(--b); background: var(--b); color: #fff; font: 600 .9rem/1.25 var(--sans); }
 .challenge-primary:hover { filter: brightness(.88); }
+.challenge-navigation { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin-top: 1.5rem; }
+.challenge-navigation .challenge-continue { margin-top: 0; margin-left: auto; }
+.challenge-navigation .discovery-contents-trigger { min-height: 44px; padding: .5rem 0; font: 500 .9rem/1.25 var(--sans); }
 .challenge-continue { margin-top: 1rem; }
 .challenge-result-score { font: 450 clamp(1.7rem, 5vw, 2.6rem)/1.1 var(--serif); margin: 0 0 .7rem; }
 .challenge-result-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1rem; margin-top: 1.25rem; }
