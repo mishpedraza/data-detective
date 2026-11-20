@@ -172,11 +172,20 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
             : evidenceLink()}
         </div>
 
-        {challenge && visit && !visit.closed && (next || complete) && (
-          <button className="challenge-primary challenge-continue" type="button"
-            onClick={() => next ? goTo(index + 1) : navigate(hrefFor('discover', { mode: 'results' }))}>
-            {next ? 'Next question →' : 'See my results →'}
-          </button>
+        {challenge && !results && (
+          <div className="challenge-navigation">
+            {index > 0 && (
+              <button className="discovery-contents-trigger" type="button" onClick={() => goTo(index - 1)}>
+                ← Previous question
+              </button>
+            )}
+            {visit && !visit.closed && (next || complete) && (
+              <button className="challenge-primary challenge-continue" type="button"
+                onClick={() => next ? goTo(index + 1) : navigate(hrefFor('discover', { mode: 'results' }))}>
+                {next ? 'Next question →' : 'See my results →'}
+              </button>
+            )}
+          </div>
         )}
         {!challenge && visit && !visit.closed && next && (
           <button className="discovery-next-preview" type="button" onClick={() => goTo(index + 1)}>
