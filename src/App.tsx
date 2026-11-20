@@ -8,6 +8,7 @@ import { Investigate } from './pages/Investigate'
 import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
 import { hrefFor, type Route } from './lib/route'
+import { analyticsConsent, setAnalyticsConsent, track } from './lib/analytics'
 
 function parse(): { route: Route; params: URLSearchParams } {
   const h = window.location.hash.replace(/^#\/?/, '')
@@ -18,6 +19,7 @@ function parse(): { route: Route; params: URLSearchParams } {
 
 export default function App() {
   const reduceMotion = useReducedMotion()
+  const [consent, setConsent] = useState(analyticsConsent)
   const [{ route, params }, setState] = useState(parse)
   useEffect(() => {
     const on = () => setState(parse())
@@ -28,6 +30,7 @@ export default function App() {
     window.location.hash = href.replace(/^#/, '')
     window.scrollTo({ top: 0, behavior: href.startsWith('#/discover') || reduceMotion ? 'instant' : 'smooth' })
   }, [reduceMotion])
+  useEffect(() => { track('page_viewed', { section: route }) }, [route, params, consent])
   const investigationId = params.get('r') ?? DEFAULT_INVESTIGATION
   const entry = editorialQuestionById(investigationId)
   return (
@@ -44,6 +47,13 @@ export default function App() {
           {route === 'explore' && <Explore navigate={navigate} />}
         </motion.main>
       </AnimatePresence>
+      {consent === null && <aside className="analytics-consent" aria-label="Analytics choice">
+        <p>Help improve Data Detective? Allow anonymous usage analytics. Your quiz answers stay in your browser.</p>
+        <div>
+          <button type="button" onClick={() => { setAnalyticsConsent(false); setConsent('no') }}>No thanks</button>
+          <button type="button" onClick={() => { setAnalyticsConsent(true); setConsent('yes'); track('analytics_consent_granted') }}>Allow analytics</button>
+        </div>
+      </aside>}
       <footer className="footer">
         <p>
           Data Detective is a prototype. Figures come from official statistics and cited research. Sources are linked in each investigation. No simulated data is used.
