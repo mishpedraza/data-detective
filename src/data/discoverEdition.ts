@@ -30,14 +30,14 @@ const housingBars = housingVisual && storyComparison(housingVisual)?.rows.map(({
   label, value: `${display} · 2007 = 100`, amount: value,
 }))
 const hours = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
-export const DISCOVERY_QUIZ_EDITION = 'finalized-nine-v1'
+export const DISCOVERY_QUIZ_EDITION = 'finalized-nine-v2'
 
-const hourCountries = ['Spain', 'United States'] as const
+const hourCountries = ['Spain', 'United States', 'Germany'] as const
 const hourChanges = hourCountries.map((country) => {
   const { earlier, later } = workingHours[country]
   return { country, earlier, later, drop: earlier - later }
 })
-const [spain, us] = hourChanges
+const biggestHoursDrop = [...hourChanges].sort((a, b) => b.drop - a.drop)[0]
 export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
   'housing-affordability': {
     context: 'Spain · National home prices after inflation',
@@ -77,20 +77,18 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
   'working-hours': {
     context: '1970–2023 · Annual hours worked per worker',
     interaction: {
-      label: 'Where did annual working hours fall more, in Spain or in the U.S.?',
+      label: 'Where did annual working hours fall the most: Spain, the U.S. or Germany?',
       choiceLabels: { 'United States': 'The U.S.' },
-      choices: [...hourCountries, 'About the same'],
-      answer: Math.round(spain.drop) === Math.round(us.drop) ? 'About the same' : spain.drop > us.drop ? 'Spain' : 'United States',
+      choices: [...hourCountries],
+      answer: biggestHoursDrop.country,
       reveal: {
-        finding: Math.round(spain.drop) === Math.round(us.drop)
-          ? `Both countries saw a drop of about ${hours.format(spain.drop)} hours per worker a year.`
-          : `${spain.drop > us.drop ? 'Spain' : 'The U.S.'} saw the larger decline: ${hours.format(Math.max(spain.drop, us.drop))} fewer annual hours per worker, compared with ${hours.format(Math.min(spain.drop, us.drop))} in ${spain.drop > us.drop ? 'the U.S.' : 'Spain'}.`,
+        finding: `Germany had the largest reduction: about ${hours.format(biggestHoursDrop.drop)} fewer hours per worker per year, compared with ${hours.format(hourChanges[0].drop)} in Spain and ${hours.format(hourChanges[1].drop)} in the U.S.`,
         comparison: hourChanges.map(({ country, earlier, later, drop }) => ({
           label: country === 'United States' ? 'U.S.' : country,
           value: `${hours.format(earlier)} → ${hours.format(later)} hours`,
           amount: Math.abs(drop),
         })),
-        note: 'Spain went from working slightly more hours per worker than the U.S. to working fewer. The comparison leaves out unpaid household work.',
+        note: 'Germany also had the fewest annual hours per worker in 2023. These figures describe working time, not salaries or unpaid household work.',
         refs: ['pwt11'],
       },
     },
