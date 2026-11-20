@@ -781,3 +781,10 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .discovery-welcome { padding-block: clamp(3rem, 12vw, 8rem); }
 .discovery-welcome .discovery-context { margin-bottom: 1.4rem; }
 .discovery-welcome-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; }
+
+/* Optional, unobtrusive consent for anonymous product analytics. */
+.analytics-consent { position: fixed; z-index: 100; bottom: 1rem; left: 1rem; right: 1rem; width: min(36rem, calc(100% - 2rem)); margin: 0 auto; padding: 1rem 1.2rem; background: var(--paper, #f5f1ea); color: var(--ink, #222); border: 1px solid var(--rule, #aaa); box-shadow: 0 5px 24px #0002; }
+.analytics-consent p { margin: 0 0 .8rem; font-size: .9rem; }
+.analytics-consent div { display: flex; justify-content: flex-end; gap: .75rem; flex-wrap: wrap; }
+.analytics-consent button { min-height: 44px; padding: .45rem .8rem; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; }
+.analytics-consent button:last-child { background: var(--b, #222); border-color: var(--b, #222); color: white; }
