@@ -11,6 +11,7 @@ const total = EDITORIAL_QUESTIONS.length
 const controls = 'a, button, input, select, textarea, [contenteditable], .discovery-reveal, [role="slider"]'
 
 export function Discover({ navigate, selected, mode }: { navigate: (href: string) => void; selected: string | null; mode: string | null }) {
+  const [shareCopied, setShareCopied] = useState(false)
   const [progress, setProgress] = useState(readDiscoveryProgress)
   const [attempt, setAttempt] = useState(() => readDiscoveryProgress(CHALLENGE_KEY))
   const answers = challengeAnswers(attempt)
@@ -126,6 +127,15 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
             focusQuestion.current = true
             navigate(hrefFor('discover', { mode: 'browse' }))
           }}>Or browse all discoveries →</a>
+          <button className="discovery-contents-trigger" type="button" onClick={async () => {
+            const shareUrl = new URL(import.meta.env.BASE_URL, window.location.origin).href
+            try {
+              await navigator.clipboard.writeText(shareUrl)
+              setShareCopied(true)
+            } catch {
+              window.prompt('Copy this link to share Data Detective:', shareUrl)
+            }
+          }}>{shareCopied ? 'Link copied ✓' : 'Copy link to share'}</button>
         </div>
       </section>
     </div>
