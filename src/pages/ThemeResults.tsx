@@ -23,7 +23,7 @@ export function ThemeNext({ quiz, theme, navigate, combined, next }: {
     <aside className="theme-next" aria-label={`${quiz.title} progress`}>
       <ThemeMeter theme={theme} />
       {combined ? <a className="theme-results-cta" href={combined} onClick={follow(navigate, combined, () => track('combined_results_opened', { theme_id: quiz.id, from: 'quiz_results' }))}>
-        See your combined {quiz.title} results <span aria-hidden="true">→</span>
+        <span>See your combined {quiz.title} results</span> <span aria-hidden="true">→</span>
       </a> : next && <a className="discovery-link" href={next.href} onClick={follow(navigate, next.href, () => track('next_theme_quiz_opened', { theme_id: quiz.id, target_chapter: next.title }))}>
         {next.state === 'in-progress' ? 'Resume' : 'Next'}: {next.title} <span aria-hidden="true">→</span>
       </a>}
