@@ -8,8 +8,7 @@ import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, f
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
-import { chapterEntry, follow, playStatus } from '../lib/quizEntry'
-import { PlayCard } from './Quizzes'
+import { follow } from '../lib/quizEntry'
 
 const plainClick = (event: MouseEvent) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
@@ -197,40 +196,12 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   )
 }
 
-function ChapterList({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => void }) {
-  const home = hrefFor('discover')
-  return (
-    <div className="discover discover-edition discovery-reader chapter-quiz">
-      <nav className="discovery-reader-nav" aria-label="Quiz navigation">
-        <a className="discovery-contents-trigger" href={home} onClick={follow(navigate, home)}>← All quizzes</a>
-      </nav>
-      <section className="discovery-reading quiz-collection">
-        <h1 tabIndex={-1}>{quiz.title}</h1>
-        <p className="discovery-context">Pick a chapter.</p>
-        <ol className="quiz-list">
-          {quiz.chapters.map((chapter, i) => {
-            const entry = chapterEntry(quiz, chapter.id)
-            return <li key={chapter.id}>
-              <PlayCard kicker={`Chapter ${i + 1}`} title={chapter.title} description={chapter.description} navigate={navigate}
-                href={entry.href} status={playStatus(entry.questions, entry.answers, chapter.minutes)} questions={entry.questions} answers={entry.answers}
-                onOpen={() => track(entry.event, { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })} />
-            </li>
-          })}
-          {quiz.moreChapters && <li><PlayCard kicker={`Chapter ${quiz.chapters.length + 1}`} title="More chapters" status="Coming soon" navigate={navigate} /></li>}
-        </ol>
-      </section>
-    </div>
-  )
-}
-
 export function ChapterQuiz({ quiz, navigate, selected, mode, chapterId }: { quiz: Quiz; navigate: (href: string) => void; selected: string | null; mode: string | null; chapterId: string | null }) {
-  const themed = hasChapterList(quiz)
   // Older links name a question but no chapter; open the chapter that holds it.
-  const chapter = !themed ? quiz.chapters[0]
-    : quiz.chapters.find(({ id }) => id === chapterId)
-      ?? (selected || mode ? quiz.chapters.find(({ questionIds }) => questionIds.includes(selected ?? '')) ?? quiz.chapters[0] : undefined)
-  if (!chapter) return <ChapterList quiz={quiz} navigate={navigate} />
-  return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={themed} navigate={navigate} selected={selected} mode={mode} />
+  const chapter = quiz.chapters.find(({ id }) => id === chapterId)
+    ?? quiz.chapters.find(({ questionIds }) => questionIds.includes(selected ?? ''))
+    ?? quiz.chapters[0]
+  return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={hasChapterList(quiz)} navigate={navigate} selected={selected} mode={mode} />
 }
 
 function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { quiz: Quiz; chapter: QuizChapter; themed: boolean; navigate: (href: string) => void; selected: string | null; mode: string | null }) {
@@ -288,10 +259,10 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...current }, question.id, pick, quiz.edition))
   }
 
-  const back = themed ? hrefFor('discover', { quiz: quiz.id }) : hrefFor('discover')
+  const back = hrefFor('discover')
   const nav = (
     <nav className="discovery-reader-nav" aria-label="Quiz navigation">
-      <a className="discovery-contents-trigger" href={back} onClick={follow(navigate, back)}>{themed ? '← Chapters' : '← All quizzes'}</a>
+      <a className="discovery-contents-trigger" href={back} onClick={follow(navigate, back)}>← All quizzes</a>
       {view === 'question' && answers.length > 0 && <button className="discovery-contents-trigger" type="button" onClick={() => {
         if (window.confirm('Start again? This clears your answers for this quiz.')) restart()
       }}>Start again</button>}

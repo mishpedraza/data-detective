@@ -8,6 +8,8 @@ export interface QuizChapter {
   id: string
   title: string
   description?: string
+  /** One line for the homepage card. */
+  summary?: string
   minutes?: number
   /** How points are awarded, shown under the results. */
   scoring?: string
@@ -19,8 +21,8 @@ export interface Quiz {
   title: string
   /** The challenge to the player, used in shared results. */
   prompt: string
-  /** One line for the quiz card. */
-  description: string
+  /** Shown on a theme that has no playable quiz yet. */
+  description?: string
   tagline?: string
   /** Changing the edition invalidates stored answers when a quiz's questions are revised. */
   edition: string
@@ -28,8 +30,6 @@ export interface Quiz {
   format?: 'chapter'
   /** Also offers browsing every discovery without scoring. */
   browse?: boolean
-  /** More chapters are planned, so the theme opens on its chapter list. */
-  moreChapters?: boolean
   attemptKey: string
   resultKey: string
   chapters: readonly QuizChapter[]
@@ -41,7 +41,6 @@ export const QUIZZES: readonly Quiz[] = [
     title: 'The World Around Us',
     prompt: 'How Well Do You Know the World?',
     tagline: 'A few surprises. Absolutely no judgment.',
-    description: 'Homes, work, family, crime and conflict. Nine beliefs, checked against the data.',
     edition: DISCOVERY_QUIZ_EDITION,
     format: 'chapter',
     browse: true,
@@ -50,7 +49,8 @@ export const QUIZZES: readonly Quiz[] = [
     resultKey: 'data-detective.challenge.last-result.v1',
     chapters: [{
       id: 'main',
-      title: 'The World Around Us',
+      title: 'Life by the numbers',
+      summary: 'Homes, work, family, crime and conflict. Nine beliefs, checked against the data.',
       description: 'Homes, family, work, crime and conflict: nine common beliefs, checked against official statistics and research.',
       minutes: 4,
       questionIds: EDITORIAL_QUESTIONS.map(({ id }) => id),
@@ -60,14 +60,13 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'men-and-women',
     title: 'Men & Women',
     prompt: 'How well do you really understand men and women?',
-    description: 'Love, dating and relationships. How different are we, really?',
-    moreChapters: true,
     edition: 'v1',
     format: 'chapter',
     attemptKey: 'data-detective.quiz.men-and-women.v1',
     resultKey: 'data-detective.quiz.men-and-women.last-result.v1',
     chapters: [{
       ...LOVE_CHAPTER,
+      summary: 'Age gaps, desire, being single and loneliness. How different are we, really?',
       scoring: 'One point per question. Being single: ¼ point per correct prediction. Emotional support: ½ point per estimate within 5 points of the real figure, ¼ within 15.',
       questionIds: LOVE_QUESTIONS.map(({ id }) => id) }],
   },
@@ -85,9 +84,9 @@ export const QUIZZES: readonly Quiz[] = [
 
 export const DEFAULT_QUIZ = QUIZZES[0]
 
-/** Themes with several chapters open on a chapter list; single-chapter quizzes start straight away. */
+/** Links name the chapter once a theme has more than one. */
 export function hasChapterList(quiz: Quiz) {
-  return quiz.chapters.length > 1 || !!quiz.moreChapters
+  return quiz.chapters.length > 1
 }
 
 export function quizById(id: string | null | undefined) {

@@ -791,7 +791,9 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 
 /* Quiz collection */
 .quiz-collection { padding-block: clamp(2.4rem, 9vw, 6rem); }
-.quiz-list { list-style: none; padding: 0; margin: clamp(1.4rem, 4vw, 2.4rem) 0 0; border-bottom: 1px solid var(--rule); }
+.quiz-theme { margin-top: clamp(1.6rem, 4.5vw, 2.6rem); }
+.quiz-theme > .discovery-kicker { margin: 0 0 .5rem; }
+.quiz-list { list-style: none; padding: 0; margin: 0; border-bottom: 1px solid var(--rule); }
 .quiz-list li { border-top: 1px solid var(--rule); }
 .quiz-card { display: grid; grid-template-columns: 1fr auto; gap: 0 1rem; align-items: start; padding: clamp(1rem, 3vw, 1.5rem) 0; color: var(--ink); text-decoration: none; }
 .quiz-body { display: block; min-width: 0; }
@@ -810,7 +812,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
   .quiz-card:hover .quiz-go { transform: translateX(6px); color: var(--b); }
 }
 .quiz-soon .quiz-title { color: var(--muted); }
-.quiz-browse { display: inline-block; margin: -.4rem 0 1.2rem; font-size: .85rem; }
+.quiz-browse { display: inline-block; margin: .7rem 0 0; font-size: .85rem; }
 
 /* chapter quizzes: visual, prediction-first questions */
 .chapter-quiz { --men: #1f6470; --women: #c4512f; --accent: #1f6470; --accent-soft: rgba(31, 100, 112, .1); }
