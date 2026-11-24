@@ -1215,3 +1215,39 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-week.v-men figcaption strong { color: var(--men); } .v-week.v-women figcaption strong { color: var(--women); }
 .v-week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1rem; margin-bottom: 1rem; }
 @media (max-width: 520px) { .v-week-grid { grid-template-columns: 1fr; } }
+
+/* Nature, nurture & society */
+.chapter-quiz[data-visual='eyes'] { --accent: #6d3f61; --accent-soft: rgba(109, 63, 97, .1); }
+.chapter-quiz[data-visual='maths'] { --accent: #3d5a78; --accent-soft: rgba(61, 90, 120, .1); }
+.chapter-quiz[data-visual='moral'] { --accent: #8a5a2b; --accent-soft: rgba(138, 90, 43, .1); }
+.chapter-quiz[data-visual='paradox'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
+.v-eyes-grid { display: grid; grid-template-columns: repeat(19, 1fr); gap: 4px; max-width: 30rem; }
+.v-country { aspect-ratio: 1; border-radius: 50%; }
+.v-country.is-women, .v-eyes .v-power-key .is-women { background: var(--accent); }
+.v-country.is-none, .v-eyes .v-power-key .is-none { background: rgba(23, 23, 28, .14); }
+.v-eyes .v-power-key .is-men { background: var(--men); opacity: .35; }
+.v-country.is-guess { outline: 2px solid var(--ink); outline-offset: 2px; }
+.v-toggle { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 .9rem; }
+.v-toggle button { min-height: 40px; padding: .4rem .85rem; border: 1px solid var(--rule-strong); border-radius: 999px; background: transparent; color: var(--ink); font: 600 .8rem/1.2 var(--sans); cursor: pointer; }
+.v-toggle button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: #fff; }
+.v-moral { margin: 0; }
+.v-moral ul { display: grid; gap: .7rem; margin: .7rem 0 0; padding: 0; list-style: none; }
+.v-moral li { display: grid; grid-template-columns: minmax(8.5rem, 12rem) 1fr 3.2rem; align-items: center; gap: .8rem; }
+.v-moral li.is-guess .v-moral-label strong { text-decoration: underline; text-decoration-color: var(--accent); text-underline-offset: 3px; }
+.v-moral-label { font-size: .85rem; color: var(--muted); } .v-moral-label strong { color: var(--ink); font-weight: 650; }
+.v-moral-track { position: relative; height: 12px; border-radius: 6px; background: rgba(23, 23, 28, .06); overflow: hidden; }
+.v-moral-track i { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--accent); }
+.v-moral-value { font: 650 .85rem/1 var(--sans); font-variant-numeric: tabular-nums; text-align: right; }
+.v-paradox svg { width: 100%; max-width: 32rem; height: auto; }
+.v-region { fill: rgba(23, 23, 28, .35); transition: fill .4s; }
+.v-region.is-a, .v-fit.is-a, .v-region-label.is-a { fill: #3d5a78; stroke: #3d5a78; }
+.v-region.is-b, .v-fit.is-b, .v-region-label.is-b { fill: #a8532f; stroke: #a8532f; }
+.v-region.is-c, .v-fit.is-c, .v-region-label.is-c { fill: #6d3f61; stroke: #6d3f61; }
+.v-region-label { stroke: none !important; font-weight: 650; }
+.v-fit { stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; }
+@media (max-width: 560px) {
+  .v-eyes-grid { grid-template-columns: repeat(12, 1fr); }
+  .v-moral li { grid-template-columns: 1fr 3rem; }
+  .v-moral-track { grid-column: 1 / -1; grid-row: 2; }
+}
+

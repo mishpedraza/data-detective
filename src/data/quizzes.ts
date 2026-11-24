@@ -2,6 +2,7 @@ import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from './discoverEdition'
 import { EDITORIAL_QUESTIONS } from './editorial'
 import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
+import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -80,6 +81,9 @@ export const QUIZZES: readonly Quiz[] = [
     }, {
       ...MONEY_CHAPTER,
       questionIds: MONEY_QUESTIONS.map(({ id }) => id),
+    }, {
+      ...NATURE_CHAPTER,
+      questionIds: NATURE_QUESTIONS.map(({ id }) => id),
     }],
   },
   {

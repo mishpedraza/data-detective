@@ -99,6 +99,7 @@ test('theme progress sums real points across quizzes and unlocks combined result
   const theme = quizById('men-and-women')!
   const love = chapterQuestions(theme, 'love-attraction')
   const money = chapterQuestions(theme, 'money-ambition-power')
+  const nature = chapterQuestions(theme, 'nature-nurture-society')
   const pickFor = (question: (typeof love)[number], right: boolean) => {
     if (question.kind === 'choice') {
       const main = right ? question.answer : question.options.find(({ id }) => id !== question.answer)!.id
@@ -113,21 +114,21 @@ test('theme progress sums real points across quizzes and unlocks combined result
     Object.fromEntries(questions.slice(0, count).map((question) => [question.id, { pick: pickFor(question, right), edition: theme.edition }]))
 
   const fresh = themeProgress(theme, {})
-  assert.deepEqual([fresh.completed, fresh.points, fresh.total, fresh.complete], [0, 0, 16, false])
-  assert.deepEqual(fresh.chapters.map(({ state }) => state), ['not-started', 'not-started'])
+  assert.deepEqual([fresh.completed, fresh.points, fresh.total, fresh.complete], [0, 0, 20, false])
+  assert.deepEqual(fresh.chapters.map(({ state }) => state), ['not-started', 'not-started', 'not-started'])
 
   const half = themeProgress(theme, { ...play(love, true), ...play(money, true, 3) })
-  assert.deepEqual(half.chapters.map(({ state }) => state), ['completed', 'in-progress'])
+  assert.deepEqual(half.chapters.map(({ state }) => state), ['completed', 'in-progress', 'not-started'])
   assert.equal(half.complete, false)
 
-  const done = themeProgress(theme, { ...play(love, true), ...play(money, false) })
+  const done = themeProgress(theme, { ...play(love, true), ...play(money, false), ...play(nature, true) })
   assert.equal(done.complete, true)
-  assert.equal(done.total, love.length + money.length)
+  assert.equal(done.total, love.length + money.length + nature.length)
   // Partial credit counts: the combined score is the sum of points, not an average of percentages.
-  assert.equal(done.points, done.chapters[0].points + done.chapters[1].points)
+  assert.equal(done.points, done.chapters.reduce((sum, { points }) => sum + points, 0))
   assert.ok(done.chapters.some(({ points }) => points % 1 !== 0), 'a partial-credit score survives into the total')
   assert.equal(pointSequence(done.chapters[0]).length, love.length)
-  assert.equal(themeVersion(theme), 'v1:love-attraction+money-ambition-power')
+  assert.equal(themeVersion(theme), 'v1:love-attraction+money-ambition-power+nature-nurture-society')
 
   // Answers from an older edition don't count towards progress.
   const stale = themeProgress(theme, Object.fromEntries(Object.entries(play(love, true)).map(([id, visit]) => [id, { ...visit, edition: 'v0' }])))

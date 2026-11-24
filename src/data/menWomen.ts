@@ -3,6 +3,7 @@
 export type Side = 'men' | 'similar' | 'women'
 export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'dumbbell' | 'grids' | 'bars' | 'facts'
   | 'leader' | 'negotiate' | 'compete' | 'risk' | 'backlash' | 'week' | 'budget' | 'timeline' | 'power'
+  | 'eyes' | 'maths' | 'moral' | 'paradox'
 
 export interface Evidence {
   citation: string
