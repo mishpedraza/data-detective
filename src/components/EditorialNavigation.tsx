@@ -1,4 +1,5 @@
 import { EDITORIAL_QUESTIONS } from '../data/editorial'
+import { DEFAULT_QUIZ } from '../data/quizzes'
 import { hrefFor } from '../lib/route'
 
 export function EditorialNavigation({ active, current }: {
@@ -8,7 +9,7 @@ export function EditorialNavigation({ active, current }: {
   const selected = active ?? current?.id ?? ''
   return (
     <nav className="editorial-navigation" aria-label="Editorial investigations">
-      <a className="tell-more" href={hrefFor('discover')}>← All questions</a>
+      <a className="tell-more" href={hrefFor('discover', { quiz: DEFAULT_QUIZ.id })}>← All questions</a>
       <label>
         <span>Browse questions</span>
         <select value={selected} onChange={(event) => {
