@@ -29,7 +29,7 @@ export function follow(navigate: (href: string) => void, href: string, then?: ()
 
 export type Scored = { id: string; points: number }
 
-export function playStatus(questions: readonly { id: string }[], answers: readonly Scored[], minutes?: number) {
+export function playStatus(questions: readonly { id: string }[], answers: readonly Scored[], minutes?: number | string) {
   const size = `${questions.length} questions${minutes ? ` · ${minutes} min` : ''}`
   return answers.length === questions.length ? `You scored ${formatPoints(totalPoints(answers))}/${questions.length} · See results`
     : answers.length ? `${answers.length} of ${questions.length} answered · Resume` : size

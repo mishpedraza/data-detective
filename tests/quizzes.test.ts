@@ -64,7 +64,7 @@ test('playing goes straight to the next unanswered question, or results when fin
   const world = quizById('world')!
   const menWomen = quizById('men-and-women')!
   assert.equal(hasChapterList(world), false)
-  assert.equal(hasChapterList(menWomen), false)
+  assert.equal(hasChapterList(menWomen), true)
   const ids = quizQuestions(world).map(({ id }) => id)
   const fresh = chapterEntry(world, world.chapters[0].id)
   assert.equal(fresh.href, hrefFor('discover', { quiz: 'world', q: ids[0], mode: 'challenge' }))
@@ -79,5 +79,7 @@ test('playing goes straight to the next unanswered question, or results when fin
   assert.equal(done.href, hrefFor('discover', { quiz: 'world', mode: 'results' }))
   assert.equal(done.event, 'quiz_results_opened')
   const love = chapterEntry(menWomen, menWomen.chapters[0].id)
-  assert.equal(love.href, hrefFor('discover', { quiz: 'men-and-women', q: quizQuestions(menWomen)[0].id, mode: 'challenge' }))
+  assert.equal(love.href, hrefFor('discover', { quiz: 'men-and-women', chapter: 'love-attraction', q: quizQuestions(menWomen)[0].id, mode: 'challenge' }))
+  const moneyEntry = chapterEntry(menWomen, 'money-ambition-power')
+  assert.equal(moneyEntry.href, hrefFor('discover', { quiz: 'men-and-women', chapter: 'money-ambition-power', q: 'mp-leader', mode: 'challenge' }))
 })

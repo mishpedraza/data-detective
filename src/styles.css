@@ -1006,3 +1006,133 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-db-value.v-db-before { transform: translateX(-110%); }
 .v-db-value.v-db-after { transform: translateX(10%); }
 .v-rotation svg { max-width: 26rem; }
+
+/* Money, ambition & power */
+.chapter-quiz[data-visual='leader'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
+.chapter-quiz[data-visual='negotiate'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
+.chapter-quiz[data-visual='compete'] { --accent: #9a6a12; --accent-soft: rgba(154, 106, 18, .1); }
+.chapter-quiz[data-visual='risk'] { --accent: #56682a; --accent-soft: rgba(86, 104, 42, .11); }
+.chapter-quiz[data-visual='backlash'] { --accent: #a3472b; --accent-soft: rgba(163, 71, 43, .1); }
+.chapter-quiz[data-visual='week'] { --accent: #3d5a6c; --accent-soft: rgba(61, 90, 108, .1); }
+.chapter-quiz[data-visual='budget'] { --accent: #7a5a2f; --accent-soft: rgba(122, 90, 47, .1); }
+.chapter-quiz[data-visual='timeline'] { --accent: #5b4a7a; --accent-soft: rgba(91, 74, 122, .1); }
+.chapter-quiz[data-visual='power'] { --accent: #24585f; --accent-soft: rgba(36, 88, 95, .1); }
+
+.ch-warmup { display: grid; gap: .7rem; margin: 0 0 1.6rem; padding: 1rem 1.1rem 1.2rem; border-radius: 14px; background: rgba(255, 255, 255, .45); box-shadow: inset 0 0 0 1px var(--rule); }
+.ch-warmup-kicker { margin: 0; font: 650 .68rem/1.4 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+.ch-warmup-prompt { margin: 0; max-width: 42ch; font: 400 1.12rem/1.4 var(--serif); }
+.ch-warmup-hint { margin: 0; font-size: .82rem; color: var(--muted); }
+.ch-option.is-chosen { box-shadow: inset 0 0 0 1.5px var(--ink-2); background: #fff; }
+.ch-slider.v-accent { --tone: var(--accent); }
+
+.ch-week { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ch-week legend { display: flex; justify-content: space-between; width: 100%; padding: 0; margin-bottom: .4rem; font-weight: 600; }
+.ch-week-value { font-variant-numeric: tabular-nums; color: var(--accent); }
+.ch-week-days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.ch-week-day { display: grid; grid-template-rows: auto 1fr 1fr; gap: 3px; }
+.ch-week-name { font-size: .72rem; font-weight: 600; color: var(--muted); text-align: center; }
+.ch-week-day button, .ch-week-day i { display: block; min-height: 2.2rem; border-radius: 6px; background: rgba(23, 23, 28, .06); transition: background .15s; }
+.ch-week-day i { min-height: 1.1rem; }
+.ch-week-day button:hover { background: rgba(23, 23, 28, .12); }
+.ch-week-day button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ch-week-day .on, .ch-week-day button.on:hover { background: var(--accent); }
+
+.v-picks { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin: .9rem 0 0; padding: 0; list-style: none; font-size: .82rem; font-weight: 600; }
+.v-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.v-yours { margin: 0 0 .8rem; font-size: .95rem; color: var(--ink-2); }
+
+.v-leader-dials { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8rem; }
+.v-dial { margin: 0; text-align: center; }
+.v-dial-mid { stroke: var(--rule-strong); stroke-width: 2; }
+.v-men-fill { fill: var(--men); font-weight: 650; } .v-women-fill { fill: var(--women); font-weight: 650; }
+.v-dial .v-needle { stroke: var(--tone, var(--ink)); stroke-width: 3.5; }
+.v-needle.v-similar { stroke: var(--ink-2); }
+.v-dial figcaption { display: grid; gap: .2rem; }
+.v-dial-verdict { font: 500 1.02rem/1.2 var(--serif); }
+.v-similar-text { color: var(--ink-2); }
+
+.v-negotiate { display: grid; gap: 1rem; }
+.v-pair-title { margin: 0 0 .35rem; font: 500 1rem/1.3 var(--serif); }
+.v-pair.is-strong .v-pair-title { font-weight: 650; color: var(--accent); }
+.v-pair-row, .v-budget-bar { display: grid; grid-template-columns: 4rem 1fr 3.2rem; align-items: center; gap: .6rem; margin-bottom: .3rem; font-size: .82rem; font-weight: 600; color: var(--tone); }
+.v-budget-bar { grid-template-columns: 1fr 3.6rem; }
+.v-pair-track { position: relative; height: .7rem; border-radius: 4px; background: rgba(23, 23, 28, .06); }
+.v-pair-track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--tone); }
+.v-pair:not(.is-strong) .v-pair-track i { opacity: .55; }
+.v-pair-value { font-variant-numeric: tabular-nums; text-align: right; }
+
+.v-compete .v-headline { align-items: flex-start; }
+.v-compete .v-headline span:last-child { max-width: 30ch; font-size: .9rem; }
+.v-shift-buttons { display: flex; flex-wrap: wrap; gap: .4rem; margin: .4rem 0 .9rem; }
+.v-shift-buttons button { min-height: 2.5rem; padding: .4rem .85rem; border-radius: 999px; font-size: .86rem; font-weight: 550; background: rgba(23, 23, 28, .06); transition: background .2s, color .2s; }
+.v-shift-buttons button.is-on { background: var(--accent); color: #fff; }
+.v-shift-buttons button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.v-shift-track { display: block; position: relative; height: .9rem; border-radius: 5px; background: rgba(23, 23, 28, .06); }
+.v-shift-track i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; background: var(--accent); }
+.v-shift-text { margin: .5rem 0 0; font: 400 1.25rem/1.3 var(--serif); }
+.v-shift-text strong { color: var(--accent); font-weight: 600; }
+
+.v-risk-people { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin: .4rem 0 .6rem; font-weight: 650; font-size: .9rem; }
+.v-risk-steps { display: grid; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.v-risk-title { margin: 0 0 .25rem; font: 600 .7rem/1.4 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.v-risk-lanes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+.v-risk-lanes p { margin: 0; padding: .55rem .7rem; border-left: 3px solid var(--tone); background: rgba(255, 255, 255, .55); border-radius: 0 8px 8px 0; font-size: .88rem; line-height: 1.35; }
+.v-risk-steps .is-same .v-risk-lanes p { border-left-color: var(--accent); }
+.v-risk-steps li:last-child { margin-top: .4rem; padding-top: .6rem; border-top: 1px dashed var(--rule-strong); }
+
+.v-quotes { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin-bottom: 1.2rem; }
+.v-quote { margin: 0; padding: .7rem .8rem; border-radius: 12px 12px 12px 3px; background: rgba(255, 255, 255, .6); box-shadow: inset 0 0 0 1px var(--rule); }
+.v-quote figcaption { font: 650 .68rem/1.4 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--tone); }
+.v-quote p { margin: .3rem 0 0; font: italic 400 1rem/1.35 var(--serif); }
+.v-div-bar.v-loss { --tone: var(--accent); } .v-div-bar.v-even { --tone: var(--ink-2); }
+.v-backlash .v-div-value { color: var(--ink-2); }
+
+.v-week-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+.v-week { margin: 0; }
+.v-week figcaption { display: flex; justify-content: space-between; margin-bottom: .3rem; font-size: .85rem; font-weight: 600; }
+.v-week figcaption strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+.v-week-cells { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
+.v-week-cells i { height: 1.2rem; background: rgba(23, 23, 28, .07); }
+.v-week-cells i:nth-child(odd) { border-radius: 4px 0 0 4px; } .v-week-cells i:nth-child(even) { border-radius: 0 4px 4px 0; margin-right: 3px; }
+.v-week-cells i.on { background: var(--accent); }
+.v-week-finding { margin: .5rem 0 1rem; }
+.v-week-sides { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; font-size: .9rem; font-weight: 600; }
+
+.v-budget-row { margin-bottom: .8rem; }
+.v-budget-row.is-lead .v-div-label { font-weight: 650; }
+.v-budget-row.is-lead .v-pair-track { height: 1rem; }
+.v-budget-guess { position: absolute; top: 50%; width: 1rem; height: 1rem; margin: -.5rem 0 0 -.5rem; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 2px var(--ink-2); }
+.v-days { margin: 1.2rem 0 .6rem; }
+.v-days .v-headline span:last-child { max-width: 32ch; font-size: .9rem; }
+.v-days-cells { display: flex; flex-wrap: wrap; gap: 4px; }
+.v-days-cells i { width: 1.15rem; height: 1.15rem; border-radius: 3px; background: var(--accent); }
+.v-sole { margin-top: .9rem; }
+
+.v-father { stroke: var(--men); stroke-width: 2.5; stroke-dasharray: 5 5; opacity: .7; }
+.v-mother { stroke: var(--women); stroke-width: 3; stroke-linecap: round; }
+.v-mother-dot { --tone: var(--women); }
+.v-timeline .discovery-facts { margin-top: .6rem; }
+
+.v-power-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 3px; }
+.v-cell { aspect-ratio: 1; border-radius: 3px; }
+.v-cell.is-same, .v-power-key .is-same { background: var(--accent); }
+.v-cell.is-opposite, .v-power-key .is-opposite { background: var(--ink); }
+.v-cell.is-none, .v-power-key .is-none { background: rgba(23, 23, 28, .12); }
+.v-power-key { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .8rem 0 0; padding: 0; list-style: none; font-size: .82rem; color: var(--ink-2); }
+.v-power-key i { display: inline-block; width: .75rem; height: .75rem; margin-right: .3rem; border-radius: 2px; vertical-align: -1px; }
+.v-power-key strong { margin-left: .2rem; font-variant-numeric: tabular-nums; color: var(--ink); }
+
+@media (max-width: 520px) {
+  .v-leader-dials { grid-template-columns: 1fr; max-width: 15rem; }
+  .v-dial { display: grid; grid-template-columns: 7rem 1fr; align-items: center; gap: .6rem; text-align: left; }
+  .v-quotes, .v-week-pair { grid-template-columns: 1fr; }
+  .v-risk-lanes p { font-size: .82rem; padding: .45rem .55rem; }
+  .ch-week-day button { min-height: 2.6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ch-week-day button, .v-shift-buttons button { transition: none; }
+}
+.v-timeline svg { max-width: 26rem; }
+.v-power-grid { max-width: 24rem; }
+.v-leader-dials svg { max-width: 10rem; margin: 0 auto; }
+.v-dial figcaption { margin-top: .3rem; }

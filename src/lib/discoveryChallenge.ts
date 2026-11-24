@@ -84,6 +84,20 @@ const incorrectReactions = [
   'The evidence has entered the chat.',
 ] as const
 
+const partialReactions = [
+  'Half the story. Not bad.',
+  'Partly right, partly surprised.',
+  'You were onto something.',
+  'Close, with a twist.',
+  'Some of that was spot on.',
+  'Not bad. Reality added a footnote.',
+  'Getting warmer.',
+  'Right idea, different details.',
+  'Part hunch, part plot twist.',
+] as const
+
+export const partialReaction = (index: number) => partialReactions[index % partialReactions.length]
+
 // Each question owns two distinct slots in each pool, so a run never repeats a line.
 export function challengeReaction(index: number, correct: boolean, variant: 0 | 1 = 0) {
   const pool = correct ? correctReactions : incorrectReactions
