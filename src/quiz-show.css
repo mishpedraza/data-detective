@@ -90,6 +90,12 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
 .quiz-home .quiz-theme-title { color: var(--show-ink); }
 .quiz-home .quiz-theme-title::after { background: #d8c7ed; }
 .quiz-home .quiz-card { background: #efe5ff; border: 1px solid #d8c7ed; border-radius: 1rem; }
+.quiz-home .quiz-foot {
+  grid-template-columns: minmax(0, max-content) auto;
+  justify-content: start;
+  column-gap: .85rem;
+  align-items: center;
+}
 .quiz-home .quiz-action { background: var(--show-violet); border-radius: .65rem; }
 .quiz-home .quiz-action > span, .quiz-home .quiz-browse-go > span { display: none; }
 .quiz-home .quiz-browse { background: white; border-radius: 1rem; }
