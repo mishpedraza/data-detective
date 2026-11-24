@@ -124,7 +124,8 @@ function Reveal({ question, pick, points, onEvidence }: { question: ChapterQuest
   )
 }
 
-function Results({ quiz, questions, attempt, restart, navigate }: {
+function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: {
+  openQuestion: (id: string) => void
   quiz: Quiz; questions: ChapterQuestion[]; attempt: DiscoveryProgress; restart: () => void; navigate: (href: string) => void
 }) {
   const answers = chapterAnswers(attempt, questions, quiz.edition)
@@ -160,7 +161,7 @@ function Results({ quiz, questions, attempt, restart, navigate }: {
           const p = answer?.points ?? 0
           return (
             <li key={question.id}>
-              <a href={hrefFor('discover', { quiz: quiz.id, q: question.id })} onClick={(event) => { if (!plainClick(event)) return; event.preventDefault(); navigate(hrefFor('discover', { quiz: quiz.id, q: question.id })) }}>
+              <a href={hrefFor('discover', { quiz: quiz.id, q: question.id })} onClick={(event) => { if (!plainClick(event)) return; event.preventDefault(); openQuestion(question.id) }}>
                 <span className="ch-tally-bar" aria-hidden="true"><motion.i initial={{ height: 0 }} animate={{ height: `${p * 100}%` }} transition={{ delay: 0.3 + i * 0.08, duration: 0.6 }} /></span>
                 <span className="ch-tally-num">{i + 1}</span>
                 <span className="ch-tally-label">{question.short}</span>
@@ -278,7 +279,8 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   if (view === 'results') return (
     <div className="discover discover-edition discovery-reader chapter-quiz">
       {nav}
-      <Results quiz={quiz} questions={questions} attempt={attempt} restart={restart} navigate={navigate} />
+      <Results quiz={quiz} questions={questions} attempt={attempt} restart={restart} navigate={navigate}
+        openQuestion={(id) => { focusNext.current = true; navigate(hrefFor('discover', { quiz: quiz.id, q: id })) }} />
     </div>
   )
 
