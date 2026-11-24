@@ -1,7 +1,7 @@
 // Chapter 1 of "How well do you really understand men and women?". Every figure is checked against the cited source.
 
 export type Side = 'men' | 'similar' | 'women'
-export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'dumbbell' | 'grids'
+export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'dumbbell' | 'grids' | 'bars' | 'facts'
 
 export interface Evidence {
   citation: string
@@ -22,7 +22,15 @@ interface Base {
   /** One or two plain sentences under the visual. */
   takeaway: string
   visual: Visual
-  evidence: Evidence
+  /** A single study, or the shared source references of an investigation. */
+  evidence?: Evidence
+  refs?: readonly string[]
+  /** Caption, bars and facts for the 'bars' and 'facts' visuals. */
+  measure?: string
+  bars?: readonly { label: string; value: string; amount: number }[]
+  facts?: readonly { label: string; value: string }[]
+  /** Investigation that explains the finding. */
+  explore?: { r: string; years?: { from: number; to: number } }
 }
 
 export interface ChoiceQuestion extends Base {
@@ -224,5 +232,3 @@ export const LOVE_CHAPTER = {
   minutes: 5,
 }
 
-export const CHAPTER_QUESTIONS: Readonly<Record<string, ChapterQuestion>> =
-  Object.fromEntries(LOVE_QUESTIONS.map((question) => [question.id, question]))

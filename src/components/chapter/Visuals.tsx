@@ -250,6 +250,43 @@ function GridsVisual() {
   )
 }
 
+function BarsVisual({ question }: { question: ChapterQuestion }) {
+  const timing = useTiming()
+  const largest = Math.max(...(question.bars ?? []).map(({ amount }) => amount))
+  return (
+    <figure className="ch-bars">
+      {question.measure && <figcaption className="discovery-measure">{question.measure}</figcaption>}
+      <ul className="story-bars discovery-bars">
+        {question.bars?.map(({ label, value, amount }, i) => (
+          <li key={label}>
+            <span>{label}</span><strong>{value}</strong>
+            <span className="story-bar" aria-hidden="true">
+              <motion.span initial={{ width: 0 }} animate={{ width: `${100 * amount / largest}%` }} transition={timing(0.25 + i * 0.12)} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </figure>
+  )
+}
+
+function FactsVisual({ question }: { question: ChapterQuestion }) {
+  const timing = useTiming()
+  if (!question.facts?.length) return null
+  return (
+    <figure className="ch-bars">
+      {question.measure && <figcaption className="discovery-measure">{question.measure}</figcaption>}
+      <dl className="discovery-facts">
+        {question.facts?.map(({ label, value }, i) => (
+          <motion.div key={label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={timing(0.25 + i * 0.15, 0.5)}>
+            <dt>{label}</dt><dd>{value}</dd>
+          </motion.div>
+        ))}
+      </dl>
+    </figure>
+  )
+}
+
 export function FindingVisual({ question, pick }: { question: ChapterQuestion; pick?: string }) {
   switch (question.visual) {
     case 'age': return <AgeVisual />
@@ -259,5 +296,7 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'diverging': return question.kind === 'rows' ? <DivergingVisual question={question} pick={pick} /> : null
     case 'dumbbell': return question.kind === 'sliders' ? <DumbbellVisual question={question} pick={pick} /> : null
     case 'grids': return <GridsVisual />
+    case 'bars': return <BarsVisual question={question} />
+    case 'facts': return <FactsVisual question={question} />
   }
 }

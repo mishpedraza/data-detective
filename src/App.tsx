@@ -46,8 +46,8 @@ export default function App() {
       <AnimatePresence mode="wait">
         <motion.main key={quiz ? `${route}-${quiz.id}` : route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}>
           {route === 'discover' && (!quiz ? <QuizCollection navigate={navigate} /> :
-            quiz.format === 'chapter' ? <ChapterQuiz key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
-            quizQuestions(quiz).length ? <Discover key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
+            quiz.format === 'chapter' && !(quiz.browse && (params.get('mode') === 'browse' || (params.get('q') && !params.get('mode')))) ? <ChapterQuiz key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
+            quizQuestions(quiz).length ? <Discover key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} /> :
               <QuizComingSoon quiz={quiz} navigate={navigate} />)}
           {route === 'investigate' && (
             entry?.status === 'research' ? <EditorialInvestigation key={entry.id} id={entry.id} /> :

@@ -1,6 +1,7 @@
 import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from './discoverEdition'
 import { EDITORIAL_QUESTIONS } from './editorial'
-import { CHAPTER_QUESTIONS, LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
+import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
+import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
 export interface QuizChapter {
@@ -8,6 +9,8 @@ export interface QuizChapter {
   title: string
   description?: string
   minutes?: number
+  /** How points are awarded, shown under the results. */
+  scoring?: string
   questionIds: readonly string[]
 }
 
@@ -21,6 +24,8 @@ export interface Quiz {
   edition: string
   /** 'chapter' quizzes use the visual chapter player with partial-credit scoring. */
   format?: 'chapter'
+  /** Also offers browsing every discovery without scoring. */
+  browse?: boolean
   attemptKey: string
   resultKey: string
   chapters: readonly QuizChapter[]
@@ -33,10 +38,18 @@ export const QUIZZES: readonly Quiz[] = [
     prompt: 'How Well Do You Know the World?',
     tagline: 'A few surprises. Absolutely no judgment.',
     edition: DISCOVERY_QUIZ_EDITION,
+    format: 'chapter',
+    browse: true,
     // Original keys, so existing players keep their answers and last result.
     attemptKey: 'data-detective.challenge.v1',
     resultKey: 'data-detective.challenge.last-result.v1',
-    chapters: [{ id: 'main', title: 'The World Around Us', questionIds: EDITORIAL_QUESTIONS.map(({ id }) => id) }],
+    chapters: [{
+      id: 'main',
+      title: 'The World Around Us',
+      description: 'Homes, family, work, crime and conflict: nine common beliefs, checked against official statistics and research.',
+      minutes: 4,
+      questionIds: EDITORIAL_QUESTIONS.map(({ id }) => id),
+    }],
   },
   {
     id: 'men-and-women',
@@ -46,7 +59,10 @@ export const QUIZZES: readonly Quiz[] = [
     format: 'chapter',
     attemptKey: 'data-detective.quiz.men-and-women.v1',
     resultKey: 'data-detective.quiz.men-and-women.last-result.v1',
-    chapters: [{ ...LOVE_CHAPTER, questionIds: LOVE_QUESTIONS.map(({ id }) => id) }],
+    chapters: [{
+      ...LOVE_CHAPTER,
+      scoring: 'One point per question. Being single: ¼ point per correct prediction. Emotional support: ½ point per estimate within 5 points of the real figure, ¼ within 15.',
+      questionIds: LOVE_QUESTIONS.map(({ id }) => id) }],
   },
   {
     id: 'housing-crisis',
