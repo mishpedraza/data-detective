@@ -169,7 +169,7 @@ function DivergingVisual({ question, pick }: { question: RowsQuestion; pick?: st
   const picks = pick ? parseRows(question, pick) : undefined
   const max = 0.42
   return (
-    <div className="v-diverging" role="img" aria-label={question.rows.map(({ label, answer, d }) => `${label}: ${answer} higher, d = ${d.toFixed(2)}`).join('. ')}>
+    <div className="v-diverging" role="img" aria-label={question.rows.map(({ label, answer, d }, i) => `${label}: ${answer} higher, d = ${d.toFixed(2)}${picks ? `; you said ${sideLabel[picks[i]].toLowerCase()}, ${picks[i] === answer ? 'correct' : 'not correct'}` : ''}`).join('. ')}>
       <div className="v-axis-labels" aria-hidden="true"><span className="v-men-text">← Men higher</span><span className="v-women-text">Women higher →</span></div>
       {question.rows.map(({ id, label, answer, d }, i) => {
         const right = picks?.[i] === answer
