@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, Side } from '../data/menWomen'
-import { DEFAULT_QUIZ, type Quiz } from '../data/quizzes'
+import { QUIZZES, quizQuestions, type Quiz } from '../data/quizzes'
+import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual, useCount } from '../components/chapter/Visuals'
 import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseRows, parseSliders, scoreQuestion, totalPoints } from '../lib/chapterScore'
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
@@ -16,7 +17,7 @@ function Verdict({ question, pick, points }: { question: ChapterQuestion; pick: 
   const choice = question.kind === 'choice' ? question.options.find(({ id }) => id === pick)?.label : undefined
   const line = points === 1 ? 'You called it.' : points > 0 ? 'Partly right.' : 'Plot twist.'
   const detail = question.kind === 'choice'
-    ? points === 1 ? 'Your instinct matched the evidence.' : `You predicted: ${choice?.toLowerCase()}.`
+    ? points === 1 ? 'Your instinct matched the evidence.' : question.evidence ? `You predicted: ${choice?.toLowerCase()}.` : `You predicted “${choice}”.`
     : question.kind === 'rows' ? `${parseRows(question, pick)!.filter((side, i) => side === question.rows[i].answer).length} of 4 predictions matched.`
       : (() => { const g = parseSliders(question, pick)!; return `You guessed ${g.men}% of men and ${g.women}% of women.` })()
   return (
@@ -102,7 +103,7 @@ function SlidersInput({ question, pick, onPick }: { question: Extract<ChapterQue
   )
 }
 
-function Reveal({ question, pick, points, onEvidence }: { question: ChapterQuestion; pick: string; points: number; onEvidence: () => void }) {
+function Reveal({ question, pick, points, onEvidence, explore }: { question: ChapterQuestion; pick: string; points: number; onEvidence: () => void; explore?: ReactNode }) {
   const reduce = useReducedMotion()
   const { evidence } = question
   return (
@@ -113,13 +114,14 @@ function Reveal({ question, pick, points, onEvidence }: { question: ChapterQuest
       <p className="ch-takeaway">{question.takeaway}</p>
       <details className="ch-evidence" onToggle={(event) => { if ((event.currentTarget as HTMLDetailsElement).open) onEvidence() }}>
         <summary>How we know</summary>
-        <dl>
+        {evidence ? <dl>
           <dt>Study</dt><dd><a href={evidence.url} target="_blank" rel="noreferrer">{evidence.citation} ↗</a></dd>
           <dt>Who</dt><dd>{evidence.sample}</dd>
           <dt>Method</dt><dd>{evidence.method}</dd>
           <dt>Limits</dt><dd>{evidence.limitation}</dd>
-        </dl>
+        </dl> : question.refs && <StorySources refs={question.refs} />}
       </details>
+      {explore}
     </motion.section>
   )
 }
@@ -147,7 +149,9 @@ function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: 
     try { await navigator.clipboard.writeText(`${text}\n${url.href}`); setStatus('Copied to clipboard.') } catch { window.prompt('Copy your result:', `${text}\n${url.href}`) }
   }
 
-  const other = hrefFor('discover', { quiz: DEFAULT_QUIZ.id })
+  const target = QUIZZES.find((entry) => entry.id !== quiz.id && quizQuestions(entry).length)
+  const other = target && hrefFor('discover', { quiz: target.id })
+  const browse = hrefFor('discover', { quiz: quiz.id, mode: 'browse' })
   return (
     <section className="discovery-reading ch-results">
       <p className="discovery-kicker">{chapter.title} · Results</p>
@@ -155,13 +159,13 @@ function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: 
       <p className="ch-score" aria-label={`${formatPoints(points)} out of ${questions.length} points`}>
         <span className="ch-score-big">{formatPoints(Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
       </p>
-      <ol className="ch-tally">
+      <ol className="ch-tally" style={{ '--steps': questions.length } as CSSProperties}>
         {questions.map((question, i) => {
           const answer = answers.find(({ id }) => id === question.id)
           const p = answer?.points ?? 0
           return (
             <li key={question.id}>
-              <a href={hrefFor('discover', { quiz: quiz.id, q: question.id })} onClick={(event) => { if (!plainClick(event)) return; event.preventDefault(); openQuestion(question.id) }}>
+              <a href={hrefFor('discover', { quiz: quiz.id, q: question.id, mode: 'challenge' })} onClick={(event) => { if (!plainClick(event)) return; event.preventDefault(); openQuestion(question.id) }}>
                 <span className="ch-tally-bar" aria-hidden="true"><motion.i initial={{ height: 0 }} animate={{ height: `${p * 100}%` }} transition={{ delay: 0.3 + i * 0.08, duration: 0.6 }} /></span>
                 <span className="ch-tally-num">{i + 1}</span>
                 <span className="ch-tally-label">{question.short}</span>
@@ -171,15 +175,20 @@ function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: 
           )
         })}
       </ol>
-      <p className="discovery-note">One point per question. Being single: ¼ point per correct prediction. Emotional support: ½ point per estimate within 5 points of the real figure, ¼ within 15.</p>
+      <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
       <div className="ch-actions">
         <button className="challenge-primary" type="button" onClick={share}>Share my result ↗</button>
-        <a className="discovery-link" href={other} onClick={(event) => {
+        {target && other && <a className="discovery-link" href={other} onClick={(event) => {
           if (!plainClick(event)) return
           event.preventDefault()
-          track('another_quiz_started', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, target_quiz_id: DEFAULT_QUIZ.id })
+          track('another_quiz_started', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, target_quiz_id: target.id })
           navigate(other)
-        }}>Try “{DEFAULT_QUIZ.title}” →</a>
+        }}>Try “{target.title}” →</a>}
+        {quiz.browse && <a className="discovery-link" href={browse} onClick={(event) => {
+          if (!plainClick(event)) return
+          event.preventDefault()
+          navigate(browse)
+        }}>Browse all discoveries →</a>}
         <button className="discovery-clue" type="button" onClick={restart}>Play again</button>
       </div>
       <p className="discovery-note" role="status">{status}</p>
@@ -200,11 +209,12 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   const index = Math.min(requested < 0 ? lastReachable : requested, lastReachable)
   const question = questions[index]
   const answer = answers.find(({ id }) => id === question.id)
-  const view = mode === 'results' && complete ? 'results' : selected || mode === 'challenge' ? 'question' : 'welcome'
+  const view = (mode === 'results' || mode === 'review') && complete ? 'results' : selected || mode === 'challenge' ? 'question' : 'welcome'
   const focusNext = useRef(false)
   const reduce = useReducedMotion()
   const link = (params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...params })
   const ids = { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id }
+  const partial = questions.filter(({ kind }) => kind !== 'choice').length
 
   useEffect(() => {
     try { localStorage.setItem(quiz.attemptKey, JSON.stringify(attempt)) } catch { /* Storage is optional. */ }
@@ -220,18 +230,18 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   const goTo = (position: number) => {
     if (position < 0 || position > lastReachable) return
     focusNext.current = true
-    navigate(link({ q: questions[position].id }))
+    navigate(link({ q: questions[position].id, mode: 'challenge' }))
   }
   function start() {
     focusNext.current = true
     track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { ...ids, answered_count: answers.length })
-    navigate(complete ? link({ mode: 'results' }) : link({ q: questions[lastReachable].id }))
+    navigate(complete ? link({ mode: 'results' }) : link({ q: questions[lastReachable].id, mode: 'challenge' }))
   }
   function restart() {
     track('quiz_restarted', ids)
     setAttempt({})
     focusNext.current = true
-    navigate(link({ q: questions[0].id }))
+    navigate(link({ q: questions[0].id, mode: 'challenge' }))
   }
   function onPick(pick: string) {
     if (answer) return
@@ -262,15 +272,20 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
     <div className="discover discover-edition discovery-reader chapter-quiz">
       {nav}
       <section className="discovery-reading discovery-welcome ch-welcome">
-        <p className="discovery-kicker">Chapter 1 · {chapter.title}</p>
+        <p className="discovery-kicker">{chapter.title === quiz.title ? chapter.title : `Chapter 1 · ${chapter.title}`}</p>
         <h1 tabIndex={-1}>{quiz.prompt}</h1>
         <p className="ch-description">{chapter.description}</p>
         <p className="ch-steps" aria-label="Predict. Reveal. Rethink."><span>Predict.</span> <span>Reveal.</span> <span>Rethink.</span></p>
-        <p className="discovery-context">{total} questions · about {chapter.minutes} minutes · one point each, with partial credit on two.</p>
+        <p className="discovery-context">{total} questions · about {chapter.minutes} minutes · one point each{partial ? `, with partial credit on ${partial === 2 ? 'two' : partial}` : ''}.</p>
         <div className="discovery-welcome-actions">
           <button className="challenge-primary" type="button" onClick={start}>
             {complete ? 'See my results' : answers.length ? `Resume · question ${lastReachable + 1}` : 'Start the quiz'} →
           </button>
+          {quiz.browse && <a className="discovery-link" href={link({ mode: 'browse' })} onClick={(event) => {
+            if (!plainClick(event)) return
+            event.preventDefault()
+            navigate(link({ mode: 'browse' }))
+          }}>Or browse all discoveries →</a>}
         </div>
       </section>
     </div>
@@ -280,7 +295,7 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
     <div className="discover discover-edition discovery-reader chapter-quiz">
       {nav}
       <Results quiz={quiz} questions={questions} attempt={attempt} restart={restart} navigate={navigate}
-        openQuestion={(id) => { focusNext.current = true; navigate(hrefFor('discover', { quiz: quiz.id, q: id })) }} />
+        openQuestion={(id) => { focusNext.current = true; navigate(link({ q: id, mode: 'challenge' })) }} />
     </div>
   )
 
@@ -288,7 +303,7 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   return (
     <div className="discover discover-edition discovery-reader chapter-quiz" data-visual={question.visual}>
       {nav}
-      <ol className="ch-rail" aria-label="Progress">
+      <ol className="ch-rail" aria-label="Progress" style={{ '--steps': total } as CSSProperties}>
         {questions.map(({ id, short }, i) => {
           const done = answers.find((entry) => entry.id === id)
           return <li key={id}><button type="button" disabled={i > lastReachable} aria-current={i === index ? 'step' : undefined}
@@ -307,7 +322,16 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
           {question.kind === 'rows' && <RowsInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'sliders' && <SlidersInput question={question} pick={answer?.pick} onPick={onPick} />}
           {answer && <Reveal question={question} pick={answer.pick} points={answer.points}
-            onEvidence={() => track('evidence_expanded', { ...ids, question_id: question.id })} />}
+            onEvidence={() => track('evidence_expanded', { ...ids, question_id: question.id })}
+            explore={question.explore && (() => {
+              const href = hrefFor('investigate', { r: question.explore.r, ...question.explore.years })
+              return <a className="discovery-link ch-explore" href={href} onClick={(event) => {
+                if (!plainClick(event)) return
+                event.preventDefault()
+                track('evidence_opened', { ...ids, question_id: question.id, from_quiz: true })
+                navigate(href)
+              }}>Explore why <span aria-hidden="true">→</span></a>
+            })()} />}
           <div className="challenge-navigation">
             {index > 0 && <button className="discovery-contents-trigger" type="button" onClick={() => goTo(index - 1)}>← Previous</button>}
             {answer && <button className="challenge-primary challenge-continue" type="button"

@@ -4,8 +4,7 @@ import { challengeAnswers } from '../lib/discoveryChallenge'
 import { readDiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
-import { chapterAnswers, formatPoints, totalPoints } from '../lib/chapterScore'
-import { CHAPTER_QUESTIONS } from '../data/menWomen'
+import { chapterAnswers, chapterQuestions, formatPoints, totalPoints } from '../lib/chapterScore'
 
 function follow(navigate: (href: string) => void, href: string, then?: () => void) {
   return (event: MouseEvent<HTMLAnchorElement>) => {
@@ -20,7 +19,7 @@ function QuizCard({ quiz, position, navigate }: { quiz: Quiz; position: number; 
   const questions = quizQuestions(quiz)
   const progress = readDiscoveryProgress(quiz.attemptKey)
   const answers = quiz.format === 'chapter'
-    ? chapterAnswers(progress, questions.map(({ id }) => CHAPTER_QUESTIONS[id]), quiz.edition).map(({ id, points }) => ({ id, points }))
+    ? chapterAnswers(progress, chapterQuestions(quiz), quiz.edition).map(({ id, points }) => ({ id, points }))
     : challengeAnswers(progress, quiz).map(({ id, correct }) => ({ id, points: Number(correct) }))
   const score = formatPoints(totalPoints(answers))
   const soon = questions.length === 0

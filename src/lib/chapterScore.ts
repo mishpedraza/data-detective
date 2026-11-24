@@ -1,4 +1,5 @@
-import { CHAPTER_QUESTIONS, type ChapterQuestion, type Side } from '../data/menWomen'
+import type { ChapterQuestion, Side } from '../data/menWomen'
+import { CHAPTER_QUESTIONS } from '../data/chapterQuestions'
 import type { Quiz } from '../data/quizzes'
 import type { DiscoveryProgress } from './discoveryProgress'
 

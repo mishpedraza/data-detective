@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { DEFAULT_QUIZ, QUIZZES, quizById, quizQuestions } from '../src/data/quizzes'
 import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from '../src/data/discoverEdition'
 import { EDITORIAL_QUESTIONS } from '../src/data/editorial'
-import { CHAPTER_QUESTIONS } from '../src/data/menWomen'
+import { CHAPTER_QUESTIONS } from '../src/data/chapterQuestions'
 import { CHALLENGE_KEY, RESULTS_KEY, challengeAnswers } from '../src/lib/discoveryChallenge'
 import { revealDiscovery, type DiscoveryProgress } from '../src/lib/discoveryProgress'
 import { hrefFor } from '../src/lib/route'
@@ -37,4 +37,21 @@ test('answers only count toward the quiz and edition they belong to', () => {
   assert.equal(challengeAnswers(progress, world).length, 1)
   assert.equal(challengeAnswers(progress, other).length, 0)
   assert.equal(challengeAnswers(revealDiscovery({}, id, interaction.answer, interaction.answer, 'old-edition'), world).length, 0)
+})
+
+test('the original quiz plays in the chapter format and keeps saved answers', async () => {
+  const { chapterAnswers, chapterQuestions } = await import('../src/lib/chapterScore')
+  assert.equal(DEFAULT_QUIZ.format, 'chapter')
+  assert.ok(DEFAULT_QUIZ.browse)
+  const questions = chapterQuestions(DEFAULT_QUIZ)
+  assert.deepEqual(questions.map(({ id }) => id), quizQuestions(DEFAULT_QUIZ).map(({ id }) => id))
+  const [first, second] = questions
+  const wrong = first.kind === 'choice' ? first.options.find(({ id }) => id !== first.answer)!.id : ''
+  let saved: DiscoveryProgress = revealDiscovery({}, first.id, wrong, first.kind === 'choice' ? first.answer : '', DISCOVERY_QUIZ_EDITION, 1)
+  if (second.kind === 'choice') saved = revealDiscovery(saved, second.id, second.answer, second.answer, DISCOVERY_QUIZ_EDITION, 0)
+  assert.deepEqual(chapterAnswers(saved, questions, DEFAULT_QUIZ.edition).map(({ points }) => points), [0, 1])
+  for (const question of questions) {
+    assert.ok(question.refs?.length && question.explore, question.id)
+    if (question.visual === 'bars') assert.ok(question.bars?.length, question.id)
+  }
 })
