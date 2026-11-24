@@ -3,26 +3,27 @@ import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 import { chapterEntry, follow, playStatus, type Scored } from '../lib/quizEntry'
 
-/** A row in a quiz or chapter list. Without an href it shows as coming soon. */
-export function PlayCard({ kicker, title, description, status, questions = [], answers = [], href, onOpen, navigate }: {
-  kicker?: string; title: string; description?: string; status: string
+/** A playable quiz card; the whole card is the link. Without an href it shows as coming soon. */
+export function PlayCard({ kicker, title, description, minutes, questions = [], answers = [], href, onOpen, navigate }: {
+  kicker?: string; title: string; description?: string; minutes?: number | string
   questions?: readonly { id: string }[]; answers?: readonly Scored[]
   href?: string; onOpen?: () => void; navigate: (href: string) => void
 }) {
+  const { meta, progress, action } = playStatus(questions, answers, minutes)
   const body = <>
-    <span className="quiz-body">
-      {kicker && <span className="discovery-kicker">{kicker}</span>}
-      <span className="quiz-title">{title}</span>
-      {description && <span className="quiz-desc">{description}</span>}
-      <span className="quiz-meta">{status}</span>
-      {questions.length > 0 && <span className="quiz-dots" aria-hidden="true">
+    {kicker && <span className="discovery-kicker">{kicker}</span>}
+    <span className="quiz-title">{title}</span>
+    {description && <span className="quiz-desc">{description}</span>}
+    <span className="quiz-foot">
+      <span className="quiz-meta">{meta}{progress && <span className="quiz-progress-text">{progress}</span>}</span>
+      {answers.length > 0 && <span className="quiz-dots" aria-hidden="true">
         {questions.map(({ id }) => {
           const answer = answers.find((entry) => entry.id === id)
           return <span key={id} className={answer ? (answer.points === 1 ? 'right' : answer.points > 0 ? 'partial' : 'wrong') : ''} />
         })}
       </span>}
+      {href && <span className="quiz-action">{action} <span aria-hidden="true">→</span></span>}
     </span>
-    {href && <span className="quiz-go" aria-hidden="true">→</span>}
   </>
   return href
     ? <a className="quiz-card" href={href} onClick={follow(navigate, href, onOpen)}>{body}</a>
@@ -34,7 +35,7 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
   return (
     <li>
       <PlayCard title={chapter.title} description={chapter.summary} navigate={navigate} href={entry.href}
-        status={playStatus(entry.questions, entry.answers, chapter.minutes)} questions={entry.questions} answers={entry.answers}
+        minutes={chapter.minutes} questions={entry.questions} answers={entry.answers}
         onOpen={() => {
           track('quiz_selected', { quiz_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
           track(entry.event, { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
@@ -45,8 +46,8 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
 
 function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => void }) {
   return (
-    <section className="quiz-theme" aria-labelledby={`theme-${quiz.id}`}>
-      <h2 id={`theme-${quiz.id}`} className="discovery-kicker">{quiz.title}</h2>
+    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`}>
+      <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
       <ol className="quiz-list">
         {quiz.chapters.map((chapter) => <ChapterCard key={chapter.id} quiz={quiz} chapter={chapter} navigate={navigate} />)}
       </ol>
@@ -58,13 +59,16 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
   const browsable = QUIZZES.find((quiz) => quiz.browse)
   const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (
-    <div className="discover discover-edition discovery-reader">
+    <div className="discover discover-edition discovery-reader quiz-home">
       <section className="discovery-reading quiz-collection">
         <h1 tabIndex={-1}>Think you know how things really are?</h1>
-        <p className="discovery-context">Test your gut. Discover what the data says.</p>
+        <p className="quiz-subtitle">Test your gut. Discover what the data says.</p>
         {QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
           .map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
-        {browse && <a className="discovery-link quiz-browse" href={browse} onClick={follow(navigate, browse)}>Or browse all discoveries without a quiz <span aria-hidden="true">→</span></a>}
+        {browse && <a className="quiz-browse" href={browse} onClick={follow(navigate, browse)}>
+          <span><span className="quiz-browse-title">Just curious?</span> Browse every discovery at your own pace, no quiz needed.</span>
+          <span className="quiz-browse-go">Browse all discoveries <span aria-hidden="true">→</span></span>
+        </a>}
       </section>
     </div>
   )

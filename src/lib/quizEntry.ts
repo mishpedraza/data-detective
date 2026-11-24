@@ -29,8 +29,12 @@ export function follow(navigate: (href: string) => void, href: string, then?: ()
 
 export type Scored = { id: string; points: number }
 
+/** Card copy for a chapter: its size, how far the player got, and the matching call to action. */
 export function playStatus(questions: readonly { id: string }[], answers: readonly Scored[], minutes?: number | string) {
-  const size = `${questions.length} questions${minutes ? ` · ${minutes} min` : ''}`
-  return answers.length === questions.length ? `You scored ${formatPoints(totalPoints(answers))}/${questions.length} · See results`
-    : answers.length ? `${answers.length} of ${questions.length} answered · Resume` : size
+  const meta = `${questions.length} questions${minutes ? ` · ${minutes} min` : ''}`
+  if (answers.length === questions.length && questions.length) {
+    return { meta, progress: `You scored ${formatPoints(totalPoints(answers))}/${questions.length}`, action: 'Play again' }
+  }
+  if (answers.length) return { meta, progress: `${answers.length} of ${questions.length} answered`, action: 'Resume quiz' }
+  return { meta, progress: '', action: 'Play quiz' }
 }
