@@ -33,6 +33,14 @@ export const MOTHERHOOD_INDEX = [
   { label: '15 years after', year: 15, mothers: 79 },
 ] as const
 
+/** Begall (2024), Table 3: preferred weekly work hours after a birth, survey 2015/16. */
+export const WEEK_PREFERENCES = [
+  { who: 'men', label: 'Men, for themselves', hours: 29.71 },
+  { who: 'men', label: 'Men, for their partner', hours: 24.90 },
+  { who: 'women', label: 'Women, for themselves', hours: 28.20 },
+  { who: 'women', label: 'Women, for their partner', hours: 34.24 },
+] as const
+
 /** Galinsky et al. (2024): 102 meta-analytic gender differences compared with experimental effects of power. */
 export const POWER_COMPARISONS = { total: 102, same: 72, opposite: 8, none: 22 } as const
 
@@ -174,14 +182,14 @@ export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
     ],
     answer: 'women-more',
     finding: 'For themselves, men and women wanted the same hours. For their partner, they didn’t.',
-    takeaway: 'Both preferred the father to work more than the mother. When he earned more, or they earned the same, both chose a “modified male-breadwinner” week.',
+    takeaway: 'Both preferred the father to work more than the mother. Even when the woman earned more, women still wanted their partner to work about 2.5 hours more than themselves, while men chose equal hours.',
     visual: 'week',
     evidence: {
-      citation: 'Begall (2024), European Sociological Review',
+      citation: 'Begall (2024), European Sociological Review. Survey conducted 2015/16',
       url: 'https://doi.org/10.1093/esr/jcad054',
-      sample: 'About 700 employed men and women of childbearing age in Sweden, the UK and the Netherlands, surveyed in 2015/16.',
-      method: 'A factorial survey: respondents gave their preferred hours for themselves and their partner after a birth, in scenarios that varied who earned more. Preferences for an equal split were slightly stronger among men.',
-      limitation: 'Hypothetical preferences, not actual working hours, and only for male–female couples.',
+      sample: '678 employed men and women aged 18–39 (328 men, 350 women) in Sweden, the UK and the Netherlands, from the European Sustainable Workforce Survey, 2015/16. Published in 2024.',
+      method: 'A factorial survey: in 2,493 fictional scenarios that varied who earned more, respondents gave their preferred weekly hours for themselves and their partner after a birth. Averages are weighted (Table 3); the earnings comparison uses model predictions (Figure 2). Calendars convert hours to 8-hour days.',
+      limitation: 'Hypothetical preferences, not how much people actually work. Respondents couldn’t choose more hours than they already worked, so specialization may be understated. Only male–female couples.',
     },
   },
   {

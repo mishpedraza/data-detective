@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, ChoiceQuestion, RowsQuestion, Side, SlidersQuestion } from '../../data/menWomen'
-import { COMPETITION_SHIFTS, DOMINANCE_EFFECTS, MOTHERHOOD_INDEX, POWER_COMPARISONS } from '../../data/moneyPower'
+import { COMPETITION_SHIFTS, DOMINANCE_EFFECTS, MOTHERHOOD_INDEX, POWER_COMPARISONS, WEEK_PREFERENCES } from '../../data/moneyPower'
 import { parseEstimate, parseRows, parseSliders, parseWeek, splitPick } from '../../lib/chapterScore'
 import { useCount, useTiming } from './motion'
 
@@ -175,40 +175,45 @@ function BacklashVisual() {
   )
 }
 
-function MiniWeek({ label, days, tone }: { label: string; days: number; tone?: string }) {
+function MiniWeek({ label, days, detail, tone }: { label: string; days: number; detail?: string; tone?: string }) {
+  const t = useTiming()
   return (
     <figure className={`v-week ${tone ?? ''}`}>
-      <figcaption>{label}<strong>{days} {days === 1 ? 'day' : 'days'}</strong></figcaption>
+      <figcaption>{label}<strong>{detail ?? `${days} ${days === 1 ? 'day' : 'days'}`}</strong></figcaption>
       <div className="v-week-cells" aria-hidden="true">
-        {Array.from({ length: 10 }, (_, i) => <i key={i} className={i < days * 2 ? 'on' : ''} />)}
+        {Array.from({ length: 10 }, (_, i) => {
+          const fill = Math.min(1, Math.max(0, days * 2 - i))
+          return <i key={i}>{fill > 0 && <motion.b initial={{ width: 0 }} animate={{ width: `${fill * 100}%` }} transition={t(0.2 + i * 0.05, 0.3)} />}</i>
+        })}
       </div>
     </figure>
   )
 }
 
-/** Q6: the player's own week, then the pattern the study found. */
+/** Q6: the player's own week, then what men and women wanted for themselves and their partner. */
 function WeekVisual({ pick }: { pick?: string }) {
   const t = useTiming()
   const days = pick ? parseWeek(splitPick(pick).warm) : undefined
-  const rows = [
-    { title: 'Hours for themselves', men: 'Men', women: 'Women', verdict: 'About the same', same: true },
-    { title: 'Hours for their partner', men: 'Men wanted her to work less', women: 'Women wanted him to work more', verdict: 'Both put the father ahead' },
-  ]
   return (
     <div className="v-weeks">
-      {days && <div className="v-week-pair">
-        <MiniWeek label="You" days={days[0]} />
-        <MiniWeek label="Your partner" days={days[1]} />
-      </div>}
-      <p className="v-kicker">What the study found</p>
-      {rows.map(({ title, men, women, verdict, same }, i) => (
-        <motion.div key={title} className={`v-week-finding${same ? ' is-same' : ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={t(0.3 + i * 0.5, 0.5)}>
-          <p className="v-pair-title">{title}</p>
-          <div className="v-week-sides"><span className="v-men-text">{men}</span><span className="v-women-text">{women}</span></div>
-          <p className="v-verdict">{verdict}</p>
-        </motion.div>
-      ))}
-      <p className="v-note">Stated preferences in a survey experiment, not actual working hours.</p>
+      {days && <>
+        <p className="v-kicker">Your ideal week</p>
+        <div className="v-week-pair">
+          <MiniWeek label="You" days={days[0]} />
+          <MiniWeek label="Your partner" days={days[1]} />
+        </div>
+      </>}
+      <p className="v-kicker">What they wanted, on average</p>
+      <div className="v-week-grid" role="img" aria-label={WEEK_PREFERENCES.map(({ label, hours }) => `${label}: ${hours} hours a week`).join('. ')}>
+        {WEEK_PREFERENCES.map(({ who, label, hours }) => (
+          <MiniWeek key={label} label={label} days={hours / 8} detail={`${hours.toFixed(1)} h`} tone={`v-${who}`} />
+        ))}
+      </div>
+      <motion.div className="v-week-finding" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={t(1, 0.5)}>
+        <p className="v-pair-title">When the woman earned more</p>
+        <div className="v-week-sides"><span className="v-men-text">Men chose equal hours, about 27 each</span><span className="v-women-text">Women still wanted him to work about 2.5 hours more</span></div>
+      </motion.div>
+      <p className="v-note">Hypothetical preferences from a 2015/16 survey experiment, not actual working hours. Calendars show hours as 8-hour days.</p>
     </div>
   )
 }
