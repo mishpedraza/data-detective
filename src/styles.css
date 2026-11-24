@@ -1215,3 +1215,62 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-week.v-men figcaption strong { color: var(--men); } .v-week.v-women figcaption strong { color: var(--women); }
 .v-week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1rem; margin-bottom: 1rem; }
 @media (max-width: 520px) { .v-week-grid { grid-template-columns: 1fr; } }
+
+/* Housing Crisis: "Why is housing so expensive?" */
+/* Same rotating palette as Money, ambition & power. */
+.chapter-quiz[data-visual='chain'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
+.chapter-quiz[data-visual='rentcontrol'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
+.chapter-quiz[data-visual='airbnb'] { --accent: #9a6a12; --accent-soft: rgba(154, 106, 18, .1); }
+.chapter-quiz[data-visual='twostudies'] { --accent: #56682a; --accent-soft: rgba(86, 104, 42, .11); }
+.chapter-quiz[data-visual='ratio'] { --accent: #a3472b; --accent-soft: rgba(163, 71, 43, .1); }
+.chapter-quiz[data-visual='vacant'] { --accent: #3d5a6c; --accent-soft: rgba(61, 90, 108, .1); }
+.chapter-quiz[data-visual='permits'] { --accent: #7a5a2f; --accent-soft: rgba(122, 90, 47, .1); }
+.chapter-quiz[data-visual='auckland'] { --accent: #5b4a7a; --accent-soft: rgba(91, 74, 122, .1); }
+.v-hs-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 3px; max-width: 26rem; margin: .4rem 0 .6rem; }
+.v-hs-cell { aspect-ratio: 1; border-radius: 2px; background: rgba(0, 0, 0, .09); }
+.v-hs-cell.is-on { background: var(--accent); }
+.v-hs-cell.is-household { background: #8a7e72; }
+.v-hs-cell.is-soft, .v-hs-key i.is-soft { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v-hs-key { display: grid; gap: .25rem; margin: 0; padding: 0; list-style: none; font-size: .85rem; color: var(--ink-2); }
+.v-hs-key i { display: inline-block; width: .7rem; height: .7rem; margin-right: .35rem; border-radius: 2px; background: var(--accent); vertical-align: -1px; }
+.v-hs-steps { display: flex; gap: .5rem; margin: .4rem 0 1rem; padding: 0; list-style: none; }
+.v-hs-steps li { flex: 1; display: grid; justify-items: center; gap: .35rem; text-align: center; font-size: .78rem; line-height: 1.3; color: var(--ink-2); }
+.v-hs-steps li:not(:last-child)::after { content: '→'; position: relative; top: -2.6rem; left: 50%; color: var(--muted); }
+.v-hs-house { width: 2.4rem; height: 2.4rem; background: var(--accent); opacity: calc(1 - var(--shade) * .2); clip-path: polygon(50% 0, 100% 40%, 100% 100%, 0 100%, 0 40%); }
+.v-hs-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.v-hs-split p { margin: .2rem 0; font-size: .9rem; color: var(--ink-2); }
+.v-hs-split .v-hs-big { margin: .2rem 0 .3rem; font: 600 clamp(2.2rem, 5vw, 3rem)/1 var(--serif); color: var(--accent); }
+.v-hs-split section { padding: 1rem 1.1rem; border-radius: 12px; background: var(--accent-soft); }
+.v-hs-split .v-hs-grid { max-width: 15rem; }
+.v-hs-bars { display: grid; gap: .55rem; margin: .4rem 0; padding: 0; list-style: none; }
+.v-hs-bars li { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr 3.2rem; align-items: center; gap: .6rem; font-size: .85rem; color: var(--ink-2); }
+.v-hs-bars strong { text-align: right; font-variant-numeric: tabular-nums; }
+.v-hs-track { height: .8rem; border-radius: 99px; background: rgba(0, 0, 0, .07); overflow: hidden; }
+.v-hs-track i { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.v-hs-bars li.is-strong .v-hs-track i { background: var(--accent); }
+.v-toggle { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 .8rem; }
+.v-toggle button { padding: .4rem .85rem; border: 1px solid var(--line, rgba(0, 0, 0, .15)); border-radius: 99px; background: transparent; font: 500 .8rem var(--sans); color: var(--ink-2); cursor: pointer; }
+.v-toggle button[aria-pressed='true'] { border-color: var(--accent); background: var(--accent); color: #fff; }
+.v-hs-studies { display: grid; gap: 0; font-size: .85rem; }
+.v-hs-studies > div { display: grid; grid-template-columns: 8rem 1fr 1fr; gap: .8rem; padding: .55rem 0; border-bottom: 1px solid rgba(0, 0, 0, .08); }
+.v-hs-studies-head span { font: 600 .72rem var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+.v-hs-studies [role='rowheader'] { color: var(--muted); }
+.v-hs-ratio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: end; max-width: 26rem; }
+.v-hs-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; text-align: center; }
+.v-hs-col strong { font: 600 1.2rem var(--serif); }
+.v-hs-col i { display: block; width: 70%; margin-top: .3rem; border-radius: 4px 4px 0 0; background: var(--accent); }
+.v-hs-col:first-child i { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.v-hs-col span { margin-top: .3rem; font-size: .85rem; } .v-hs-col small { font-size: .72rem; color: var(--muted); }
+.v-hs-ratio .v-note { grid-column: 1 / -1; }
+.v-hs-vacant section + section { margin-top: .8rem; }
+.v-hs-skyline { display: flex; align-items: end; gap: 4px; height: 6rem; max-width: 26rem; margin-bottom: .8rem; border-bottom: 2px solid var(--ink-2); }
+.v-hs-skyline i { flex: 1; background: var(--accent); opacity: .75; border-radius: 2px 2px 0 0; }
+@media (max-width: 560px) {
+  .v-hs-split { grid-template-columns: 1fr; }
+  .v-hs-bars li { grid-template-columns: 1fr 3rem; }
+  .v-hs-bars .v-hs-bar-label { grid-column: 1 / -1; }
+  .v-hs-studies > div { grid-template-columns: 1fr 1fr; }
+  .v-hs-studies [role='rowheader'] { grid-column: 1 / -1; }
+  .v-hs-studies-head span:first-child { display: none; }
+  .v-hs-steps li { font-size: .7rem; }
+}

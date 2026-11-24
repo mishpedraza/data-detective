@@ -2,6 +2,7 @@ import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from './discoverEdition'
 import { EDITORIAL_QUESTIONS } from './editorial'
 import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
+import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -86,12 +87,16 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'housing-crisis',
     title: 'The Housing Crisis',
     prompt: 'How Well Do You Understand the Housing Crisis?',
-    accent: '#a8532f',
+    accent: '#6d3f61',
     description: 'Prices, rents and who can still afford a home.',
     edition: 'v1',
+    format: 'chapter',
     attemptKey: 'data-detective.quiz.housing-crisis.v1',
     resultKey: 'data-detective.quiz.housing-crisis.last-result.v1',
-    chapters: [],
+    chapters: [{
+      ...HOUSING_CHAPTER,
+      questionIds: HOUSING_QUESTIONS.map(({ id }) => id),
+    }],
   },
 ]
 
