@@ -48,7 +48,7 @@ function Verdict({ question, pick, points, index }: { question: ChapterQuestion;
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
 
-/** Five days in half-day cells, filled from Monday when read back. */
+/** Five days in half-day cells. Only the total is stored, so a locked week is shown filled from Monday. */
 export function WeekCalendar({ label, days, onChange }: { label: string; days?: number; onChange?: (days: number) => void }) {
   const [cells, setCells] = useState<boolean[]>(() => Array.from({ length: 10 }, (_, i) => i < (days ?? 0) * 2))
   const value = cells.filter(Boolean).length / 2
@@ -97,8 +97,8 @@ function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string
       <p className="ch-warmup-kicker">Not scored</p>
       <p className="ch-warmup-prompt">{warmup.prompt}</p>
       <p className="ch-warmup-hint">{locked ? 'Your ideal week' : 'Tap each half day to work it.'}</p>
-      <WeekCalendar label="You" days={saved?.[0]} onChange={locked ? undefined : (d) => setDays(([, p]) => [d, p])} />
-      <WeekCalendar label="Your partner" days={saved?.[1]} onChange={locked ? undefined : (d) => setDays(([y]) => [y, d])} />
+      <WeekCalendar key={`you-${locked}`} label="You" days={saved?.[0]} onChange={locked ? undefined : (d) => setDays(([, p]) => [d, p])} />
+      <WeekCalendar key={`partner-${locked}`} label="Your partner" days={saved?.[1]} onChange={locked ? undefined : (d) => setDays(([y]) => [y, d])} />
       {!locked && <button type="button" className="challenge-primary ch-reveal" disabled={!ready} onClick={() => onDone?.(`${days[0]},${days[1]}`)}>
         {ready ? 'Continue →' : 'Set both weeks'}
       </button>}
