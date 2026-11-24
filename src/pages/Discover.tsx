@@ -87,10 +87,7 @@ export function Discover({ quiz, navigate, selected }: { quiz: Quiz; navigate: (
   return (
     <div className="discover discover-edition discovery-reader">
       <nav className="discovery-reader-nav" aria-label="Discovery navigation">
-        <button className="discovery-contents-trigger" type="button" onClick={() => {
-          focusQuestion.current = true
-          navigate(link())
-        }}>← Quiz home</button>
+        <button className="discovery-contents-trigger" type="button" onClick={() => navigate(hrefFor('discover'))}>← All quizzes</button>
         <button className="discovery-contents-trigger" type="button" aria-haspopup="dialog"
           onClick={() => dialog.current?.showModal()}>All discoveries</button>
         <div className="discovery-pager">
