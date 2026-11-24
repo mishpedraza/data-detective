@@ -14,7 +14,7 @@ function Picks({ question, pick }: { question: RowsQuestion; pick?: string }) {
     <ul className="v-picks">
       {question.rows.map(({ id, label, answer }, i) => (
         <li key={id} className={picks[i] === answer ? 'v-hit' : 'v-miss'}>
-          <span aria-hidden="true">{picks[i] === answer ? '✓' : '✗'}</span> {label}
+          <span aria-hidden="true">{picks[i] === answer ? '✓' : '✗'}</span><span className="v-sr">{picks[i] === answer ? 'Correct: ' : 'Not correct: '}</span> {label}
         </li>
       ))}
     </ul>
@@ -43,8 +43,8 @@ function Dial({ answer, title, delay }: { answer: Side; title: string; delay: nu
 function LeaderVisual({ question, pick }: { question: RowsQuestion; pick?: string }) {
   const titles = ['How leaders see themselves', 'How others see them', 'Everything combined']
   return (
-    <div className="v-leader" role="img" aria-label={question.rows.map(({ label, answer }) => `${label}: ${SAID[answer].toLowerCase()}`).join('. ')}>
-      <div className="v-leader-dials">
+    <div className="v-leader">
+      <div className="v-leader-dials" role="img" aria-label={question.rows.map(({ label, answer }) => `${label}: ${SAID[answer].toLowerCase()}`).join('. ')}>
         {question.rows.map(({ id, answer }, i) => <Dial key={id} answer={answer} title={titles[i]} delay={0.3 + i * 0.4} />)}
       </div>
       <Picks question={question} pick={pick} />
@@ -218,12 +218,13 @@ function BudgetVisual({ question, pick }: { question: SlidersQuestion; pick?: st
   const t = useTiming()
   const guess = pick ? parseSliders(question, pick) : undefined
   const rows = question.sources ?? []
-  const max = 45
+  const max = Math.max(45, guess?.men ?? 0, guess?.women ?? 0)
   const gap = question.actual.men - question.actual.women
   const days = Math.round((gap * 52) / 24)
   const shown = useCount(days, 0, 1000, 1800)
   return (
-    <div className="v-budget" role="img" aria-label={rows.map(({ label, men, women }) => `${label}: husbands ${men} hours, wives ${women} hours`).join('. ')}>
+    <div className="v-budget">
+      <div role="img" aria-label={rows.map(({ label, men, women }) => `${label}: husbands ${men} hours, wives ${women} hours`).join('. ') + (guess ? `. Your leisure guesses: husband ${guess.men}, wife ${guess.women}.` : '')}>
       <div className="v-axis-labels" aria-hidden="true"><span><i className="v-key v-men" /> Husband</span><span><i className="v-key v-women" /> Wife</span>{guess && <span><i className="v-key v-guess" /> Your guesses</span>}</div>
       {rows.map(({ label, men, women }, i) => {
         const leisure = label === 'Leisure'
@@ -242,6 +243,7 @@ function BudgetVisual({ question, pick }: { question: SlidersQuestion; pick?: st
           </div>
         )
       })}
+      </div>
       <div className="v-days">
         <p className="v-headline"><span className="v-big">{Math.round(shown)}</span><span>full days more leisure a year for husbands, if the 8.8-hour weekly gap holds</span></p>
         <div className="v-days-cells" aria-hidden="true">
@@ -263,8 +265,8 @@ function TimelineVisual() {
   const y = (index: number) => 30 + (100 - index) * 4.4
   const [before, after, later] = MOTHERHOOD_INDEX
   return (
-    <div className="v-timeline" role="img" aria-label="Mothers' probability of working, relative to the year before the first child: 100, then 75 one year after, then 79 fifteen years after. Fathers: no significant change.">
-      <svg viewBox="0 0 360 190" aria-hidden="true">
+    <div className="v-timeline">
+      <svg viewBox="0 0 360 190" role="img" aria-label="Mothers' probability of working, relative to the year before the first child: 100, then 75 one year after, then 79 fifteen years after. Fathers: no significant change.">
         <line x1={x(before.year)} x2={x(later.year)} y1={y(100)} y2={y(100)} className="v-father" />
         <text x={x(later.year)} y={y(100) - 8} textAnchor="end" className="v-tick">Fathers: no significant change</text>
         <motion.line x1={x(before.year)} y1={y(100)} initial={{ x2: x(before.year), y2: y(100) }} animate={{ x2: x(after.year), y2: y(after.mothers) }} className="v-mother" transition={t(0.4, 0.8)} />
@@ -293,9 +295,9 @@ function PowerVisual({ question, pick }: { question: ChapterQuestion; pick?: str
   const { total, same, opposite } = POWER_COMPARISONS
   const kind = (i: number) => i < same ? 'same' : i < same + opposite ? 'opposite' : 'none'
   return (
-    <div className="v-power" role="img" aria-label={`Of ${total} comparisons, ${same} pointed the same way, ${opposite} the opposite way and ${POWER_COMPARISONS.none} showed no meaningful gender difference.`}>
+    <div className="v-power">
       {guess !== undefined && <p className="v-yours">You guessed <strong>{guess}%</strong>.</p>}
-      <div className="v-power-grid" style={{ '--cols': 17 } as CSSProperties} aria-hidden="true">
+      <div className="v-power-grid" style={{ '--cols': 17 } as CSSProperties} role="img" aria-label={`Of ${total} comparisons, ${same} pointed the same way, ${opposite} the opposite way and ${POWER_COMPARISONS.none} showed no meaningful gender difference.`}>
         {Array.from({ length: total }, (_, i) => (
           <motion.span key={i} className={`v-cell is-${kind(i)}`} initial={reduce ? false : { opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
             transition={reduce ? { duration: 0 } : { delay: 0.2 + i * 0.018, duration: 0.25 }} />
