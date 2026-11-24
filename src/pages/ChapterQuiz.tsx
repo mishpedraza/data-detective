@@ -230,7 +230,8 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
     track('quiz_question_answered', event)
     track('discovery_revealed', event)
     if (answers.length + 1 === total) track('quiz_completed', { ...ids, score: totalPoints(answers) + points, total_questions: total })
-    setAttempt((current) => recordAnswer(current, question.id, pick, quiz.edition))
+    // Merge what other tabs saved so a stale tab never overwrites newer answers.
+    setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...current }, question.id, pick, quiz.edition))
   }
 
   const home = hrefFor('discover')
