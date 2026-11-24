@@ -1,15 +1,15 @@
-import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from '../data/discoverEdition'
-import { EDITORIAL_QUESTIONS } from '../data/editorial'
+import { DISCOVER_TEASERS } from '../data/discoverEdition'
+import { DEFAULT_QUIZ, quizQuestions, type Quiz } from '../data/quizzes'
 import type { DiscoveryProgress } from './discoveryProgress'
 
-export const CHALLENGE_KEY = 'data-detective.challenge.v1'
-export const RESULTS_KEY = 'data-detective.challenge.last-result.v1'
+export const CHALLENGE_KEY = DEFAULT_QUIZ.attemptKey
+export const RESULTS_KEY = DEFAULT_QUIZ.resultKey
 
-export function challengeAnswers(progress: DiscoveryProgress) {
-  return EDITORIAL_QUESTIONS.flatMap(({ id }) => {
+export function challengeAnswers(progress: DiscoveryProgress, quiz: Quiz = DEFAULT_QUIZ) {
+  return quizQuestions(quiz).flatMap(({ id }) => {
     const interaction = DISCOVER_TEASERS[id]?.interaction
     const visit = progress[id]
-    if (!interaction || visit?.edition !== DISCOVERY_QUIZ_EDITION || !interaction.choices.includes(visit.pick)) return []
+    if (!interaction || visit?.edition !== quiz.edition || !interaction.choices.includes(visit.pick)) return []
     return [{ id, question: interaction.label, pick: interaction.choiceLabels?.[visit.pick] ?? visit.pick,
       answer: interaction.choiceLabels?.[interaction.answer] ?? interaction.answer,
       correct: visit.pick === interaction.answer, years: DISCOVER_TEASERS[id]?.years }]
@@ -28,11 +28,15 @@ const headlines = [
     'Save some knowledge for the rest of us.', 'We have questions. Apparently, you have answers.'],
 ]
 
+const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve']
+const count = (n: number) => words[n] ?? String(n)
+
 export function pickResult(correct: number, total: number, previous?: string, random = Math.random) {
-  const pool = headlines[correct <= 2 ? 0 : correct <= 6 ? 1 : 2].filter((line) => line !== previous)
+  const share = total ? correct / total : 0
+  const pool = headlines[share <= 2 / 9 ? 0 : share <= 6 / 9 ? 1 : 2].filter((line) => line !== previous)
   const missed = total - correct
   const support = missed === 0
-    ? ['You called every one.', 'Nine questions. Zero plot twists you didn’t see coming.']
+    ? ['You called every one.', `${count(total)} questions. Zero plot twists you didn’t see coming.`]
     : [`You got ${correct} right and found ${missed} ${missed === 1 ? 'surprise' : 'surprises'} along the way.`,
       missed === 1 ? 'One answer still managed to surprise you.' : `You found ${missed} answers you might want to tell someone about.`]
   return { headline: pool[Math.floor(random() * pool.length)], supporting: support[Math.floor(random() * support.length)] }
@@ -83,5 +87,5 @@ const incorrectReactions = [
 // Each question owns two distinct slots in each pool, so a run never repeats a line.
 export function challengeReaction(index: number, correct: boolean, variant: 0 | 1 = 0) {
   const pool = correct ? correctReactions : incorrectReactions
-  return pool[index * 2 + variant]
+  return pool[(index * 2 + variant) % pool.length]
 }

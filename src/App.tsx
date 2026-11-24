@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Nav } from './components/Nav'
 import { Discover } from './pages/Discover'
+import { QuizCollection, QuizComingSoon } from './pages/Quizzes'
+import { DEFAULT_QUIZ, quizById, quizQuestions } from './data/quizzes'
 import { editorialQuestionById, DEFAULT_INVESTIGATION } from './data/editorial'
 import { EditorialInvestigation } from './pages/EditorialInvestigation'
 import { Investigate } from './pages/Investigate'
@@ -30,15 +32,21 @@ export default function App() {
     window.location.hash = href.replace(/^#/, '')
     window.scrollTo({ top: 0, behavior: href.startsWith('#/discover') || reduceMotion ? 'instant' : 'smooth' })
   }, [reduceMotion])
-  useEffect(() => { track('page_viewed', { section: route }) }, [route, params, consent])
+  // Links from before the quiz collection (no quiz id) open the original quiz.
+  const quiz = route === 'discover'
+    ? quizById(params.get('quiz')) ?? (params.get('q') || params.get('mode') ? DEFAULT_QUIZ : undefined)
+    : undefined
+  useEffect(() => { track('page_viewed', { section: route, ...(quiz && { quiz_id: quiz.id }) }) }, [route, params, consent, quiz])
   const investigationId = params.get('r') ?? DEFAULT_INVESTIGATION
   const entry = editorialQuestionById(investigationId)
   return (
     <>
       <Nav route={route} go={(r) => navigate(hrefFor(r))} />
       <AnimatePresence mode="wait">
-        <motion.main key={route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}>
-          {route === 'discover' && <Discover navigate={navigate} selected={params.get('q')} mode={params.get('mode')} />}
+        <motion.main key={quiz ? `${route}-${quiz.id}` : route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}>
+          {route === 'discover' && (!quiz ? <QuizCollection navigate={navigate} /> :
+            quizQuestions(quiz).length ? <Discover key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
+              <QuizComingSoon quiz={quiz} navigate={navigate} />)}
           {route === 'investigate' && (
             entry?.status === 'research' ? <EditorialInvestigation key={entry.id} id={entry.id} /> :
               investigationId === 'surgery-waits' ? <SurgeryWaits /> :

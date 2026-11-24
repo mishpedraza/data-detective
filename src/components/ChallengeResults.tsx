@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { pickResult, RESULTS_KEY, type challengeAnswers } from '../lib/discoveryChallenge'
+import { pickResult, type challengeAnswers } from '../lib/discoveryChallenge'
+import type { Quiz } from '../data/quizzes'
 import { hrefFor } from '../lib/route'
 
-export function ChallengeResults({ answers, review, navigate, restart }: {
+export function ChallengeResults({ quiz, answers, review, navigate, restart }: {
+  quiz: Quiz
   answers: ReturnType<typeof challengeAnswers>
   review: boolean
   navigate: (href: string) => void
@@ -11,7 +13,7 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
   const correct = answers.filter((answer) => answer.correct).length
   const [result] = useState(() => {
     let previous: string | undefined
-    try { previous = localStorage.getItem(RESULTS_KEY) ?? undefined } catch { /* Storage is optional. */ }
+    try { previous = localStorage.getItem(quiz.resultKey) ?? undefined } catch { /* Storage is optional. */ }
     return pickResult(correct, answers.length, previous)
   })
   const [shareStatus, setShareStatus] = useState('')
@@ -21,10 +23,10 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
 
   useEffect(() => {
     if (!review) {
-      try { localStorage.setItem(RESULTS_KEY, result.headline) } catch { /* Storage is optional. */ }
+      try { localStorage.setItem(quiz.resultKey, result.headline) } catch { /* Storage is optional. */ }
     }
     heading.current?.focus()
-  }, [review, result.headline])
+  }, [review, result.headline, quiz.resultKey])
 
   useEffect(() => {
     if (manualText) copyField.current?.select()
@@ -32,8 +34,8 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
 
   async function share() {
     const url = new URL(window.location.href)
-    url.hash = hrefFor('discover', { mode: 'challenge' })
-    const message = `${result.headline}\n\nI got ${correct}/${answers.length} on Data Detective.\n\nHow well do you know the world?`
+    url.hash = hrefFor('discover', { quiz: quiz.id, mode: 'challenge' })
+    const message = `${result.headline}\n\nI got ${correct}/${answers.length} on Data Detective.\n\n${quiz.prompt}`
     if (navigator.share) {
       try {
         await navigator.share({ text: message, url: url.href })
@@ -66,7 +68,7 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
           </li>
         ))}
       </ol>
-      <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover', { mode: 'results' }))}>Back to results</button>
+      <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover', { quiz: quiz.id, mode: 'results' }))}>Back to results</button>
     </section>
   )
 
@@ -76,9 +78,9 @@ export function ChallengeResults({ answers, review, navigate, restart }: {
       <p className="challenge-result-score">{correct} out of {answers.length}</p>
       <p className="discovery-note">{result.supporting}</p>
       <div className="challenge-result-actions">
-        <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover', { mode: 'browse' }))}>Discover more →</button>
+        <button className="challenge-primary" type="button" onClick={() => navigate(hrefFor('discover', { quiz: quiz.id, mode: 'browse' }))}>Discover more →</button>
         <button className="discovery-clue" type="button" onClick={share}>Share my result ↗</button>
-        <button className="discovery-clue" type="button" onClick={() => navigate(hrefFor('discover', { mode: 'review' }))}>Review my answers →</button>
+        <button className="discovery-clue" type="button" onClick={() => navigate(hrefFor('discover', { quiz: quiz.id, mode: 'review' }))}>Review my answers →</button>
         <button className="discovery-clue" type="button" onClick={restart}>Try again</button>
       </div>
       <p className="discovery-note" role="status">{shareStatus}</p>

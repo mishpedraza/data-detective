@@ -1,42 +1,44 @@
-import { useCallback, useEffect, useRef, useState, type PointerEvent } from 'react'
-import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from '../data/discoverEdition'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
+import { DISCOVER_TEASERS } from '../data/discoverEdition'
 import { ChallengeResults } from '../components/ChallengeResults'
-import { CHALLENGE_KEY, challengeAnswers, challengeReaction } from '../lib/discoveryChallenge'
+import { challengeAnswers, challengeReaction } from '../lib/discoveryChallenge'
 import { DiscoveryInteraction } from '../components/DiscoveryInteraction'
-import { EDITORIAL_QUESTIONS } from '../data/editorial'
+import { quizQuestions, type Quiz } from '../data/quizzes'
 import { DISCOVERY_PROGRESS_KEY, readDiscoveryProgress, revealDiscovery } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 
-const total = EDITORIAL_QUESTIONS.length
 const controls = 'a, button, input, select, textarea, [contenteditable], .discovery-reveal, [role="slider"]'
 
-export function Discover({ navigate, selected, mode }: { navigate: (href: string) => void; selected: string | null; mode: string | null }) {
+export function Discover({ quiz, navigate, selected, mode }: { quiz: Quiz; navigate: (href: string) => void; selected: string | null; mode: string | null }) {
+  const questions = useMemo(() => quizQuestions(quiz), [quiz])
+  const total = questions.length
+  const link = useCallback((params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...params }), [quiz.id])
   const [shareCopied, setShareCopied] = useState(false)
   const [progress, setProgress] = useState(readDiscoveryProgress)
-  const [attempt, setAttempt] = useState(() => readDiscoveryProgress(CHALLENGE_KEY))
-  const answers = challengeAnswers(attempt)
+  const [attempt, setAttempt] = useState(() => readDiscoveryProgress(quiz.attemptKey))
+  const answers = challengeAnswers(attempt, quiz)
   const score = answers.filter(({ correct }) => correct).length
   const complete = answers.length === total
   const results = complete && (mode === 'results' || mode === 'review')
   const challenge = mode === 'challenge' || mode === 'results' || mode === 'review'
   const browse = mode === 'browse' || (!challenge && selected !== null)
   const welcome = !challenge && !browse
-  const firstUnanswered = EDITORIAL_QUESTIONS.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
+  const firstUnanswered = questions.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
   const lastReachable = firstUnanswered < 0 ? total - 1 : firstUnanswered
   const dialog = useRef<HTMLDialogElement>(null)
   const headline = useRef<HTMLHeadingElement>(null)
   const focusQuestion = useRef(false)
   const touch = useRef<{ id: number; x: number; y: number } | null>(null)
-  const requested = EDITORIAL_QUESTIONS.findIndex(({ id }) => id === selected)
+  const requested = questions.findIndex(({ id }) => id === selected)
   const index = challenge ? Math.min(requested < 0 ? 0 : requested, lastReachable) : Math.max(0, requested)
-  const entry = EDITORIAL_QUESTIONS[index]
-  const next = EDITORIAL_QUESTIONS[index + 1]
+  const entry = questions[index]
+  const next = questions[index + 1]
   const teaser = DISCOVER_TEASERS[entry.id]
   const activeProgress = challenge ? attempt : progress
   const setActiveProgress = challenge ? setAttempt : setProgress
   const recorded = activeProgress[entry.id]
-  const visit = recorded?.edition === DISCOVERY_QUIZ_EDITION && (!challenge || answers.some(({ id }) => id === entry.id)) ? recorded : undefined
+  const visit = recorded?.edition === quiz.edition && (!challenge || answers.some(({ id }) => id === entry.id)) ? recorded : undefined
 
   useEffect(() => {
     try {
@@ -47,8 +49,8 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
   }, [progress])
 
   useEffect(() => {
-    try { localStorage.setItem(CHALLENGE_KEY, JSON.stringify(attempt)) } catch { /* Storage is optional. */ }
-  }, [attempt])
+    try { localStorage.setItem(quiz.attemptKey, JSON.stringify(attempt)) } catch { /* Storage is optional. */ }
+  }, [attempt, quiz.attemptKey])
 
   useEffect(() => {
     if (focusQuestion.current) {
@@ -58,11 +60,11 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
   }, [challenge, entry.id, results, welcome])
 
   const goTo = useCallback((position: number) => {
-    const question = EDITORIAL_QUESTIONS[position]
+    const question = questions[position]
     if (!question || position === index || (challenge && position > lastReachable)) return
     focusQuestion.current = true
-    navigate(hrefFor('discover', { q: question.id, mode: challenge ? 'challenge' : 'browse' }))
-  }, [challenge, index, lastReachable, navigate])
+    navigate(link({ q: question.id, mode: challenge ? 'challenge' : 'browse' }))
+  }, [questions, challenge, index, lastReachable, navigate, link])
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -98,41 +100,48 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
     <a className="discovery-link discovery-open" href={href} onClick={(event) => {
       if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
       event.preventDefault()
-      track('evidence_opened', { question_id: entry.id, from_quiz: challenge })
+      track('evidence_opened', { quiz_id: quiz.id, question_id: entry.id, from_quiz: challenge })
       navigate(href)
     }}>{label} <span aria-hidden="true">→</span></a>
   )
   function openChallenge() {
-    track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { answered_count: answers.length })
+    track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { quiz_id: quiz.id, answered_count: answers.length })
     focusQuestion.current = true
-    navigate(complete ? hrefFor('discover', { mode: 'results' })
-      : hrefFor('discover', { mode: 'challenge', q: EDITORIAL_QUESTIONS[lastReachable].id }))
+    navigate(complete ? link({ mode: 'results' })
+      : link({ mode: 'challenge', q: questions[lastReachable].id }))
   }
 
   function restart() {
-    track('quiz_restarted')
+    track('quiz_restarted', { quiz_id: quiz.id })
     setAttempt({})
     focusQuestion.current = true
-    navigate(hrefFor('discover', { mode: 'challenge', q: EDITORIAL_QUESTIONS[0].id }))
+    navigate(link({ mode: 'challenge', q: questions[0].id }))
   }
 
   if (welcome) return (
     <div className="discover discover-edition discovery-reader">
+      <nav className="discovery-reader-nav" aria-label="Quiz navigation">
+        <a className="discovery-contents-trigger" href={hrefFor('discover')} onClick={(event) => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+          event.preventDefault()
+          navigate(hrefFor('discover'))
+        }}>← All quizzes</a>
+      </nav>
       <section className="discovery-reading discovery-welcome">
-        <h1 ref={headline} tabIndex={-1}>How Well Do You Know the World?</h1>
-        <p className="discovery-context">9 questions. A few surprises. Absolutely no judgment.</p>
+        <h1 ref={headline} tabIndex={-1}>{quiz.prompt}</h1>
+        <p className="discovery-context">{total} questions.{quiz.tagline && ` ${quiz.tagline}`}</p>
         <div className="discovery-welcome-actions">
           <button className="challenge-primary" type="button" onClick={openChallenge}>
             {complete ? 'See challenge results' : answers.length ? 'Resume the challenge' : 'Take the challenge'} →
           </button>
-          <a className="discovery-link" href={hrefFor('discover', { mode: 'browse' })} onClick={(event) => {
+          <a className="discovery-link" href={link({ mode: 'browse' })} onClick={(event) => {
             if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
             event.preventDefault()
             focusQuestion.current = true
-            navigate(hrefFor('discover', { mode: 'browse' }))
+            navigate(link({ mode: 'browse' }))
           }}>Or browse all discoveries →</a>
           <button className="discovery-contents-trigger" type="button" onClick={async () => {
-            const shareUrl = new URL(import.meta.env.BASE_URL, window.location.origin).href
+            const shareUrl = new URL(`${import.meta.env.BASE_URL}${link()}`, window.location.origin).href
             try {
               await navigator.clipboard.writeText(shareUrl)
               setShareCopied(true)
@@ -150,8 +159,8 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
       <nav className="discovery-reader-nav" aria-label="Discovery navigation">
         <button className="discovery-contents-trigger" type="button" onClick={() => {
           focusQuestion.current = true
-          navigate(hrefFor('discover'))
-        }}>← Discover home</button>
+          navigate(link())
+        }}>← Quiz home</button>
         {browse && <button className="discovery-contents-trigger" type="button" aria-haspopup="dialog"
           onClick={() => dialog.current?.showModal()}>All discoveries</button>}
         {challenge && !results && answers.length > 0 && (
@@ -165,7 +174,7 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
         </div>}
       </nav>
 
-      {results ? <ChallengeResults answers={answers} review={mode === 'review'} navigate={navigate} restart={restart} /> :
+      {results ? <ChallengeResults quiz={quiz} answers={answers} review={mode === 'review'} navigate={navigate} restart={restart} /> :
       <article className="discovery-reading" key={entry.id} onPointerDown={startSwipe} onPointerUp={finishSwipe}
         onPointerCancel={() => { touch.current = null }}>
         {challenge && <div className="challenge-progress">
@@ -181,10 +190,10 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
                 onReveal={(pick, answer) => {
                   const variant = challenge && answer !== undefined ? (Math.random() < 0.5 ? 0 : 1) : undefined
                   if (challenge && answer !== undefined && !visit) {
-                    track('quiz_question_answered', { question_id: entry.id, question_number: index + 1, correct: pick === answer })
-                    if (answers.length + 1 === total) track('quiz_completed', { score: score + Number(pick === answer), total_questions: total })
+                    track('quiz_question_answered', { quiz_id: quiz.id, question_id: entry.id, question_number: index + 1, correct: pick === answer })
+                    if (answers.length + 1 === total) track('quiz_completed', { quiz_id: quiz.id, score: score + Number(pick === answer), total_questions: total })
                   }
-                  setActiveProgress((current) => revealDiscovery(current, entry.id, pick, answer, DISCOVERY_QUIZ_EDITION, variant))
+                  setActiveProgress((current) => revealDiscovery(current, entry.id, pick, answer, quiz.edition, variant))
                 }}
                 onClose={() => setActiveProgress((current) => ({ ...current, [entry.id]: { ...visit!, closed: true } }))} />
             : evidenceLink()}
@@ -199,7 +208,7 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
             )}
             {visit && !visit.closed && (next || complete) && (
               <button className="challenge-primary challenge-continue" type="button"
-                onClick={() => next ? goTo(index + 1) : navigate(hrefFor('discover', { mode: 'results' }))}>
+                onClick={() => next ? goTo(index + 1) : navigate(link({ mode: 'results' }))}>
                 {next ? 'Next question →' : 'See my results →'}
               </button>
             )}
@@ -220,7 +229,7 @@ export function Discover({ navigate, selected, mode }: { navigate: (href: string
           <button className="discovery-clue" type="button" onClick={() => dialog.current?.close()}>Close</button>
         </div>
         <ol>
-          {EDITORIAL_QUESTIONS.map(({ id, question }, position) => (
+          {questions.map(({ id, question }, position) => (
             <li key={id}><button type="button" aria-current={index === position ? 'step' : undefined}
               onClick={() => {
                 dialog.current?.close()
