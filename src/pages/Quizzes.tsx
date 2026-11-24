@@ -34,16 +34,19 @@ export function PlayCard({ kicker, title, description, minutes, questions = [], 
     : <div className="quiz-card quiz-soon">{body}</div>
 }
 
+function trackQuizOpen(quiz: Quiz, chapter: QuizChapter, entry: ReturnType<typeof chapterEntry>) {
+  const props = { quiz_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length }
+  track('quiz_selected', props)
+  track(entry.event, { ...props, theme_id: quiz.id })
+}
+
 function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizChapter; navigate: (href: string) => void }) {
   const entry = chapterEntry(quiz, chapter.id)
   return (
     <li>
       <PlayCard title={chapter.title} description={chapter.summary} navigate={navigate} href={entry.href}
         minutes={chapter.minutes} questions={entry.questions} answers={entry.answers}
-        onOpen={() => {
-          track('quiz_selected', { quiz_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
-          track(entry.event, { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
-        }} />
+        onOpen={() => trackQuizOpen(quiz, chapter, entry)} />
     </li>
   )
 }
@@ -69,15 +72,38 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
 }
 
 export function QuizCollection({ navigate }: { navigate: (href: string) => void }) {
+  const playable = QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
+  const featuredQuiz = playable[0]
+  const featuredChapter = featuredQuiz?.chapters[0]
+  const entry = featuredChapter && chapterEntry(featuredQuiz, featuredChapter.id)
+  const featured = entry && featuredChapter && {
+    entry,
+    chapter: featuredChapter,
+    ...playStatus(entry.questions, entry.answers, featuredChapter.minutes),
+  }
   const browsable = QUIZZES.find((quiz) => quiz.browse)
   const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (
     <div className="discover discover-edition discovery-reader quiz-home">
       <section className="discovery-reading quiz-collection">
-        <h1 tabIndex={-1}>Think you know how things really are?</h1>
-        <p className="quiz-subtitle">Test your gut. Discover what the data says.</p>
-        {QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
-          .map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
+        <header className="quiz-show-hero">
+          <div className="quiz-show-intro">
+            <h1 tabIndex={-1}>How good is <em>your gut?</em></h1>
+            <p className="quiz-subtitle">Make a guess, see what the research found, and challenge a friend to beat your score.</p>
+            {featured && <div className="quiz-show-start">
+              <a className="quiz-show-button" href={featured.entry.href}
+                onClick={follow(navigate, featured.entry.href, () => trackQuizOpen(featuredQuiz, featured.chapter, featured.entry))}>
+                {featured.state === 'not-started' ? 'Play ' + featured.chapter.title : featured.action}
+              </a>
+              <span>{featured.meta}</span>
+            </div>}
+          </div>
+          <div className="quiz-show-art" aria-hidden="true">
+            <div className="quiz-show-plot"><i /><i /><i /><i /><i /></div>
+            <div className="quiz-show-lens"><span>?</span></div>
+          </div>
+        </header>
+        {playable.map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
         {browse && <a className="quiz-browse" href={browse} onClick={follow(navigate, browse)}>
           <span><span className="quiz-browse-title">Just curious?</span> Browse every discovery at your own pace, no quiz needed.</span>
           <span className="quiz-browse-go">Browse all discoveries <span aria-hidden="true">→</span></span>

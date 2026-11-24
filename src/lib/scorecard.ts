@@ -1,7 +1,7 @@
 import { formatPoints } from './chapterScore'
 
-export const SIGNATURE = 'I put my assumptions to the test.'
-export const SHARE_MESSAGE = 'I put my assumptions to the test on Data Detective. How much of what you believe holds up against the evidence?'
+export const SIGNATURE = 'Can you beat my score?'
+export const SHARE_MESSAGE = 'Can you beat my score on Data Detective?'
 export const SITE_LABEL = 'data-detective.pages.dev'
 
 export type Scorecard =
@@ -12,10 +12,11 @@ export type Scorecard =
 export const CARD_WIDTH = 1080
 export const CARD_HEIGHT = 1350
 
-const PAPER = '#f5f1ea'
-const INK = '#17171c'
-const INK_2 = '#3b3a40'
-const MUTED = '#7a756c'
+const PAPER = '#301960'
+const INK = '#ffffff'
+const INK_2 = '#eee1ff'
+const MUTED = '#d8c2f7'
+const HIGHLIGHT = '#e5ff77'
 const SERIF = '"Fraunces Variable", "Iowan Old Style", Georgia, serif'
 const SANS = '"Inter Variable", Inter, system-ui, sans-serif'
 const PAD = 96
@@ -52,7 +53,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, width: number) {
 }
 
 function bar(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, share: number, accent: string) {
-  ctx.globalAlpha = 0.14
+  ctx.globalAlpha = 0.22
   ctx.fillStyle = accent
   ctx.beginPath(); ctx.roundRect(x, y, width, height, Math.min(6, height / 2)); ctx.fill()
   ctx.globalAlpha = 1
@@ -76,14 +77,15 @@ export function drawScorecard(ctx: CanvasRenderingContext2D, card: Scorecard) {
   ctx.textBaseline = 'alphabetic'
   ctx.fillStyle = PAPER
   ctx.fillRect(0, 0, CARD_WIDTH, CARD_HEIGHT)
-  ctx.fillStyle = card.accent
-  ctx.fillRect(0, 0, CARD_WIDTH, 16)
+  ctx.fillStyle = HIGHLIGHT
+  ctx.fillRect(0, 0, CARD_WIDTH, 32)
+  ctx.fillRect(PAD, CARD_HEIGHT - 332, width, 2)
 
   ctx.font = `650 26px ${SANS}`
   ctx.fillStyle = INK
   tracked(ctx, 'DATA DETECTIVE', PAD, 150, 5)
   ctx.font = `600 24px ${SANS}`
-  ctx.fillStyle = card.accent
+  ctx.fillStyle = HIGHLIGHT
   tracked(ctx, card.kind === 'quiz' ? card.theme.toUpperCase() : 'THE COMPLETE SERIES', PAD, 196, 4)
 
   ctx.font = `450 ${card.kind === 'quiz' ? 80 : 68}px ${SERIF}`
@@ -99,18 +101,18 @@ export function drawScorecard(ctx: CanvasRenderingContext2D, card: Scorecard) {
   y += (title.length - 1) * lineHeight
 
   if (card.kind === 'quiz') {
-    score(ctx, card.points, card.total, y + 300, 280, card.accent)
+    score(ctx, card.points, card.total, y + 300, 280, HIGHLIGHT)
     const gap = 12
     const column = Math.min(72, (width - gap * (card.sequence.length - 1)) / card.sequence.length)
     card.sequence.forEach((points, i) => {
       const x = PAD + i * (column + gap)
-      ctx.globalAlpha = 0.14; ctx.fillStyle = card.accent
+      ctx.globalAlpha = 0.14; ctx.fillStyle = HIGHLIGHT
       ctx.beginPath(); ctx.roundRect(x, y + 370, column, 150, 8); ctx.fill()
       ctx.globalAlpha = 1
       if (points > 0) { ctx.beginPath(); ctx.roundRect(x, y + 370 + 150 * (1 - points), column, 150 * points, 8); ctx.fill() }
     })
   } else {
-    score(ctx, card.points, card.total, y + 250, 230, card.accent)
+    score(ctx, card.points, card.total, y + 250, 230, HIGHLIGHT)
     y += 330
     for (const part of parts) {
       ctx.font = `450 34px ${SERIF}`
@@ -120,7 +122,7 @@ export function drawScorecard(ctx: CanvasRenderingContext2D, card: Scorecard) {
       ctx.textAlign = 'right'
       ctx.fillText(scoreLabel(part.points, part.total), CARD_WIDTH - PAD, y)
       ctx.textAlign = 'left'
-      bar(ctx, PAD, y + 20, width, 10, part.total ? part.points / part.total : 0, card.accent)
+      bar(ctx, PAD, y + 20, width, 10, part.total ? part.points / part.total : 0, HIGHLIGHT)
       y += 92
     }
   }
@@ -132,10 +134,10 @@ export function drawScorecard(ctx: CanvasRenderingContext2D, card: Scorecard) {
   ctx.fillStyle = INK_2
   const questions = card.kind === 'theme' ? card.total : 0
   const sub = card.kind === 'quiz'
-    ? 'How much of what you believe holds up against the evidence?'
+    ? 'Make your guesses and see what the data says.'
     : `${questions} questions. ${card.parts.length} quizzes. A few surprises.`
   wrap(ctx, sub, width).forEach((line, i) => ctx.fillText(line, PAD, CARD_HEIGHT - 176 + i * 40))
-  ctx.fillStyle = card.accent
+  ctx.fillStyle = HIGHLIGHT
   ctx.fillRect(PAD, CARD_HEIGHT - 92, 48, 3)
   ctx.font = `650 26px ${SANS}`
   ctx.fillText(SITE_LABEL, PAD + 66, CARD_HEIGHT - 82)
