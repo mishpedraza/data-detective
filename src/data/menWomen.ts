@@ -8,6 +8,8 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
 export interface Evidence {
   citation: string
   url: string
+  /** Further studies cited alongside the main one. */
+  more?: readonly { citation: string; url: string }[]
   sample: string
   method: string
   limitation: string

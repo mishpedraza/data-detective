@@ -224,7 +224,8 @@ function Reveal({ question, pick, points, index, onEvidence, explore }: { questi
       <details className="ch-evidence" onToggle={(event) => { if ((event.currentTarget as HTMLDetailsElement).open) onEvidence() }}>
         <summary>How we know</summary>
         {evidence ? <dl>
-          <dt>Study</dt><dd><a href={evidence.url} target="_blank" rel="noreferrer">{evidence.citation} ↗</a></dd>
+          <dt>Study</dt><dd><a href={evidence.url} target="_blank" rel="noreferrer">{evidence.citation} ↗</a>
+            {evidence.more?.map(({ citation, url }) => <span key={url}>; <a href={url} target="_blank" rel="noreferrer">{citation} ↗</a></span>)}</dd>
           <dt>Who</dt><dd>{evidence.sample}</dd>
           <dt>Method</dt><dd>{evidence.method}</dd>
           <dt>Limits</dt><dd>{evidence.limitation}</dd>

@@ -107,10 +107,11 @@ export const HOUSING_QUESTIONS: readonly ChapterQuestion[] = [
     takeaway: 'One found no drop in rental homes. The other found about 10% fewer new contracts as pricier homes left the market, while rents rose at the cheap end. They measured supply differently, and only the first has passed peer review. The law was struck down in 2022; later caps are a different policy.',
     visual: 'twostudies',
     evidence: {
-      citation: 'Jofre-Monseny, Martínez-Mazza & Segú (2023), Regional Science and Urban Economics; Monràs & Montalvo (2023), FRBSF Working Paper 2023-28',
+      citation: 'Study A: Jofre-Monseny, Martínez-Mazza & Segú (2023), Regional Science and Urban Economics',
       url: 'https://doi.org/10.1016/j.regsciurbeco.2023.103916',
+      more: [{ citation: 'Study B: Monràs & Montalvo (2023), FRBSF Working Paper 2023-28', url: 'https://doi.org/10.24148/wp2023-28' }],
       sample: 'Both use Catalonia’s official register of rental deposits, comparing capped and uncapped municipalities.',
-      method: 'Study A: rents paid fell 4–6%, with no fall in signed or ended contracts or the active stock. Study B (working paper, https://doi.org/10.24148/wp2023-28): rents fell about 5%, new contracts about 10%, mostly above the cap’s reference price.',
+      method: 'Study A: rents paid fell 4–6%, with no fall in signed or ended contracts or the active stock. Study B (working paper): rents fell about 5%, new contracts about 10%, mostly above the cap’s reference price.',
       limitation: 'The policy ran from September 2020 to March 2022, partly during Covid. Short periods and different supply measures make the evidence genuinely contested.',
     },
   },

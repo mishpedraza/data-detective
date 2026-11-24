@@ -14,7 +14,7 @@ test('Housing Crisis plays "Why is housing so expensive?" as an 8-question chapt
   assert.equal(HOUSING_QUESTIONS.length, 8)
   for (const question of HOUSING_QUESTIONS) {
     assert.equal(CHAPTER_QUESTIONS[question.id], question)
-    assert.match(question.evidence!.url, /^https:\/\//)
+    for (const { url } of [question.evidence!, ...(question.evidence!.more ?? [])]) assert.match(url, /^https:\/\//)
     if (question.kind === 'choice') assert.ok(question.options.some(({ id }) => id === question.answer), question.id)
   }
 })
