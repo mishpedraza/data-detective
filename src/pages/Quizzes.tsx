@@ -80,7 +80,7 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
       <section className="discovery-reading quiz-collection">
         <header className="quiz-show-hero">
           <div className="quiz-show-intro">
-            <h1 tabIndex={-1}>How good is <em>your gut?</em></h1>
+            <h1 tabIndex={-1}>How sure are you, <em>really?</em></h1>
             <p className="quiz-subtitle">Make a guess, see what the research found, and challenge a friend to beat your score.</p>
           </div>
           <div className="quiz-show-art" aria-hidden="true">
