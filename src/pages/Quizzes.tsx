@@ -3,6 +3,9 @@ import { QUIZZES, quizQuestions, type Quiz, type QuizChapter } from '../data/qui
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 import { chapterEntry, follow, playStatus, type Scored } from '../lib/quizEntry'
+import { formatPoints } from '../lib/chapterScore'
+import { themeProgress } from '../lib/themeProgress'
+import { ThemeMeter } from './ThemeResults'
 
 /** A playable quiz card; the whole card is the link. Without an href it shows as coming soon. */
 export function PlayCard({ kicker, title, description, minutes, questions = [], answers = [], href, onOpen, navigate }: {
@@ -10,9 +13,9 @@ export function PlayCard({ kicker, title, description, minutes, questions = [], 
   questions?: readonly { id: string }[]; answers?: readonly Scored[]
   href?: string; onOpen?: () => void; navigate: (href: string) => void
 }) {
-  const { meta, progress, action } = playStatus(questions, answers, minutes)
+  const { meta, state, label, progress, action } = playStatus(questions, answers, minutes)
   const body = <>
-    {kicker && <span className="discovery-kicker">{kicker}</span>}
+    {kicker ? <span className="discovery-kicker">{kicker}</span> : href && <span className={`quiz-state is-${state}`}>{label}</span>}
     <span className="quiz-title">{title}</span>
     {description && <span className="quiz-desc">{description}</span>}
     <span className="quiz-foot">
@@ -46,12 +49,21 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
 }
 
 function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => void }) {
+  const theme = themeProgress(quiz)
+  const combined = hrefFor('discover', { quiz: quiz.id, mode: 'theme' })
   return (
-    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`}>
-      <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
+    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`} style={{ '--accent': quiz.accent } as CSSProperties}>
+      <div className="quiz-theme-head">
+        <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
+        {theme.chapters.length > 1 && <ThemeMeter theme={theme} />}
+      </div>
       <ol className="quiz-list" data-count={quiz.chapters.length} style={{ '--count': quiz.chapters.length } as CSSProperties}>
         {quiz.chapters.map((chapter) => <ChapterCard key={chapter.id} quiz={quiz} chapter={chapter} navigate={navigate} />)}
       </ol>
+      {theme.complete && <a className="theme-results-cta" href={combined} onClick={follow(navigate, combined, () => track('combined_results_opened', { theme_id: quiz.id, from: 'homepage' }))}>
+        <span>You’ve completed every {quiz.title} quiz. <strong>See your combined results</strong></span>
+        <span className="theme-results-score">{formatPoints(theme.points)}/{theme.total} <span aria-hidden="true">→</span></span>
+      </a>}
     </section>
   )
 }

@@ -11,7 +11,12 @@ import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryP
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 import { follow } from '../lib/quizEntry'
-import { SITE_URL } from '../lib/site'
+import { shareLink } from '../lib/site'
+import { ScoreShare } from '../components/ScoreShare'
+import type { Scorecard } from '../lib/scorecard'
+import { chapterProgress, pointSequence, themeProgress, themeVersion } from '../lib/themeProgress'
+import { nextAttempt, shareOrigin, shareProps } from '../lib/shareTracking'
+import { ThemeNext, ThemeResults } from './ThemeResults'
 
 const plainClick = (event: MouseEvent) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
@@ -236,22 +241,16 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   const answers = chapterAnswers(attempt, questions, quiz.edition)
   const points = totalPoints(answers)
   const shown = useCount(points, 0, 1300, 200)
-  const [status, setStatus] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => { heading.current?.focus() }, [])
-
-  async function share() {
-    track('share_clicked', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, total_questions: questions.length })
-    const url = new URL(SITE_URL)
-    url.hash = hrefFor('discover', { quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) })
-    const text = `I scored ${formatPoints(points)}/${questions.length} on “${chapter.title}” in Data Detective. ${quiz.prompt}`
-    if (navigator.share) {
-      try { await navigator.share({ text, url: url.href }); return } catch (error) { if (error instanceof Error && error.name === 'AbortError') return }
-    }
-    try { await navigator.clipboard.writeText(`${text}\n${url.href}`); setStatus('Copied to clipboard.') } catch { window.prompt('Copy your result:', `${text}\n${url.href}`) }
-  }
+  const theme = themeProgress(quiz, attempt)
+  const own = theme.chapters.find((entry) => entry.chapter.id === chapter.id) ?? chapterProgress(quiz, chapter, attempt)
+  const card: Scorecard = { kind: 'quiz', theme: quiz.title, title: chapter.title, points, total: questions.length, sequence: pointSequence(own), accent: quiz.accent }
+  const nextInTheme = hasChapterList(quiz) && !theme.complete ? theme.chapters.find((entry) => entry.chapter.id !== chapter.id && entry.state !== 'completed') : undefined
+  const combined = theme.complete && hrefFor('discover', { quiz: quiz.id, mode: 'theme' })
 
   const target = QUIZZES.find((entry) => entry.id !== quiz.id && quizQuestions(entry).length)
+  const nextHref = nextInTheme && hrefFor('discover', { quiz: quiz.id, chapter: nextInTheme.chapter.id })
   const other = target && hrefFor('discover', { quiz: target.id })
   const browse = hrefFor('discover', { quiz: quiz.id, mode: 'browse' })
   return (
@@ -278,8 +277,11 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
         })}
       </ol>
       <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
+      <ScoreShare card={card} url={shareLink({ quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) }, 'quiz')}
+        analytics={{ quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, max_points: questions.length }} />
+      {hasChapterList(quiz) && <ThemeNext quiz={quiz} theme={theme} navigate={navigate} combined={combined || undefined}
+        next={nextInTheme && nextHref ? { title: nextInTheme.chapter.title, href: nextHref, state: nextInTheme.state } : undefined} />}
       <div className="ch-actions">
-        <button className="challenge-primary" type="button" onClick={share}>Share my result ↗</button>
         {target && other && <a className="discovery-link" href={other} onClick={(event) => {
           if (!plainClick(event)) return
           event.preventDefault()
@@ -293,7 +295,6 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
         }}>Browse all discoveries →</a>}
         <button className="discovery-clue" type="button" onClick={restart}>Play again</button>
       </div>
-      <p className="discovery-note" role="status">{status}</p>
     </section>
   )
 }
@@ -303,6 +304,7 @@ export function ChapterQuiz({ quiz, navigate, selected, mode, chapterId }: { qui
   const chapter = quiz.chapters.find(({ id }) => id === chapterId)
     ?? quiz.chapters.find(({ questionIds }) => questionIds.includes(selected ?? ''))
     ?? quiz.chapters[0]
+  if (mode === 'theme' && hasChapterList(quiz)) return <ThemeResults quiz={quiz} navigate={navigate} />
   return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={hasChapterList(quiz)} navigate={navigate} selected={selected} mode={mode} />
 }
 
@@ -359,7 +361,19 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     const event = { ...ids, question_id: question.id, question_number: index + 1, points }
     track('quiz_question_answered', event)
     track('discovery_revealed', event)
-    if (answers.length + 1 === total) track('quiz_completed', { ...ids, score: totalPoints(answers) + points, total_questions: total })
+    if (!answers.length && shareOrigin()) track('shared_quiz_started', { ...ids, ...shareProps() })
+    if (answers.length + 1 === total) {
+      const score = totalPoints(answers) + points
+      track('quiz_completed', { ...ids, ...shareProps(), score, total_questions: total, max_points: total, score_pct: Math.round(score / total * 100),
+        edition: quiz.edition, attempt_number: nextAttempt(`${quiz.id}/${chapter.id}`) })
+      const theme = themeProgress(quiz)
+      const others = theme.chapters.filter((entry) => entry.chapter.id !== chapter.id)
+      if (hasChapterList(quiz) && others.length && others.every(({ state }) => state === 'completed')) {
+        const combined = others.reduce((sum, entry) => sum + entry.points, score)
+        track('theme_completed', { theme_id: quiz.id, quiz_id: quiz.id, ...shareProps(), score: combined, max_points: theme.total, score_pct: Math.round(combined / theme.total * 100),
+          quiz_count: theme.chapters.length, theme_version: themeVersion(quiz), attempt_number: nextAttempt(quiz.id) })
+      }
+    }
     // Start from what other tabs saved; this tab only speaks for its own chapter, so a stale tab can't restore another chapter's cleared answers.
     setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...Object.fromEntries(Object.entries(current).filter(([id]) => chapter.questionIds.includes(id))) },
       question.id, pick, quiz.edition))
@@ -376,7 +390,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   )
 
   if (view === 'results') return (
-    <div className="discover discover-edition discovery-reader chapter-quiz">
+    <div className="discover discover-edition discovery-reader chapter-quiz" style={{ '--accent': quiz.accent } as CSSProperties}>
       {nav}
       <Results quiz={quiz} chapter={chapter} questions={questions} attempt={attempt} restart={restart} navigate={navigate}
         openQuestion={(id) => { focusNext.current = true; navigate(link({ q: id, mode: 'challenge' })) }} />

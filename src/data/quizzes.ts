@@ -22,6 +22,10 @@ export interface Quiz {
   title: string
   /** The challenge to the player, used in shared results. */
   prompt: string
+  /** The same challenge in the first person, for the combined theme scorecard. */
+  selfPrompt?: string
+  /** The theme's accent colour on the homepage, results and scorecards. */
+  accent: string
   /** Shown on a theme that has no playable quiz yet. */
   description?: string
   tagline?: string
@@ -41,6 +45,7 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'world',
     title: 'The World Around Us',
     prompt: 'How Well Do You Know the World?',
+    accent: '#3d5a78',
     tagline: 'A few surprises. Absolutely no judgment.',
     edition: DISCOVERY_QUIZ_EDITION,
     format: 'chapter',
@@ -61,6 +66,8 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'men-and-women',
     title: 'Men & Women',
     prompt: 'How well do you really understand men and women?',
+    selfPrompt: 'How well do I really understand men & women?',
+    accent: '#6d3f61',
     edition: 'v1',
     format: 'chapter',
     attemptKey: 'data-detective.quiz.men-and-women.v1',
@@ -79,6 +86,7 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'housing-crisis',
     title: 'The Housing Crisis',
     prompt: 'How Well Do You Understand the Housing Crisis?',
+    accent: '#a8532f',
     description: 'Prices, rents and who can still afford a home.',
     edition: 'v1',
     attemptKey: 'data-detective.quiz.housing-crisis.v1',
