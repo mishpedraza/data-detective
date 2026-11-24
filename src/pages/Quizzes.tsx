@@ -26,12 +26,18 @@ export function PlayCard({ kicker, title, description, minutes, questions = [], 
           return <span key={id} className={answer ? (answer.points === 1 ? 'right' : answer.points > 0 ? 'partial' : 'wrong') : ''} />
         })}
       </span>}
-      {href && <span className="quiz-action">{action} <span aria-hidden="true">→</span></span>}
+      {href && <span className="quiz-action">{state === 'not-started' ? 'Start' : action} <span aria-hidden="true">→</span></span>}
     </span>
   </>
   return href
     ? <a className="quiz-card" href={href} onClick={follow(navigate, href, onOpen)}>{body}</a>
     : <div className="quiz-card quiz-soon">{body}</div>
+}
+
+function trackQuizOpen(quiz: Quiz, chapter: QuizChapter, entry: ReturnType<typeof chapterEntry>) {
+  const props = { quiz_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length }
+  track('quiz_selected', props)
+  track(entry.event, { ...props, theme_id: quiz.id })
 }
 
 function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizChapter; navigate: (href: string) => void }) {
@@ -40,10 +46,7 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
     <li>
       <PlayCard title={chapter.title} description={chapter.summary} navigate={navigate} href={entry.href}
         minutes={chapter.minutes} questions={entry.questions} answers={entry.answers}
-        onOpen={() => {
-          track('quiz_selected', { quiz_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
-          track(entry.event, { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })
-        }} />
+        onOpen={() => trackQuizOpen(quiz, chapter, entry)} />
     </li>
   )
 }
@@ -52,7 +55,7 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
   const theme = themeProgress(quiz)
   const combined = hrefFor('discover', { quiz: quiz.id, mode: 'theme' })
   return (
-    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`} style={{ '--accent': quiz.accent } as CSSProperties}>
+    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`}>
       <div className="quiz-theme-head">
         <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
         {theme.chapters.length > 1 && <ThemeMeter theme={theme} />}
@@ -69,15 +72,33 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
 }
 
 export function QuizCollection({ navigate }: { navigate: (href: string) => void }) {
+  const playable = QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
+  const featured = playable.find((quiz) => quiz.id === 'world' && quiz.chapters.length === 1)
+  const chapter = featured?.chapters[0]
+  const entry = featured && chapter ? chapterEntry(featured, chapter.id) : undefined
+  const status = entry && chapter ? playStatus(entry.questions, entry.answers, chapter.minutes) : undefined
   const browsable = QUIZZES.find((quiz) => quiz.browse)
   const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (
     <div className="discover discover-edition discovery-reader quiz-home">
       <section className="discovery-reading quiz-collection">
-        <h1 tabIndex={-1}>Think you know how things really are?</h1>
-        <p className="quiz-subtitle">Test your gut. Discover what the data says.</p>
-        {QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
-          .map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
+        <header className="quiz-show-hero">
+          <div className="quiz-show-intro">
+            <h1 tabIndex={-1}>How sure are you, <em>really?</em></h1>
+            <p className="quiz-subtitle">Make a guess, see what the research found, and challenge a friend to beat your score.</p>
+            {featured && chapter && entry && status && <div className="quiz-show-start">
+              <a className="quiz-show-button" href={entry.href}
+                onClick={follow(navigate, entry.href, () => trackQuizOpen(featured, chapter, entry))}>
+                {status.action}
+              </a>
+            </div>}
+          </div>
+          <div className="quiz-show-art" aria-hidden="true">
+            <div className="quiz-show-plot"><i /><i /><i /><i /><i /></div>
+            <div className="quiz-show-lens"><span>?</span></div>
+          </div>
+        </header>
+        {playable.filter((quiz) => quiz !== featured).map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
         {browse && <a className="quiz-browse" href={browse} onClick={follow(navigate, browse)}>
           <span><span className="quiz-browse-title">Just curious?</span> Browse every discovery at your own pace, no quiz needed.</span>
           <span className="quiz-browse-go">Browse all discoveries <span aria-hidden="true">→</span></span>

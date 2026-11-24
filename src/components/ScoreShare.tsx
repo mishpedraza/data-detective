@@ -59,7 +59,7 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
     }
     try {
       // The link goes in the text too: some apps drop the url field when an image is attached.
-      await navigator.share(withImage ? { files: [png!], text: `${SHARE_MESSAGE}\n${url}` } : { text: `${scoreSummary(card)} ${SHARE_MESSAGE}`, url })
+      await navigator.share(withImage ? { files: [png!], text: `${scoreSummary(card)} ${SHARE_MESSAGE}\n${url}` } : { text: `${scoreSummary(card)} ${SHARE_MESSAGE}`, url })
       track('scorecard_shared', { ...props, method })
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') track('scorecard_share_cancelled', { ...props, method })
@@ -73,7 +73,9 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
         {image ? <img src={image.src} alt={scorecardAlt(card)} width={1080} height={1350} /> : <span className="scorecard-placeholder" aria-hidden="true" />}
       </figure>
       <div className="score-share-actions">
-        <button className="challenge-primary score-share-primary" type="button" onClick={share}>Share my results <span aria-hidden="true">↗</span></button>
+        <h2>Can they beat your score?</h2>
+        <p className="score-share-invite">Send your scorecard and challenge a friend to take the quiz.</p>
+        <button className="challenge-primary score-share-primary" type="button" onClick={share}>Challenge a friend</button>
         <button className="score-share-secondary" type="button" onClick={download} disabled={!image}>Download image</button>
         <button className="score-share-secondary" type="button" onClick={() => void copy('button')}>Copy link</button>
         <p className="discovery-note" role="status">{status}</p>
