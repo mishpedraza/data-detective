@@ -34,7 +34,8 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
   position: relative;
   width: min(100%, 14rem);
   aspect-ratio: 1.19;
-  justify-self: center;
+  place-self: center;
+  margin-inline-end: clamp(0rem, 5vw, 4rem);
   container-type: inline-size;
 }
 .quiz-show-plot {
@@ -128,7 +129,7 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
 @media (max-width: 650px) {
   .quiz-show-hero { grid-template-columns: minmax(0, 1fr) minmax(0, 23%); gap: .6rem; }
   .quiz-show-hero h1 { font-size: clamp(2rem, 7vw, 2.65rem); }
-  .quiz-show-art { width: min(100%, 6.5rem); align-self: start; }
+  .quiz-show-art { width: min(100%, 6.5rem); margin-inline-end: 0; }
   .ch-results .score-share { grid-template-columns: 1fr; }
   .scorecard-preview { width: min(100%, 13rem); justify-self: center; }
 }
