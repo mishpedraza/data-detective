@@ -7,6 +7,17 @@ export const happinessEstimates = [
 ] as const // Myrskylä & Margolis, Table 2, German fixed-effects estimates.
 
 export const permitCrime = { baseline: 1.1, reduction: 0.6 } // Pinotti, abstract.
+/** Kleven, Landais & Søgaard (2021), Table 2: earnings penalty for mothers relative to fathers, %, averaged over years 0–5 and 6–10. */
+export const adoptionPenalties = {
+  birth: { short: 19.0, long: 17.0 },
+  adopted: { short: 15.3, long: 18.1 },
+} as const
+/** FBI, 2025 Reported Crimes in the Nation: estimated change in the violent crime rate, 2024 to 2025. */
+export const violentCrime2025 = { change: -9.3, since: 1936 } as const
+/** Gallup, October polls: share of U.S. adults saying there is more crime in the U.S. than a year ago. */
+export const gallupMoreCrime = [
+  { year: 2023, value: 77 }, { year: 2024, value: 64 }, { year: 2025, value: 49 }, { year: 2026, value: 46 },
+] as const
 export const danishEarnings = [
   { label: 'Mothers', value: -20, display: 'About 20% lower' },
   { label: 'Fathers', value: 0, display: 'Little change' },

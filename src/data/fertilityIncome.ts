@@ -1,0 +1,51 @@
+// World Bank WDI, downloaded 24 November 2026: SP.DYN.TFRT.IN (births per woman) and NY.GDP.PCAP.CD (GDP per person, current US$).
+// The 13 OECD countries of Doepke et al. (2023), Figure 8.
+export const FERTILITY_YEARS = [1980, 2000, 2024] as const
+export type FertilityYear = (typeof FERTILITY_YEARS)[number]
+export const FERTILITY_INCOME: Readonly<Record<FertilityYear, readonly { country: string; gdp: number; births: number }[]>> = {
+  1980: [
+    { country: 'Australia', gdp: 10223, births: 1.89 },
+    { country: 'Canada', gdp: 11208, births: 1.74 },
+    { country: 'Finland', gdp: 11225, births: 1.63 },
+    { country: 'France', gdp: 12565, births: 1.85 },
+    { country: 'Germany', gdp: 12183, births: 1.44 },
+    { country: 'Italy', gdp: 8476, births: 1.64 },
+    { country: 'Japan', gdp: 9872, births: 1.75 },
+    { country: 'Netherlands', gdp: 13812, births: 1.6 },
+    { country: 'Norway', gdp: 15708, births: 1.72 },
+    { country: 'Portugal', gdp: 3368, births: 2.25 },
+    { country: 'Spain', gdp: 6204, births: 2.22 },
+    { country: 'Sweden', gdp: 17073, births: 1.68 },
+    { country: 'United States', gdp: 12575, births: 1.84 },
+  ],
+  2000: [
+    { country: 'Australia', gdp: 21909, births: 1.76 },
+    { country: 'Canada', gdp: 24271, births: 1.51 },
+    { country: 'Finland', gdp: 24336, births: 1.73 },
+    { country: 'France', gdp: 22341, births: 1.89 },
+    { country: 'Germany', gdp: 23926, births: 1.38 },
+    { country: 'Italy', gdp: 20190, births: 1.26 },
+    { country: 'Japan', gdp: 39753, births: 1.36 },
+    { country: 'Netherlands', gdp: 26225, births: 1.72 },
+    { country: 'Norway', gdp: 37992, births: 1.85 },
+    { country: 'Portugal', gdp: 11526, births: 1.55 },
+    { country: 'Spain', gdp: 14743, births: 1.22 },
+    { country: 'Sweden', gdp: 29633, births: 1.54 },
+    { country: 'United States', gdp: 36330, births: 2.06 },
+  ],
+  2024: [
+    { country: 'Australia', gdp: 64610, births: 1.48 },
+    { country: 'Canada', gdp: 55016, births: 1.25 },
+    { country: 'Finland', gdp: 53156, births: 1.25 },
+    { country: 'France', gdp: 46103, births: 1.61 },
+    { country: 'Germany', gdp: 56104, births: 1.36 },
+    { country: 'Italy', gdp: 40430, births: 1.18 },
+    { country: 'Japan', gdp: 33797, births: 1.15 },
+    { country: 'Netherlands', gdp: 67465, births: 1.43 },
+    { country: 'Norway', gdp: 89889, births: 1.45 },
+    { country: 'Portugal', gdp: 29328, births: 1.41 },
+    { country: 'Spain', gdp: 35327, births: 1.1 },
+    { country: 'Sweden', gdp: 57223, births: 1.43 },
+    { country: 'United States', gdp: 86170, births: 1.63 },
+  ],
+}

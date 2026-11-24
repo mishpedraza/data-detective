@@ -4,6 +4,7 @@ import { overlap, parseRows, parseSliders } from '../../lib/chapterScore'
 import { MoneyVisual } from './MoneyVisuals'
 import { NatureVisual } from './NatureVisuals'
 import { HousingVisual } from './HousingVisuals'
+import { WorldVisual } from './WorldVisuals'
 import { useCount, useTiming } from './motion'
 
 function AgeVisual() {
@@ -276,6 +277,7 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'bars': return <BarsVisual question={question} />
     case 'facts': return <FactsVisual question={question} />
     case 'eyes': case 'maths': case 'moral': case 'paradox': return <NatureVisual question={question} pick={pick} />
+    case 'permitcards': case 'adoption': case 'crimedrop': case 'fertility': return <WorldVisual question={question} />
     case 'chain':
     case 'rentcontrol':
     case 'airbnb':

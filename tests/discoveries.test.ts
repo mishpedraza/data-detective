@@ -72,9 +72,10 @@ test('Discover has one sourced teaser per existing question and grades only defi
   assert.match(housing.reveal.finding, /13% below/)
   assert.equal(housing.choiceLabels?.[housing.answer], 'About 13% lower')
   const crime = DISCOVER_TEASERS['crime-perceptions']!.interaction!
-  assert.equal(crime.answer, 'Across the country')
-  assert.deepEqual(crime.reveal.comparison?.map(({ amount }) => amount), [77, 55])
+  assert.equal(crime.answer, 'It recorded the biggest one-year drop')
+  assert.match(crime.reveal.finding, /9\.3% from 2024 to 2025/)
+  assert.deepEqual(crime.reveal.comparison?.map(({ amount }) => amount), [77, 64, 49, 46])
   const fertility = DISCOVER_TEASERS['wealth-and-fertility']!.interaction!
-  assert.equal(fertility.answer, 'The pattern flipped')
-  assert.deepEqual(fertility.reveal.facts?.map(({ label }) => label), ['1980', '2000'])
+  assert.equal(fertility.answer, 'Richer countries tended to have more births per woman')
+  assert.deepEqual(fertility.reveal.facts?.map(({ label }) => label), ['1980', '2000', '2024'])
 })

@@ -1,7 +1,7 @@
 import { discoveryEvidence, predictions } from './discoveries'
 import { storyComparison } from '../lib/storyComparison'
 import { REVIEWED_ANSWERS } from './reviewedAnswers'
-import { cohortWealth, happinessEstimates, permitCrime, usCrime } from './studyEvidence'
+import { adoptionPenalties, cohortWealth, gallupMoreCrime, happinessEstimates, permitCrime, violentCrime2025 } from './studyEvidence'
 import { workingHours } from './workingHours'
 
 type Reveal = {
@@ -94,33 +94,38 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'immigration-crime': {
-    context: 'Italy · Applicants who narrowly qualified versus those who narrowly missed out',
+    context: 'Italy · Residence-permit applicants on either side of the cutoff',
     interaction: {
-      label: 'How much did getting a residence permit change the recorded crime rate among applicants near the cutoff?',
-      choices: ['Little or none', 'The rate was about a quarter lower', 'The rate was about half as high'],
-      answer: 'The rate was about half as high',
+      label: 'Two people apply for an Italian residence permit. One just makes the cutoff. The other just misses it. Which group had a higher recorded crime rate afterward?',
+      choices: ['The group that got permits', 'The group that missed out', 'The rates were about the same'],
+      answer: 'The group that missed out',
       reveal: {
-        finding: 'Getting a residence permit roughly halved the recorded crime rate among applicants near the cutoff.',
-        measure: 'Estimated crime rates near Italy’s permit cutoff',
+        finding: 'The group that missed out. Near the cutoff, getting a permit brought the recorded crime rate from about 11 in 1,000 to 5 in 1,000.',
+        measure: 'Recorded crime rate afterward · applicants near the cutoff',
         comparison: [
-          { label: 'Baseline rate', value: `${permitCrime.baseline}%`, amount: permitCrime.baseline },
-          { label: 'With legal status', value: `≈${(permitCrime.baseline - permitCrime.reduction).toFixed(1)}%`, amount: permitCrime.baseline - permitCrime.reduction },
+          { label: 'Got a permit', value: `≈${Math.round((permitCrime.baseline - permitCrime.reduction) * 10)} in 1,000`, amount: permitCrime.baseline - permitCrime.reduction },
+          { label: 'Just missed out', value: `≈${Math.round(permitCrime.baseline * 10)} in 1,000`, amount: permitCrime.baseline },
         ],
-        note: 'The study estimated a drop of 0.6 percentage points. It measures crime among these applicants, leaving the effect of immigration on national crime open.',
+        note: 'Permits went first come, first served until the quota ran out, so applicants on either side of the cutoff were otherwise alike. The permit itself, which opens the door to legal work, roughly halved their recorded crime. The result applies to these applicants, not to how immigration affects crime overall.',
         refs: ['pinotti2017'],
       },
     },
   },
   'education-and-pay': {
-    context: 'Denmark · Earnings ten years after a first birth',
+    context: 'Denmark · Earnings after a child arrives',
     interaction: {
-      label: 'What drove the earnings gap after a first child?',
-      choices: ['Mostly fewer hours', 'Mostly lower hourly pay', 'Mostly fewer mothers in work', 'All three contributed roughly equally'],
-      answer: 'All three contributed roughly equally',
+      label: 'If a mother adopts, is the long-term hit to her earnings smaller than if she gives birth?',
+      choices: ['Smaller', 'About the same', 'Larger'],
+      answer: 'About the same',
       reveal: {
-        finding: 'All three contributed roughly equally.',
-        note: 'Mothers were less likely to be working, worked fewer hours when employed, and earned less per hour. Each factor accounted for roughly a third of the long-run earnings effect in the Danish study.',
-        refs: ['kleven2019'],
+        finding: `About the same. Six to ten years on, the estimated earnings penalties were virtually identical: ${adoptionPenalties.adopted.long}% for adoptive mothers and ${adoptionPenalties.birth.long}% for mothers who gave birth.`,
+        measure: 'Mothers’ earnings penalty relative to fathers · years 6–10',
+        comparison: [
+          { label: 'Gave birth', value: `${adoptionPenalties.birth.long}%`, amount: adoptionPenalties.birth.long },
+          { label: 'Adopted', value: `${adoptionPenalties.adopted.long}%`, amount: adoptionPenalties.adopted.long },
+        ],
+        note: 'Mothers who gave birth took a slightly larger hit at first, when pregnancy, recovery and breastfeeding matter most. Then the two paths converged. Adoptive mothers have none of those biological links, so biology can’t explain why mothers’ earnings stay lower.',
+        refs: ['kleven2021'],
       },
     },
   },
@@ -161,37 +166,35 @@ export const DISCOVER_TEASERS: Readonly<Partial<Record<string, Teaser>>> = {
     },
   },
   'crime-perceptions': {
-    context: 'Gallup · Perceptions of crime over the previous year',
+    context: 'United States · FBI national estimates, 2024 to 2025',
     interaction: {
-      label: 'Where are people in the U.S. more likely to say crime is rising: across the country or in their own area?',
-      choices: ['Across the country', 'In their own area', 'About equally likely'],
-      answer: 'Across the country',
+      label: 'In 2025, did violent crime in the U.S. rise, fall a little, or record its biggest one-year drop in the FBI’s national estimates?',
+      choices: ['It rose', 'It fell a little', 'It recorded the biggest one-year drop'],
+      answer: 'It recorded the biggest one-year drop',
       reveal: {
-        finding: 'People more often say crime is rising nationally than in their own area.',
-        measure: 'Share who said crime had risen · Gallup, October 2023',
-        comparison: [
-          { label: 'Across the country', value: '77%', amount: 77 },
-          { label: 'In their own area', value: '55%', amount: 55 },
-        ],
-        note: `Over a different time frame, the recorded U.S. violent crime rate fell ${usCrime.decline}% from 1993 to 2022, even though crime rose in some years.`,
-        refs: ['pewCrime2024', 'gallupCrime2023'],
+        finding: `It recorded the biggest one-year drop in the FBI’s national estimates: violent crime fell ${-violentCrime2025.change}% from 2024 to 2025.`,
+        measure: 'Said there was more crime in the U.S. than a year earlier · Gallup, October polls',
+        comparison: gallupMoreCrime.map(({ year, value }) => ({ label: String(year), value: `${value}%`, amount: value })),
+        note: 'Opinion shifted too. In separate Gallup polls, the share of Americans who said crime was rising nationally fell from 77% in 2023 to 46% in 2026. The FBI counts recorded crime and Gallup asks what people think, so the figures leave open what changed people’s minds.',
+        refs: ['fbi2025', 'gallupCrime2026'],
       },
     },
   },
   'wealth-and-fertility': {
-    context: '13 OECD countries · GDP per person and births per woman',
+    context: 'The same 13 OECD countries, compared in 1980, 2000 and 2024',
     interaction: {
-      label: 'In 1980, the richer countries in this group tended to have fewer babies. Did that pattern still hold in 2000?',
-      choices: ['The pattern held', 'The pattern disappeared', 'The pattern flipped'],
-      answer: 'The pattern flipped',
+      label: 'Among rich countries today, do the richest still have the fewest babies?',
+      choices: ['Richer countries tended to have fewer births per woman', 'There was no clear pattern', 'Richer countries tended to have more births per woman'],
+      answer: 'Richer countries tended to have more births per woman',
       reveal: {
-        finding: 'By 2000, richer countries in this sample tended to have slightly higher fertility.',
+        finding: 'No. In this group, richer countries tended to have more births per woman in 2024.',
         facts: [
-          { label: '1980', value: 'Higher income went with lower fertility ↘' },
-          { label: '2000', value: 'Higher income went with slightly higher fertility ↗' },
+          { label: '1980', value: 'Richer countries had fewer births per woman ↘' },
+          { label: '2000', value: 'The pattern had flipped ↗' },
+          { label: '2024', value: 'Richer countries still had more births per woman ↗' },
         ],
-        note: 'That reversal is one reason researchers look beyond income to factors like childcare and how easily parents can combine work and family.',
-        refs: ['doepke2022'],
+        note: 'In 1980, the richer countries in this group tended to have fewer babies. By 2000, the pattern had flipped, and it still held in 2024. Births per woman fell in every one of these countries, so the flip is about where they fell least.',
+        refs: ['doepke2023', 'worldBankFertility', 'worldBankGdp'],
       },
     },
   },
