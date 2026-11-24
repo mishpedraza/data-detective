@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import type { ChapterQuestion, Side } from '../data/menWomen'
+import type { ChapterQuestion, ChoiceQuestion, Side, Warmup } from '../data/menWomen'
 import { QUIZZES, hasChapterList, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
 import { StorySources } from '../components/StoryEvidence'
-import { FindingVisual, useCount } from '../components/chapter/Visuals'
-import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseRows, parseSliders, scoreQuestion, totalPoints } from '../lib/chapterScore'
+import { FindingVisual } from '../components/chapter/Visuals'
+import { useCount } from '../components/chapter/motion'
+import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseEstimate, parseRows, parseSliders, parseWeek, scoreQuestion, splitPick, totalPoints } from '../lib/chapterScore'
+import { challengeReaction, partialReaction } from '../lib/discoveryChallenge'
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
@@ -14,35 +16,118 @@ const plainClick = (event: MouseEvent) => event.button === 0 && !event.metaKey &
 
 const sideLabel: Record<Side, string> = { men: 'Men', similar: 'Similar', women: 'Women' }
 
-function Verdict({ question, pick, points }: { question: ChapterQuestion; pick: string; points: number }) {
-  const choice = question.kind === 'choice' ? question.options.find(({ id }) => id === pick)?.label : undefined
-  const line = points === 1 ? 'You called it.' : points > 0 ? 'Partly right.' : 'Plot twist.'
-  const detail = question.kind === 'choice'
-    ? points === 1 ? 'Your instinct matched the evidence.' : question.evidence ? `You predicted: ${choice?.toLowerCase()}.` : `You predicted “${choice}”.`
-    : question.kind === 'rows' ? `${parseRows(question, pick)!.filter((side, i) => side === question.rows[i].answer).length} of 4 predictions matched.`
-      : (() => { const g = parseSliders(question, pick)!; return `You guessed ${g.men}% of men and ${g.women}% of women.` })()
+const unitOf = (question: ChapterQuestion) => question.kind === 'sliders' && question.unit === 'h' ? ' h' : '%'
+const off = (guess: number, actual: number, unit: string) => {
+  const gap = Math.round(Math.abs(guess - actual) * 10) / 10
+  return gap === 0 ? 'spot on' : `${gap}${unit === '%' ? ' points' : ' hours'} off`
+}
+
+function verdictDetail(question: ChapterQuestion, pick: string) {
+  // The options already mark the pick and the answer.
+  if (question.kind === 'choice') return null
+  if (question.kind === 'rows') return `${parseRows(question, pick)!.filter((side, i) => side === question.rows[i].answer).length} of ${question.rows.length} predictions matched.`
+  if (question.kind === 'estimate') {
+    const guess = parseEstimate(question, pick)!
+    return `You guessed ${guess}%; it was ${question.actual}% (${off(guess, question.actual, '%')}).`
+  }
+  const guess = parseSliders(question, pick)!
+  const unit = unitOf(question)
+  const { men, women } = question.labels ?? { men: 'Men', women: 'Women' }
+  return `${men}: you guessed ${guess.men}${unit}, it was ${question.actual.men}${unit} (${off(guess.men, question.actual.men, unit)}). ${women}: ${guess.women}${unit} vs ${question.actual.women}${unit} (${off(guess.women, question.actual.women, unit)}).`
+}
+
+function Verdict({ question, pick, points, index }: { question: ChapterQuestion; pick: string; points: number; index: number }) {
+  // The line rotates by question so a run doesn't repeat itself.
+  const line = points === 1 ? challengeReaction(index, true) : points > 0 ? partialReaction(index) : challengeReaction(index, false)
   return (
     <p className={`ch-verdict ${points === 1 ? 'is-right' : points > 0 ? 'is-partial' : 'is-wrong'}`}>
-      <strong>{line}</strong> {detail} <span className="ch-points">+{formatPoints(points)} {points === 1 ? 'point' : 'points'}</span>
+      <strong>{line}</strong> {verdictDetail(question, pick)} <span className="ch-points">+{formatPoints(points)} {points === 1 ? 'point' : 'points'}</span>
     </p>
   )
 }
 
-function ChoiceInput({ question, pick, onPick }: { question: Extract<ChapterQuestion, { kind: 'choice' }>; pick?: string; onPick: (pick: string) => void }) {
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
+
+/** Five days in half-day cells. Only the total is stored, so a locked week is shown filled from Monday. */
+export function WeekCalendar({ label, days, onChange }: { label: string; days?: number; onChange?: (days: number) => void }) {
+  const [cells, setCells] = useState<boolean[]>(() => Array.from({ length: 10 }, (_, i) => i < (days ?? 0) * 2))
+  const value = cells.filter(Boolean).length / 2
   return (
-    <div className={`ch-options${pick ? ' is-revealed' : ''}`} role="group" aria-label="Your prediction">
-      {question.options.map(({ id, label }, i) => {
-        const state = !pick ? '' : id === question.answer ? ' is-answer' : id === pick ? ' is-pick' : ' is-other'
-        return (
-          <button key={id} type="button" className={`ch-option${state}`} disabled={!!pick} aria-pressed={pick === id} onClick={() => onPick(id)}>
-            <span className="ch-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
-            <span>{label}</span>
-            {pick && id === question.answer && <span className="ch-mark" aria-label="Correct answer">✓</span>}
-            {pick && id === pick && id !== question.answer && <span className="ch-mark" aria-label="Your answer">✗</span>}
+    <fieldset className={`ch-week${onChange ? '' : ' is-locked'}`}>
+      <legend><span>{label}</span><span className="ch-week-value">{days === undefined && onChange && !cells.some(Boolean) ? '—' : `${onChange ? value : days} ${(onChange ? value : days) === 1 ? 'day' : 'days'}`}</span></legend>
+      <div className="ch-week-days">
+        {DAYS.map((day, d) => (
+          <div key={day} className="ch-week-day">
+            <span className="ch-week-name">{day}</span>
+            {[0, 1].map((half) => {
+              const i = d * 2 + half
+              const name = `${day} ${half ? 'afternoon' : 'morning'}`
+              return onChange
+                ? <button key={half} type="button" className={cells[i] ? 'on' : ''} aria-pressed={cells[i]} aria-label={`${label}: work ${name}`}
+                  onClick={() => { const next = cells.map((on, j) => j === i ? !on : on); setCells(next); onChange(next.filter(Boolean).length / 2) }} />
+                : <i key={half} className={cells[i] ? 'on' : ''} />
+            })}
+          </div>
+        ))}
+      </div>
+    </fieldset>
+  )
+}
+
+function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string; onDone?: (warm: string) => void }) {
+  const [days, setDays] = useState<[number?, number?]>([])
+  const locked = value !== undefined
+  if (warmup.kind === 'choice') return (
+    <div className="ch-warmup">
+      <p className="ch-warmup-kicker">Not scored</p>
+      <p className="ch-warmup-prompt">{warmup.prompt}</p>
+      <div className={`ch-options${locked ? ' is-revealed' : ''}`} role="group" aria-label="Your choice">
+        {warmup.options.map(({ id, label }, i) => (
+          <button key={id} type="button" className={`ch-option${locked ? id === value ? ' is-chosen' : ' is-other' : ''}`} disabled={locked} aria-pressed={value === id} onClick={() => onDone?.(id)}>
+            <span className="ch-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span><span>{label}</span>
           </button>
-        )
-      })}
+        ))}
+      </div>
     </div>
+  )
+  const saved = parseWeek(value)
+  const ready = days[0] !== undefined && days[1] !== undefined
+  return (
+    <div className="ch-warmup">
+      <p className="ch-warmup-kicker">Not scored</p>
+      <p className="ch-warmup-prompt">{warmup.prompt}</p>
+      <p className="ch-warmup-hint">{locked ? 'Your ideal week' : 'Tap each half day to work it.'}</p>
+      <WeekCalendar key={`you-${locked}`} label="You" days={saved?.[0]} onChange={locked ? undefined : (d) => setDays(([, p]) => [d, p])} />
+      <WeekCalendar key={`partner-${locked}`} label="Your partner" days={saved?.[1]} onChange={locked ? undefined : (d) => setDays(([y]) => [y, d])} />
+      {!locked && <button type="button" className="challenge-primary ch-reveal" disabled={!ready} onClick={() => onDone?.(`${days[0]},${days[1]}`)}>
+        {ready ? 'Continue →' : 'Set both weeks'}
+      </button>}
+    </div>
+  )
+}
+
+function ChoiceInput({ question, pick, onPick }: { question: ChoiceQuestion; pick?: string; onPick: (pick: string) => void }) {
+  const saved = pick ? splitPick(pick) : undefined
+  const [warm, setWarm] = useState<string>()
+  const warmed = saved?.warm ?? warm
+  return (
+    <>
+      {question.warmup && <WarmupInput warmup={question.warmup} value={warmed} onDone={setWarm} />}
+      {question.warmup && warmed !== undefined && <p className="ch-prompt">{question.prompt}</p>}
+      {(!question.warmup || warmed !== undefined) && <div className={`ch-options${pick ? ' is-revealed' : ''}`} role="group" aria-label="Your prediction">
+        {question.options.map(({ id, label }, i) => {
+          const state = !saved ? '' : id === question.answer ? ' is-answer' : id === saved.main ? ' is-pick' : ' is-other'
+          return (
+            <button key={id} type="button" className={`ch-option${state}`} disabled={!!pick} aria-pressed={saved?.main === id} onClick={() => onPick(question.warmup ? `${id}|${warmed}` : id)}>
+              <span className="ch-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span>
+              <span>{label}</span>
+              {saved && id === question.answer && <span className="ch-mark" aria-label="Correct answer">✓</span>}
+              {saved && id === saved.main && id !== question.answer && <span className="ch-mark" aria-label="Your answer">✗</span>}
+            </button>
+          )
+        })}
+      </div>}
+    </>
   )
 }
 
@@ -60,28 +145,30 @@ function RowsInput({ question, pick, onPick }: { question: Extract<ChapterQuesti
               <label key={side} className={draft[i] === side ? 'is-on' : ''}>
                 <input type="radio" name={id} value={side} checked={draft[i] === side}
                   onChange={() => setDraft((current) => current.map((value, j) => j === i ? side : value))} />
-                {sideLabel[side]}
+                {question.labels?.[side] ?? sideLabel[side]}
               </label>
             ))}
           </div>
         </fieldset>
       ))}
       <button type="button" className="challenge-primary ch-reveal" disabled={!ready} onClick={() => onPick(draft.join(','))}>
-        {ready ? 'Reveal the results →' : `Make all four predictions (${draft.filter(Boolean).length}/4)`}
+        {ready ? 'Reveal the results →' : `Make all ${question.rows.length} predictions (${draft.filter(Boolean).length}/${question.rows.length})`}
       </button>
     </div>
   )
 }
 
-function Slider({ label, tone, value, onChange }: { label: string; tone: 'men' | 'women'; value?: number; onChange: (value: number) => void }) {
+function Slider({ label, tone, value, onChange, unit = '%', max = 100 }: { label: string; tone: 'men' | 'women' | 'accent'; value?: number; onChange: (value: number) => void; unit?: '%' | 'h'; max?: number }) {
+  const middle = Math.round(max / 2)
+  const spoken = unit === 'h' ? 'hours a week' : 'percent'
   return (
     <label className={`ch-slider v-${tone}`}>
-      <span className="ch-slider-head"><span>{label}</span><span className="ch-slider-value">{value === undefined ? '—' : `${value}%`}</span></span>
-      <input type="range" min={0} max={100} step={1} value={value ?? 50} aria-valuetext={value === undefined ? 'Not set' : `${value} percent`}
+      <span className="ch-slider-head"><span>{label}</span><span className="ch-slider-value">{value === undefined ? '—' : `${value}${unit === 'h' ? ' h' : '%'}`}</span></span>
+      <input type="range" min={0} max={max} step={1} value={value ?? middle} aria-valuetext={value === undefined ? 'Not set' : `${value} ${spoken}`}
         className={value === undefined ? 'is-unset' : ''} onChange={(event) => onChange(Number(event.target.value))}
-        onPointerDown={() => value === undefined && onChange(50)} />
+        onPointerDown={() => value === undefined && onChange(middle)} />
       <span className="ch-people" aria-hidden="true">
-        {Array.from({ length: 20 }, (_, i) => <i key={i} className={value !== undefined && i < Math.round(value / 5) ? 'on' : ''} />)}
+        {Array.from({ length: 20 }, (_, i) => <i key={i} className={value !== undefined && i < Math.round((value / max) * 20) ? 'on' : ''} />)}
       </span>
     </label>
   )
@@ -92,11 +179,12 @@ function SlidersInput({ question, pick, onPick }: { question: Extract<ChapterQue
   const [women, setWomen] = useState<number>()
   if (pick) return null
   const ready = men !== undefined && women !== undefined
+  const labels = question.labels ?? { men: 'Men', women: 'Women' }
   return (
     <div className="ch-sliders">
       <p className="ch-scenario">{question.scenario}</p>
-      <Slider label="Men" tone="men" value={men} onChange={setMen} />
-      <Slider label="Women" tone="women" value={women} onChange={setWomen} />
+      <Slider label={labels.men} tone="men" value={men} onChange={setMen} unit={question.unit} max={question.max} />
+      <Slider label={labels.women} tone="women" value={women} onChange={setWomen} unit={question.unit} max={question.max} />
       <button type="button" className="challenge-primary ch-reveal" disabled={!ready} onClick={() => onPick(`${men},${women}`)}>
         {ready ? 'Lock in my estimates →' : 'Set both estimates'}
       </button>
@@ -104,12 +192,25 @@ function SlidersInput({ question, pick, onPick }: { question: Extract<ChapterQue
   )
 }
 
-function Reveal({ question, pick, points, onEvidence, explore }: { question: ChapterQuestion; pick: string; points: number; onEvidence: () => void; explore?: ReactNode }) {
+function EstimateInput({ question, pick, onPick }: { question: Extract<ChapterQuestion, { kind: 'estimate' }>; pick?: string; onPick: (pick: string) => void }) {
+  const [value, setValue] = useState<number>()
+  if (pick) return null
+  return (
+    <div className="ch-sliders">
+      <Slider label={question.label} tone="accent" value={value} onChange={setValue} />
+      <button type="button" className="challenge-primary ch-reveal" disabled={value === undefined} onClick={() => onPick(String(value))}>
+        {value !== undefined ? 'Lock in my estimate →' : 'Set your estimate'}
+      </button>
+    </div>
+  )
+}
+
+function Reveal({ question, pick, points, index, onEvidence, explore }: { question: ChapterQuestion; pick: string; points: number; index: number; onEvidence: () => void; explore?: ReactNode }) {
   const reduce = useReducedMotion()
   const { evidence } = question
   return (
     <motion.section className="ch-reveal-panel" aria-live="polite" initial={reduce ? false : { opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}>
-      <Verdict question={question} pick={pick} points={points} />
+      <Verdict question={question} pick={pick} points={points} index={index} />
       <p className="ch-finding">{question.finding}</p>
       <div className="ch-visual"><FindingVisual question={question} pick={pick} /></div>
       <p className="ch-takeaway">{question.takeaway}</p>
@@ -141,7 +242,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   async function share() {
     track('share_clicked', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, total_questions: questions.length })
     const url = new URL(window.location.href)
-    url.hash = hrefFor('discover', { quiz: quiz.id })
+    url.hash = hrefFor('discover', { quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) })
     const text = `I scored ${formatPoints(points)}/${questions.length} on “${chapter.title}” in Data Detective. ${quiz.prompt}`
     if (navigator.share) {
       try { await navigator.share({ text, url: url.href }); return } catch (error) { if (error instanceof Error && error.name === 'AbortError') return }
@@ -157,7 +258,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
       <p className="discovery-kicker">{chapter.title} · Results</p>
       <h1 ref={heading} tabIndex={-1}>{chapterResult(points, questions.length)}</h1>
       <p className="ch-score" aria-label={`${formatPoints(points)} out of ${questions.length} points`}>
-        <span className="ch-score-big">{formatPoints(Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
+        <span className="ch-score-big">{formatPoints(shown === points ? points : Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
       </p>
       <ol className="ch-tally" style={{ '--steps': questions.length } as CSSProperties}>
         {questions.map((question, i) => {
@@ -244,7 +345,10 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   }
   function restart() {
     track('quiz_restarted', ids)
-    setAttempt({})
+    // Other chapters of the theme share this storage; only clear this one.
+    // Start from what is stored, so a stale tab can't bring back answers another tab cleared.
+    setAttempt(Object.fromEntries(Object.entries(readDiscoveryProgress(quiz.attemptKey))
+      .filter(([id]) => !chapter.questionIds.includes(id))))
     focusNext.current = true
     navigate(link({ q: questions[0].id, mode: 'challenge' }))
   }
@@ -255,8 +359,9 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     track('quiz_question_answered', event)
     track('discovery_revealed', event)
     if (answers.length + 1 === total) track('quiz_completed', { ...ids, score: totalPoints(answers) + points, total_questions: total })
-    // Merge what other tabs saved so a stale tab never overwrites newer answers.
-    setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...current }, question.id, pick, quiz.edition))
+    // Start from what other tabs saved; this tab only speaks for its own chapter, so a stale tab can't restore another chapter's cleared answers.
+    setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...Object.fromEntries(Object.entries(current).filter(([id]) => chapter.questionIds.includes(id))) },
+      question.id, pick, quiz.edition))
   }
 
   const back = hrefFor('discover')
@@ -278,6 +383,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   )
 
   const next = questions[index + 1]
+  const reactionIndex = quizQuestions(quiz).findIndex(({ id }) => id === question.id)
   return (
     <div className="discover discover-edition discovery-reader chapter-quiz" data-visual={question.visual}>
       {nav}
@@ -295,11 +401,12 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
           initial={reduce ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={reduce ? undefined : { opacity: 0, x: -24 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           <p className="discovery-kicker">Question {index + 1} of {total} · {question.short}</p>
           <h1 ref={headline} tabIndex={-1}>{question.question}</h1>
-          <p className="ch-prompt">{question.prompt}</p>
+          {!(question.kind === 'choice' && question.warmup) && <p className="ch-prompt">{question.prompt}</p>}
           {question.kind === 'choice' && <ChoiceInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'rows' && <RowsInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'sliders' && <SlidersInput question={question} pick={answer?.pick} onPick={onPick} />}
-          {answer && <Reveal question={question} pick={answer.pick} points={answer.points}
+          {question.kind === 'estimate' && <EstimateInput question={question} pick={answer?.pick} onPick={onPick} />}
+          {answer && <Reveal question={question} pick={answer.pick} points={answer.points} index={reactionIndex}
             onEvidence={() => track('evidence_expanded', { ...ids, question_id: question.id })}
             explore={question.explore && (() => {
               const href = hrefFor('investigate', { r: question.explore.r, ...question.explore.years })

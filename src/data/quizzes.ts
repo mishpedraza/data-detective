@@ -1,6 +1,7 @@
 import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from './discoverEdition'
 import { EDITORIAL_QUESTIONS } from './editorial'
 import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
+import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -10,7 +11,7 @@ export interface QuizChapter {
   description?: string
   /** One line for the homepage card. */
   summary?: string
-  minutes?: number
+  minutes?: number | string
   /** How points are awarded, shown under the results. */
   scoring?: string
   questionIds: readonly string[]
@@ -68,7 +69,11 @@ export const QUIZZES: readonly Quiz[] = [
       ...LOVE_CHAPTER,
       summary: 'Age gaps, desire, being single and loneliness. How different are we, really?',
       scoring: 'One point per question. Being single: ¼ point per correct prediction. Emotional support: ½ point per estimate within 5 points of the real figure, ¼ within 15.',
-      questionIds: LOVE_QUESTIONS.map(({ id }) => id) }],
+      questionIds: LOVE_QUESTIONS.map(({ id }) => id),
+    }, {
+      ...MONEY_CHAPTER,
+      questionIds: MONEY_QUESTIONS.map(({ id }) => id),
+    }],
   },
   {
     id: 'housing-crisis',

@@ -2,6 +2,7 @@
 
 export type Side = 'men' | 'similar' | 'women'
 export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'dumbbell' | 'grids' | 'bars' | 'facts'
+  | 'leader' | 'negotiate' | 'compete' | 'risk' | 'backlash' | 'week' | 'budget' | 'timeline' | 'power'
 
 export interface Evidence {
   citation: string
@@ -33,25 +34,50 @@ interface Base {
   explore?: { r: string; years?: { from: number; to: number } }
 }
 
+/** An unscored personal exercise played before the scored question. */
+export type Warmup =
+  | { kind: 'choice'; prompt: string; options: readonly { id: string; label: string }[] }
+  | { kind: 'week'; prompt: string }
+
 export interface ChoiceQuestion extends Base {
   kind: 'choice'
   options: readonly { id: string; label: string }[]
   answer: string
+  warmup?: Warmup
 }
 
 export interface RowsQuestion extends Base {
   kind: 'rows'
-  rows: readonly { id: string; label: string; answer: Side; d: number }[]
+  rows: readonly { id: string; label: string; answer: Side; d?: number }[]
+  /** Overrides the Men / Similar / Women button labels. */
+  labels?: Partial<Record<Side, string>>
 }
 
 export interface SlidersQuestion extends Base {
   kind: 'sliders'
   scenario: string
   actual: { men: number; women: number }
-  sources: readonly { label: string; men: number; women: number }[]
+  sources?: readonly { label: string; men: number; women: number }[]
+  /** What other people guessed, shown between the player's guess and the real figures. */
+  expected?: { men: number; women: number }
+  labels?: { men: string; women: string }
+  unit?: '%' | 'h'
+  max?: number
+  /** Distance for half and quarter points; 5 and 15 by default. */
+  near?: number
+  far?: number
 }
 
-export type ChapterQuestion = ChoiceQuestion | RowsQuestion | SlidersQuestion
+/** A single percentage estimate: one point within `near`, half within `far`. */
+export interface EstimateQuestion extends Base {
+  kind: 'estimate'
+  label: string
+  actual: number
+  near: number
+  far: number
+}
+
+export type ChapterQuestion = ChoiceQuestion | RowsQuestion | SlidersQuestion | EstimateQuestion
 
 const PEW_SUPPORT = 'https://www.pewresearch.org/social-trends/2025/01/16/where-men-and-women-turn-for-emotional-support-and-social-connection/'
 const PEW_REPORT = 'https://www.pewresearch.org/social-trends/2025/01/16/men-women-and-social-connections/'

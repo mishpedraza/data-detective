@@ -1,4 +1,4 @@
-import type { ChapterQuestion, Side } from '../data/menWomen'
+import type { ChapterQuestion, ChoiceQuestion, Side } from '../data/menWomen'
 import { CHAPTER_QUESTIONS } from '../data/chapterQuestions'
 import type { Quiz } from '../data/quizzes'
 import type { DiscoveryProgress } from './discoveryProgress'
@@ -14,24 +14,59 @@ export function parseRows(question: ChapterQuestion, pick: string): Side[] | und
 export function parseSliders(question: ChapterQuestion, pick: string): { men: number; women: number } | undefined {
   if (question.kind !== 'sliders' || !/^\d{1,3},\d{1,3}$/.test(pick)) return
   const [men, women] = pick.split(',').map(Number)
-  return men <= 100 && women <= 100 ? { men, women } : undefined
+  const max = question.max ?? 100
+  return men <= max && women <= max ? { men, women } : undefined
 }
 
-/** Half a point per estimate within 5 points of the real figure, a quarter within 15. */
-export function estimatePoints(estimate: number, actual: number) {
+export function parseEstimate(question: ChapterQuestion, pick: string): number | undefined {
+  if (question.kind !== 'estimate' || !/^\d{1,3}$/.test(pick)) return
+  const value = Number(pick)
+  return value <= 100 ? value : undefined
+}
+
+/** A choice with a warm-up stores both as "answer|warm-up"; the warm-up is never scored. */
+export function splitPick(pick: string) {
+  const [main, warm] = pick.split('|')
+  return { main, warm }
+}
+
+/** Days a week, in half days, for "you,partner" week warm-ups. */
+export function parseWeek(warm?: string): [number, number] | undefined {
+  if (!warm || !/^\d(\.5)?,\d(\.5)?$/.test(warm)) return
+  const days = warm.split(',').map(Number) as [number, number]
+  return days.every((day) => day <= 5) ? days : undefined
+}
+
+function validWarmup(question: ChoiceQuestion, warm?: string) {
+  if (!question.warmup) return warm === undefined
+  return question.warmup.kind === 'week' ? !!parseWeek(warm) : question.warmup.options.some(({ id }) => id === warm)
+}
+
+/** Half a point per estimate within `near` of the real figure, a quarter within `far`. */
+export function estimatePoints(estimate: number, actual: number, near = 5, far = 15) {
   const error = Math.abs(estimate - actual)
-  return error <= 5 ? 0.5 : error <= 15 ? 0.25 : 0
+  return error <= near ? 0.5 : error <= far ? 0.25 : 0
 }
 
 /** Points for a pick, from 0 to 1, or undefined if the pick isn't a valid answer to the question. */
 export function scoreQuestion(question: ChapterQuestion, pick: string): number | undefined {
-  if (question.kind === 'choice') return question.options.some(({ id }) => id === pick) ? Number(pick === question.answer) : undefined
+  if (question.kind === 'choice') {
+    const { main, warm } = splitPick(pick)
+    return question.options.some(({ id }) => id === main) && validWarmup(question, warm) ? Number(main === question.answer) : undefined
+  }
   if (question.kind === 'rows') {
     const sides = parseRows(question, pick)
-    return sides && sides.filter((side, i) => side === question.rows[i].answer).length * 0.25
+    return sides && sides.filter((side, i) => side === question.rows[i].answer).length / question.rows.length
+  }
+  if (question.kind === 'estimate') {
+    const value = parseEstimate(question, pick)
+    if (value === undefined) return
+    const error = Math.abs(value - question.actual)
+    return error <= question.near ? 1 : error <= question.far ? 0.5 : 0
   }
   const estimates = parseSliders(question, pick)
-  return estimates && estimatePoints(estimates.men, question.actual.men) + estimatePoints(estimates.women, question.actual.women)
+  const { near = 5, far = 15 } = question
+  return estimates && estimatePoints(estimates.men, question.actual.men, near, far) + estimatePoints(estimates.women, question.actual.women, near, far)
 }
 
 export type ChapterAnswer = { id: string; pick: string; points: number }

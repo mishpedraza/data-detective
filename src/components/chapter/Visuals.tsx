@@ -1,33 +1,8 @@
-import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, RowsQuestion, Side, SlidersQuestion } from '../../data/menWomen'
 import { overlap, parseRows, parseSliders } from '../../lib/chapterScore'
-
-const ease = [0.22, 1, 0.36, 1] as const
-
-/** Counts from `from` to `to` once, or jumps straight there with reduced motion. */
-export function useCount(to: number, from = 0, duration = 1100, delay = 250) {
-  const reduce = useReducedMotion()
-  const [value, setValue] = useState(reduce ? to : from)
-  useEffect(() => {
-    if (reduce) { setValue(to); return }
-    let frame = 0
-    const start = performance.now() + delay
-    const tick = (now: number) => {
-      const t = Math.min(1, Math.max(0, (now - start) / duration))
-      setValue(from + (to - from) * (1 - Math.pow(1 - t, 3)))
-      if (t < 1) frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [to, from, duration, delay, reduce])
-  return value
-}
-
-function useTiming() {
-  const reduce = useReducedMotion()
-  return (delay = 0, duration = 0.9) => reduce ? { duration: 0 } : { delay, duration, ease }
-}
+import { MoneyVisual } from './MoneyVisuals'
+import { useCount, useTiming } from './motion'
 
 function AgeVisual() {
   const t = useTiming()
@@ -169,7 +144,7 @@ function DivergingVisual({ question, pick }: { question: RowsQuestion; pick?: st
   const picks = pick ? parseRows(question, pick) : undefined
   const max = 0.42
   return (
-    <div className="v-diverging" role="img" aria-label={question.rows.map(({ label, answer, d }, i) => `${label}: ${answer} higher, d = ${d.toFixed(2)}${picks ? `; you said ${sideLabel[picks[i]].toLowerCase()}, ${picks[i] === answer ? 'correct' : 'not correct'}` : ''}`).join('. ')}>
+    <div className="v-diverging" role="img" aria-label={question.rows.map(({ label, answer, d }, i) => `${label}: ${answer} higher, d = ${(d ?? 0).toFixed(2)}${picks ? `; you said ${sideLabel[picks[i]].toLowerCase()}, ${picks[i] === answer ? 'correct' : 'not correct'}` : ''}`).join('. ')}>
       <div className="v-axis-labels" aria-hidden="true"><span className="v-men-text">← Men higher</span><span className="v-women-text">Women higher →</span></div>
       {question.rows.map(({ id, label, answer, d }, i) => {
         const right = picks?.[i] === answer
@@ -178,8 +153,8 @@ function DivergingVisual({ question, pick }: { question: RowsQuestion; pick?: st
             {picks && <span className={right ? 'v-hit' : 'v-miss'}>{right ? '✓' : '✗'} you said {sideLabel[picks[i]].toLowerCase()}</span>}</p>
           <div className="v-div-track" aria-hidden="true">
             <motion.span className={`v-div-bar v-${answer}`} style={{ [answer === 'men' ? 'right' : 'left']: '50%' }}
-              initial={{ width: 0 }} animate={{ width: `${(d / max) * 50}%` }} transition={t(0.2 + i * 0.15, 0.9)} />
-            <span className="v-div-value" style={{ [answer === 'men' ? 'right' : 'left']: `calc(50% + ${(d / max) * 50}% + .4rem)` }}>{d.toFixed(2)}</span>
+              initial={{ width: 0 }} animate={{ width: `${((d ?? 0) / max) * 50}%` }} transition={t(0.2 + i * 0.15, 0.9)} />
+            <span className="v-div-value" style={{ [answer === 'men' ? 'right' : 'left']: `calc(50% + ${((d ?? 0) / max) * 50}% + .4rem)` }}>{(d ?? 0).toFixed(2)}</span>
           </div>
         </div>
       })}
@@ -192,9 +167,9 @@ function DumbbellVisual({ question, pick }: { question: SlidersQuestion; pick?: 
   const t = useTiming()
   const guess = pick ? parseSliders(question, pick) : undefined
   return (
-    <div className="v-dumbbell" role="img" aria-label={question.sources.map(({ label, men, women }) => `${label}: men ${men}%, women ${women}%`).join('. ')}>
+    <div className="v-dumbbell" role="img" aria-label={(question.sources ?? []).map(({ label, men, women }) => `${label}: men ${men}%, women ${women}%`).join('. ')}>
       <div className="v-axis-labels" aria-hidden="true"><span><i className="v-key v-men" /> Men</span><span><i className="v-key v-women" /> Women</span>{guess && <span><i className="v-key v-guess" /> Your guesses</span>}</div>
-      {question.sources.map(({ label, men, women }, i) => (
+      {(question.sources ?? []).map(({ label, men, women }, i) => (
         <div key={label} className={`v-db-row${i === 0 ? ' v-db-lead' : ''}`}>
           <p className="v-div-label">{label}</p>
           <div className="v-db-track" aria-hidden="true">
@@ -298,5 +273,6 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'grids': return <GridsVisual />
     case 'bars': return <BarsVisual question={question} />
     case 'facts': return <FactsVisual question={question} />
+    default: return <MoneyVisual question={question} pick={pick} />
   }
 }
