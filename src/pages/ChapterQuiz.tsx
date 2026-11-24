@@ -241,12 +241,16 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   const complete = answers.length === total
   const firstOpen = questions.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
   const lastReachable = firstOpen < 0 ? total - 1 : firstOpen
-  const requested = questions.findIndex(({ id }) => id === selected)
+  // A link without a question opens the next one; stay on it after answering so the reveal shows.
+  const [entered] = useState(() => (selected || complete ? null : questions[firstOpen].id))
+  const current = selected ?? entered
+  const requested = questions.findIndex(({ id }) => id === current)
   const index = Math.min(requested < 0 ? lastReachable : requested, lastReachable)
   const question = questions[index]
   const answer = answers.find(({ id }) => id === question.id)
-  const view = (mode === 'results' || mode === 'review' || (!selected && !mode)) && complete ? 'results' : 'question'
-  const focusNext = useRef(false)
+  const view = (mode === 'results' || mode === 'review' || (!current && !mode)) && complete ? 'results' : 'question'
+  // Opening a card replaces the focused link, so start on the question heading.
+  const focusNext = useRef(true)
   const reduce = useReducedMotion()
   const link = (params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...(themed && { chapter: chapter.id }), ...params })
   const ids = { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id }
