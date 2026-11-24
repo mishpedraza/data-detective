@@ -44,19 +44,19 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
 }
 
 function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => void }) {
-  const browse = hrefFor('discover', { quiz: quiz.id, mode: 'browse' })
   return (
     <section className="quiz-theme" aria-labelledby={`theme-${quiz.id}`}>
       <h2 id={`theme-${quiz.id}`} className="discovery-kicker">{quiz.title}</h2>
       <ol className="quiz-list">
         {quiz.chapters.map((chapter) => <ChapterCard key={chapter.id} quiz={quiz} chapter={chapter} navigate={navigate} />)}
       </ol>
-      {quiz.browse && <a className="discovery-link quiz-browse" href={browse} onClick={follow(navigate, browse)}>Browse all discoveries <span aria-hidden="true">→</span></a>}
     </section>
   )
 }
 
 export function QuizCollection({ navigate }: { navigate: (href: string) => void }) {
+  const browsable = QUIZZES.find((quiz) => quiz.browse)
+  const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (
     <div className="discover discover-edition discovery-reader">
       <section className="discovery-reading quiz-collection">
@@ -64,6 +64,7 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
         <p className="discovery-context">Test your gut. Discover what the data says.</p>
         {QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
           .map((quiz) => <Theme key={quiz.id} quiz={quiz} navigate={navigate} />)}
+        {browse && <a className="discovery-link quiz-browse" href={browse} onClick={follow(navigate, browse)}>Or browse all discoveries without a quiz <span aria-hidden="true">→</span></a>}
       </section>
     </div>
   )
