@@ -241,6 +241,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   const answers = chapterAnswers(attempt, questions, quiz.edition)
   const points = totalPoints(answers)
   const shown = useCount(points, 0, 1300, 200)
+  const reduceMotion = useReducedMotion()
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => { heading.current?.focus() }, [])
   const theme = themeProgress(quiz, attempt)
@@ -254,33 +255,40 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   const other = target && hrefFor('discover', { quiz: target.id })
   const browse = hrefFor('discover', { quiz: quiz.id, mode: 'browse' })
   return (
-    <section className="discovery-reading ch-results">
-      <p className="discovery-kicker">{chapter.title} · Results</p>
-      <h1 ref={heading} tabIndex={-1}>{chapterResult(points, questions.length)}</h1>
-      <p className="ch-score" aria-label={`${formatPoints(points)} out of ${questions.length} points`}>
-        <span className="ch-score-big">{formatPoints(shown === points ? points : Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
-      </p>
-      <ol className="ch-tally" style={{ '--steps': questions.length } as CSSProperties}>
+    <section className="discovery-reading ch-results chapter-results">
+      <div className="chapter-result-hero">
+        <p className="ch-score" aria-label={`${formatPoints(points)} out of ${questions.length} points`}>
+          <span className="ch-score-big">{formatPoints(shown === points ? points : Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
+        </p>
+        <div>
+          <p className="discovery-kicker">{chapter.title} · Results</p>
+          <h1 ref={heading} tabIndex={-1}>{chapterResult(points, questions.length)}</h1>
+        </div>
+      </div>
+      {hasChapterList(quiz) && <ThemeNext quiz={quiz} theme={theme} navigate={navigate} combined={combined || undefined}
+        next={nextInTheme && nextHref ? { title: nextInTheme.chapter.title, href: nextHref, state: nextInTheme.state } : undefined} />}
+      <h2 className="chapter-tally-heading" id="chapter-tally-heading">Your answers</h2>
+      <ol className="ch-tally" aria-labelledby="chapter-tally-heading" style={{ '--steps': questions.length } as CSSProperties}>
         {questions.map((question, i) => {
           const answer = answers.find(({ id }) => id === question.id)
           const p = answer?.points ?? 0
           return (
             <li key={question.id}>
               <a href={hrefFor('discover', { quiz: quiz.id, q: question.id, mode: 'challenge' })} onClick={(event) => { if (!plainClick(event)) return; event.preventDefault(); openQuestion(question.id) }}>
-                <span className="ch-tally-bar" aria-hidden="true"><motion.i initial={{ height: 0 }} animate={{ height: `${p * 100}%` }} transition={{ delay: 0.3 + i * 0.08, duration: 0.6 }} /></span>
-                <span className="ch-tally-num">{i + 1}</span>
+                <span className="ch-tally-bar" aria-hidden="true"><motion.i initial={reduceMotion ? false : { width: 0 }} animate={{ width: `${p * 100}%` }} transition={reduceMotion ? { duration: 0 } : { delay: 0.2 + i * 0.06, duration: 0.5 }} /></span>
                 <span className="ch-tally-label">{question.short}</span>
-                <span className="ch-tally-points">{formatPoints(p)}</span>
+                <span className="ch-tally-points">{formatPoints(p)} / 1</span>
               </a>
             </li>
           )
         })}
       </ol>
+      <details className="chapter-scoring">
+        <summary>How scoring works</summary>
+        <p>{chapter.scoring ?? 'One point per question.'}</p>
+      </details>
       <ScoreShare card={card} url={shareLink({ quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) }, 'quiz')}
         analytics={{ quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, max_points: questions.length }} />
-      <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
-      {hasChapterList(quiz) && <ThemeNext quiz={quiz} theme={theme} navigate={navigate} combined={combined || undefined}
-        next={nextInTheme && nextHref ? { title: nextInTheme.chapter.title, href: nextHref, state: nextInTheme.state } : undefined} />}
       <div className="ch-actions">
         {target && other && <a className="discovery-link" href={other} onClick={(event) => {
           if (!plainClick(event)) return

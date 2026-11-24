@@ -74,7 +74,6 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
       </figure>
       <div className="score-share-actions">
         <h2>Can they beat your score?</h2>
-        <p className="score-share-invite">Send your scorecard and challenge a friend to take the quiz.</p>
         <button className="challenge-primary score-share-primary" type="button" onClick={share}>Challenge a friend</button>
         <button className="score-share-secondary" type="button" onClick={download} disabled={!image}>Download image</button>
         <button className="score-share-secondary" type="button" onClick={() => void copy('button')}>Copy link</button>
