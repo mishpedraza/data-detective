@@ -55,7 +55,7 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
   const theme = themeProgress(quiz)
   const combined = hrefFor('discover', { quiz: quiz.id, mode: 'theme' })
   return (
-    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`} style={{ '--accent': quiz.accent } as CSSProperties}>
+    <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`}>
       <div className="quiz-theme-head">
         <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
         {theme.chapters.length > 1 && <ThemeMeter theme={theme} />}
@@ -73,14 +73,6 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
 
 export function QuizCollection({ navigate }: { navigate: (href: string) => void }) {
   const playable = QUIZZES.filter((quiz) => quiz.format === 'chapter' && quizQuestions(quiz).length > 0)
-  const featuredQuiz = playable[0]
-  const featuredChapter = featuredQuiz?.chapters[0]
-  const entry = featuredChapter && chapterEntry(featuredQuiz, featuredChapter.id)
-  const featured = entry && featuredChapter && {
-    entry,
-    chapter: featuredChapter,
-    ...playStatus(entry.questions, entry.answers, featuredChapter.minutes),
-  }
   const browsable = QUIZZES.find((quiz) => quiz.browse)
   const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (
@@ -90,13 +82,6 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
           <div className="quiz-show-intro">
             <h1 tabIndex={-1}>How good is <em>your gut?</em></h1>
             <p className="quiz-subtitle">Make a guess, see what the research found, and challenge a friend to beat your score.</p>
-            {featured && <div className="quiz-show-start">
-              <a className="quiz-show-button" href={featured.entry.href}
-                onClick={follow(navigate, featured.entry.href, () => trackQuizOpen(featuredQuiz, featured.chapter, featured.entry))}>
-                {featured.state === 'not-started' ? 'Play ' + featured.chapter.title : featured.action}
-              </a>
-              <span>{featured.meta}</span>
-            </div>}
           </div>
           <div className="quiz-show-art" aria-hidden="true">
             <div className="quiz-show-plot"><i /><i /><i /><i /><i /></div>
