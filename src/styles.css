@@ -1136,3 +1136,9 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-power-grid { max-width: 24rem; }
 .v-leader-dials svg { max-width: 10rem; margin: 0 auto; }
 .v-dial figcaption { margin-top: .3rem; }
+.v-week-cells i { position: relative; overflow: hidden; }
+.v-week-cells i b { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); }
+.v-week.v-men .v-week-cells i b { background: var(--men); } .v-week.v-women .v-week-cells i b { background: var(--women); }
+.v-week.v-men figcaption strong { color: var(--men); } .v-week.v-women figcaption strong { color: var(--women); }
+.v-week-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem 1rem; margin-bottom: 1rem; }
+@media (max-width: 520px) { .v-week-grid { grid-template-columns: 1fr; } }
