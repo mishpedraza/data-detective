@@ -266,7 +266,7 @@ export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
 export const MONEY_CHAPTER = {
   id: 'money-ambition-power',
   title: 'Money, ambition & power',
-  summary: 'Who negotiates harder, who takes more risks, and who should earn more at home?',
+  summary: 'Who negotiates harder, who takes more risks, and how do couples divide work?',
   minutes: '6–8',
   scoring: 'One point per question. Leadership and Risk: ⅓ point per correct prediction. Negotiation: ½ point per estimate within 5 points, ¼ within 15. Free time: ½ point per estimate within 2 hours, ¼ within 5. Power: 1 point within 5 points, ½ within 15.',
 }

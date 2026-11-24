@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { QUIZZES, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
@@ -48,7 +49,7 @@ function Theme({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => voi
   return (
     <section className="quiz-theme" data-theme={quiz.id} aria-labelledby={`theme-${quiz.id}`}>
       <h2 id={`theme-${quiz.id}`} className="quiz-theme-title">{quiz.title}</h2>
-      <ol className="quiz-list">
+      <ol className="quiz-list" data-count={quiz.chapters.length} style={{ '--count': quiz.chapters.length } as CSSProperties}>
         {quiz.chapters.map((chapter) => <ChapterCard key={chapter.id} quiz={quiz} chapter={chapter} navigate={navigate} />)}
       </ol>
     </section>
