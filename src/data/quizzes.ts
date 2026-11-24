@@ -1,10 +1,13 @@
 import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from './discoverEdition'
 import { EDITORIAL_QUESTIONS } from './editorial'
+import { CHAPTER_QUESTIONS, LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
 export interface QuizChapter {
   id: string
   title: string
+  description?: string
+  minutes?: number
   questionIds: readonly string[]
 }
 
@@ -16,6 +19,8 @@ export interface Quiz {
   tagline?: string
   /** Changing the edition invalidates stored answers when a quiz's questions are revised. */
   edition: string
+  /** 'chapter' quizzes use the visual chapter player with partial-credit scoring. */
+  format?: 'chapter'
   attemptKey: string
   resultKey: string
   chapters: readonly QuizChapter[]
@@ -36,11 +41,12 @@ export const QUIZZES: readonly Quiz[] = [
   {
     id: 'men-and-women',
     title: 'Men and Women',
-    prompt: 'How Well Do You Really Understand Men and Women?',
+    prompt: 'How well do you really understand men and women?',
     edition: 'v1',
+    format: 'chapter',
     attemptKey: 'data-detective.quiz.men-and-women.v1',
     resultKey: 'data-detective.quiz.men-and-women.last-result.v1',
-    chapters: [],
+    chapters: [{ ...LOVE_CHAPTER, questionIds: LOVE_QUESTIONS.map(({ id }) => id) }],
   },
   {
     id: 'housing-crisis',
@@ -64,6 +70,8 @@ export type QuizQuestion = { id: string; question: string; chapter: string }
 /** The playable questions of a quiz, in order across its chapters. */
 export function quizQuestions(quiz: Quiz): QuizQuestion[] {
   return quiz.chapters.flatMap(({ id: chapter, questionIds }) => questionIds.flatMap((id) => {
+    const visual = CHAPTER_QUESTIONS[id]
+    if (visual) return [{ id, chapter, question: visual.question }]
     const interaction = DISCOVER_TEASERS[id]?.interaction
     if (!interaction) return []
     return [{ id, chapter, question: EDITORIAL_QUESTIONS.find((entry) => entry.id === id)?.question ?? interaction.label }]

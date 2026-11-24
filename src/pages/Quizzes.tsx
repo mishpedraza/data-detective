@@ -4,6 +4,8 @@ import { challengeAnswers } from '../lib/discoveryChallenge'
 import { readDiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
+import { chapterAnswers, formatPoints, totalPoints } from '../lib/chapterScore'
+import { CHAPTER_QUESTIONS } from '../data/menWomen'
 
 function follow(navigate: (href: string) => void, href: string, then?: () => void) {
   return (event: MouseEvent<HTMLAnchorElement>) => {
@@ -16,8 +18,11 @@ function follow(navigate: (href: string) => void, href: string, then?: () => voi
 
 function QuizCard({ quiz, position, navigate }: { quiz: Quiz; position: number; navigate: (href: string) => void }) {
   const questions = quizQuestions(quiz)
-  const answers = challengeAnswers(readDiscoveryProgress(quiz.attemptKey), quiz)
-  const score = answers.filter(({ correct }) => correct).length
+  const progress = readDiscoveryProgress(quiz.attemptKey)
+  const answers = quiz.format === 'chapter'
+    ? chapterAnswers(progress, questions.map(({ id }) => CHAPTER_QUESTIONS[id]), quiz.edition).map(({ id, points }) => ({ id, points }))
+    : challengeAnswers(progress, quiz).map(({ id, correct }) => ({ id, points: Number(correct) }))
+  const score = formatPoints(totalPoints(answers))
   const soon = questions.length === 0
   const href = hrefFor('discover', { quiz: quiz.id })
   const status = soon ? 'Coming soon'
@@ -36,7 +41,7 @@ function QuizCard({ quiz, position, navigate }: { quiz: Quiz; position: number; 
           {!soon && <span className="quiz-dots" aria-hidden="true">
             {questions.map(({ id }) => {
               const answer = answers.find((entry) => entry.id === id)
-              return <span key={id} className={answer ? (answer.correct ? 'right' : 'wrong') : ''} />
+              return <span key={id} className={answer ? (answer.points === 1 ? 'right' : answer.points > 0 ? 'partial' : 'wrong') : ''} />
             })}
           </span>}
         </span>
