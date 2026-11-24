@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { DEFAULT_QUIZ, QUIZZES, quizById, quizQuestions } from '../src/data/quizzes'
 import { DISCOVER_TEASERS, DISCOVERY_QUIZ_EDITION } from '../src/data/discoverEdition'
 import { EDITORIAL_QUESTIONS } from '../src/data/editorial'
+import { CHAPTER_QUESTIONS } from '../src/data/menWomen'
 import { CHALLENGE_KEY, RESULTS_KEY, challengeAnswers } from '../src/lib/discoveryChallenge'
 import { revealDiscovery, type DiscoveryProgress } from '../src/lib/discoveryProgress'
 import { hrefFor } from '../src/lib/route'
@@ -16,7 +17,7 @@ test('quizzes have unique ids, storage keys and questions', () => {
     unique(quiz.chapters.map(({ id }) => id))
     assert.equal(quizById(quiz.id), quiz)
     assert.equal(hrefFor('discover', { quiz: quiz.id }), `#/discover?quiz=${quiz.id}`)
-    for (const id of quiz.chapters.flatMap(({ questionIds }) => questionIds)) assert.ok(DISCOVER_TEASERS[id]?.interaction, `${quiz.id}: ${id}`)
+    for (const id of quiz.chapters.flatMap(({ questionIds }) => questionIds)) assert.ok(DISCOVER_TEASERS[id]?.interaction || CHAPTER_QUESTIONS[id], `${quiz.id}: ${id}`)
   }
 })
 

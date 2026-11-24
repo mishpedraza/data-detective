@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Nav } from './components/Nav'
 import { Discover } from './pages/Discover'
+import { ChapterQuiz } from './pages/ChapterQuiz'
 import { QuizCollection, QuizComingSoon } from './pages/Quizzes'
 import { DEFAULT_QUIZ, quizById, quizQuestions } from './data/quizzes'
 import { editorialQuestionById, DEFAULT_INVESTIGATION } from './data/editorial'
@@ -45,6 +46,7 @@ export default function App() {
       <AnimatePresence mode="wait">
         <motion.main key={quiz ? `${route}-${quiz.id}` : route} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: reduceMotion ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}>
           {route === 'discover' && (!quiz ? <QuizCollection navigate={navigate} /> :
+            quiz.format === 'chapter' ? <ChapterQuiz key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
             quizQuestions(quiz).length ? <Discover key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} /> :
               <QuizComingSoon quiz={quiz} navigate={navigate} />)}
           {route === 'investigate' && (
