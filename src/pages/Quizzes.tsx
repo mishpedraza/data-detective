@@ -6,6 +6,7 @@ import { chapterEntry, follow, playStatus, type Scored } from '../lib/quizEntry'
 import { formatPoints } from '../lib/chapterScore'
 import { themeProgress } from '../lib/themeProgress'
 import { ThemeMeter } from './ThemeResults'
+import { ChapterShare } from '../components/ChapterShare'
 
 /** A playable quiz card; the whole card is the link. Without an href it shows as coming soon. */
 export function PlayCard({ kicker, title, description, minutes, questions = [], answers = [], href, onOpen, navigate }: {
@@ -47,6 +48,7 @@ function ChapterCard({ quiz, chapter, navigate }: { quiz: Quiz; chapter: QuizCha
       <PlayCard title={chapter.title} description={chapter.summary} navigate={navigate} href={entry.href}
         minutes={chapter.minutes} questions={entry.questions} answers={entry.answers}
         onOpen={() => trackQuizOpen(quiz, chapter, entry)} />
+      {entry.questions.length > 0 && <ChapterShare quizId={quiz.id} chapterId={chapter.id} title={chapter.title} />}
     </li>
   )
 }
@@ -91,6 +93,7 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
                 onClick={follow(navigate, entry.href, () => trackQuizOpen(featured, chapter, entry))}>
                 {status.action}
               </a>
+              <ChapterShare quizId={featured.id} chapterId={chapter.id} title={chapter.title} />
             </div>}
           </div>
           <div className="quiz-show-art" aria-hidden="true">
