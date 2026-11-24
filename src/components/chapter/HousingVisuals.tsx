@@ -5,19 +5,19 @@ import { AIRBNB, CHAIN, PERMITS, RATIO, VACANT } from '../../data/housing'
 import { parseEstimate } from '../../lib/chapterScore'
 import { useTiming } from './motion'
 
-function Grid({ total, on, cols, label, tone = 'on' }: { total: number; on: number; cols: number; label: string; tone?: string }) {
+function Grid({ total, on, cols, label, tone = 'on', deep = on }: { total: number; on: number; cols: number; label: string; tone?: string; deep?: number }) {
   const reduce = useReducedMotion()
   return (
     <div className="v-hs-grid" style={{ '--cols': cols } as CSSProperties} role="img" aria-label={label}>
       {Array.from({ length: total }, (_, i) => (
-        <motion.span key={i} className={`v-hs-cell ${i < on ? `is-${tone}` : ''}`} initial={reduce ? false : { opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
+        <motion.span key={i} className={`v-hs-cell ${i < deep ? `is-${tone}` : i < on ? 'is-soft' : ''}`} initial={reduce ? false : { opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }}
           transition={reduce ? { duration: 0 } : { delay: 0.15 + i * 0.012, duration: 0.25 }} />
       ))}
     </div>
   )
 }
 
-const STEPS = ['New home near the centre', 'Their old flat', 'The next flat along', 'Further out, cheaper areas'] as const
+const STEPS = ['New home near the centre', 'Their old flat', 'Someone else’s old flat', 'Further out, cheaper areas'] as const
 
 /** Q1: an illustrative chain of moves, then the measured vacancies. */
 function ChainVisual() {
@@ -34,10 +34,11 @@ function ChainVisual() {
         ))}
       </ol>
       <p className="v-kicker">What the Helsinki data showed, per 100 new homes</p>
-      <Grid total={100} on={CHAIN.bottomHalf} cols={20} label={`Of every 100 new homes, ${CHAIN.bottomHalf} vacancies opened in below-median-income neighbourhoods, ${CHAIN.bottomFifth} of them in the poorest fifth.`} />
+      <Grid total={100} on={CHAIN.bottomHalf} deep={CHAIN.bottomFifth} cols={20} label={`Of every 100 new homes, ${CHAIN.bottomHalf} vacancies opened in below-median-income neighbourhoods, ${CHAIN.bottomFifth} of them in the poorest fifth.`} />
       <ul className="v-hs-key">
-        <li><i className="is-on" /> Vacancy in a below-median-income area <strong>{CHAIN.bottomHalf}</strong></li>
-        <li>of which in the poorest fifth of areas <strong>{CHAIN.bottomFifth}</strong></li>
+        <li><i className="is-on" /> In the poorest fifth of neighbourhoods <strong>{CHAIN.bottomFifth}</strong></li>
+        <li><i className="is-soft" /> In other below-median-income neighbourhoods <strong>{CHAIN.bottomHalf - CHAIN.bottomFifth}</strong></li>
+        <li>Total in below-median-income neighbourhoods <strong>{CHAIN.bottomHalf}</strong></li>
       </ul>
       <p className="v-note">Followed for {CHAIN.rounds} rounds of moves. The top row is a simplified illustration, not real households.</p>
     </div>
@@ -51,12 +52,13 @@ function RentControlVisual() {
       <section>
         <p className="v-kicker">Today’s renter</p>
         <p className="v-hs-big">−20%</p>
-        <p>less likely to move. More stability, and less likely to leave San Francisco.</p>
+        <p>less likely to move. More stability, and less likely to be pushed out of the city.</p>
       </section>
       <section>
         <p className="v-kicker">Tomorrow’s renter</p>
         <p className="v-hs-big">−15%</p>
-        <Grid total={100} on={85} cols={10} label="Illustration: of 100 rental homes in covered buildings, 85 remained for rent." />
+        <p>fewer homes for rent in the covered buildings.</p>
+        <Grid total={100} on={85} cols={20} label="Illustration: of 100 rental homes in covered buildings, 85 remained for rent." />
         <p className="v-note">Illustration of the 15% drop: landlords sold to owner-occupiers, converted or redeveloped.</p>
       </section>
     </div>

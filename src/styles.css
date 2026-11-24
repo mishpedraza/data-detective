@@ -1230,6 +1230,7 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-hs-cell { aspect-ratio: 1; border-radius: 2px; background: rgba(0, 0, 0, .09); }
 .v-hs-cell.is-on { background: var(--accent); }
 .v-hs-cell.is-household { background: #8a7e72; }
+.v-hs-cell.is-soft, .v-hs-key i.is-soft { background: color-mix(in srgb, var(--accent) 40%, transparent); }
 .v-hs-key { display: grid; gap: .25rem; margin: 0; padding: 0; list-style: none; font-size: .85rem; color: var(--ink-2); }
 .v-hs-key i { display: inline-block; width: .7rem; height: .7rem; margin-right: .35rem; border-radius: 2px; background: var(--accent); vertical-align: -1px; }
 .v-hs-steps { display: flex; gap: .5rem; margin: .4rem 0 1rem; padding: 0; list-style: none; }
@@ -1238,7 +1239,9 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-hs-house { width: 2.4rem; height: 2.4rem; background: var(--accent); opacity: calc(1 - var(--shade) * .2); clip-path: polygon(50% 0, 100% 40%, 100% 100%, 0 100%, 0 40%); }
 .v-hs-split { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 .v-hs-split p { margin: .2rem 0; font-size: .9rem; color: var(--ink-2); }
-.v-hs-big { font: 600 2rem/1.1 var(--serif); color: var(--accent) !important; }
+.v-hs-split .v-hs-big { margin: .2rem 0 .3rem; font: 600 clamp(2.2rem, 5vw, 3rem)/1 var(--serif); color: var(--accent); }
+.v-hs-split section { padding: 1rem 1.1rem; border-radius: 12px; background: var(--accent-soft); }
+.v-hs-split .v-hs-grid { max-width: 15rem; }
 .v-hs-bars { display: grid; gap: .55rem; margin: .4rem 0; padding: 0; list-style: none; }
 .v-hs-bars li { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr 3.2rem; align-items: center; gap: .6rem; font-size: .85rem; color: var(--ink-2); }
 .v-hs-bars strong { text-align: right; font-variant-numeric: tabular-nums; }
