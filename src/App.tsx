@@ -66,7 +66,7 @@ export default function App() {
       </aside>}
       <footer className="footer">
         <p>
-          Data Detective is a prototype. Figures come from official statistics and cited research. Sources are linked in each investigation. No simulated data is used.
+          Explore surprising findings from published research and official statistics. Sources and methodology accompany every discovery.
         </p>
         <p>
           <a href="https://app.devin.ai/sessions/8f5abb24434b448fbfe89dd972b66385" target="_blank" rel="noreferrer">Request changes</a>

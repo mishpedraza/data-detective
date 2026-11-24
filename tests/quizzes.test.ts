@@ -83,3 +83,11 @@ test('playing goes straight to the next unanswered question, or results when fin
   const moneyEntry = chapterEntry(menWomen, 'money-ambition-power')
   assert.equal(moneyEntry.href, hrefFor('discover', { quiz: 'men-and-women', chapter: 'money-ambition-power', q: 'mp-leader', mode: 'challenge' }))
 })
+
+test('quiz cards offer play, resume or play again with matching progress', async () => {
+  const { playStatus } = await import('../src/lib/quizEntry')
+  const questions = [{ id: 'a' }, { id: 'b' }]
+  assert.deepEqual(playStatus(questions, [], 4), { meta: '2 questions · 4 min', progress: '', action: 'Play quiz' })
+  assert.deepEqual(playStatus(questions, [{ id: 'a', points: 1 }]), { meta: '2 questions', progress: '1 of 2 answered', action: 'Resume quiz' })
+  assert.equal(playStatus(questions, [{ id: 'a', points: 1 }, { id: 'b', points: 0 }]).action, 'Play again')
+})
