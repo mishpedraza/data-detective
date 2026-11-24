@@ -242,7 +242,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   async function share() {
     track('share_clicked', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, total_questions: questions.length })
     const url = new URL(window.location.href)
-    url.hash = hrefFor('discover', { quiz: quiz.id })
+    url.hash = hrefFor('discover', { quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) })
     const text = `I scored ${formatPoints(points)}/${questions.length} on “${chapter.title}” in Data Detective. ${quiz.prompt}`
     if (navigator.share) {
       try { await navigator.share({ text, url: url.href }); return } catch (error) { if (error instanceof Error && error.name === 'AbortError') return }
@@ -346,7 +346,8 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   function restart() {
     track('quiz_restarted', ids)
     // Other chapters of the theme share this storage; only clear this one.
-    setAttempt((current) => Object.fromEntries(Object.entries({ ...readDiscoveryProgress(quiz.attemptKey), ...current })
+    // Start from what is stored, so a stale tab can't bring back answers another tab cleared.
+    setAttempt(Object.fromEntries(Object.entries(readDiscoveryProgress(quiz.attemptKey))
       .filter(([id]) => !chapter.questionIds.includes(id))))
     focusNext.current = true
     navigate(link({ q: questions[0].id, mode: 'challenge' }))
