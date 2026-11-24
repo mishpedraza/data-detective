@@ -87,7 +87,51 @@ test('playing goes straight to the next unanswered question, or results when fin
 test('quiz cards offer play, resume or play again with matching progress', async () => {
   const { playStatus } = await import('../src/lib/quizEntry')
   const questions = [{ id: 'a' }, { id: 'b' }]
-  assert.deepEqual(playStatus(questions, [], 4), { meta: '2 questions · 4 min', progress: '', action: 'Play quiz' })
-  assert.deepEqual(playStatus(questions, [{ id: 'a', points: 1 }]), { meta: '2 questions', progress: '1 of 2 answered', action: 'Resume quiz' })
-  assert.equal(playStatus(questions, [{ id: 'a', points: 1 }, { id: 'b', points: 0 }]).action, 'Play again')
+  assert.deepEqual(playStatus(questions, [], 4), { meta: '2 questions · 4 min', state: 'not-started', label: 'Not started', progress: '', action: 'Play quiz' })
+  assert.deepEqual(playStatus(questions, [{ id: 'a', points: 1 }]), { meta: '2 questions', state: 'in-progress', label: 'In progress', progress: '1 of 2 answered', action: 'Resume quiz' })
+  assert.deepEqual(playStatus(questions, [{ id: 'a', points: 1 }, { id: 'b', points: 0.25 }]),
+    { meta: '2 questions', state: 'completed', label: 'Completed · 1.25/2', progress: '', action: 'Play again' })
+})
+
+test('theme progress sums real points across quizzes and unlocks combined results only when every quiz is done', async () => {
+  const { themeProgress, pointSequence, themeVersion } = await import('../src/lib/themeProgress')
+  const { chapterQuestions } = await import('../src/lib/chapterScore')
+  const theme = quizById('men-and-women')!
+  const love = chapterQuestions(theme, 'love-attraction')
+  const money = chapterQuestions(theme, 'money-ambition-power')
+  const pickFor = (question: (typeof love)[number], right: boolean) => {
+    if (question.kind === 'choice') {
+      const main = right ? question.answer : question.options.find(({ id }) => id !== question.answer)!.id
+      const warm = question.warmup ? `|${question.warmup.kind === 'week' ? '3,2' : question.warmup.options[0].id}` : ''
+      return main + warm
+    }
+    if (question.kind === 'rows') return question.rows.map(({ answer }, i) => i === 0 ? answer : answer === 'men' ? 'women' : 'men').join(',')
+    if (question.kind === 'estimate') return String(question.actual)
+    return `${Math.round(question.actual.men)},${Math.min(question.max ?? 100, Math.round(question.actual.women) + 10)}`
+  }
+  const play = (questions: typeof love, right: boolean, count = questions.length): DiscoveryProgress =>
+    Object.fromEntries(questions.slice(0, count).map((question) => [question.id, { pick: pickFor(question, right), edition: theme.edition }]))
+
+  const fresh = themeProgress(theme, {})
+  assert.deepEqual([fresh.completed, fresh.points, fresh.total, fresh.complete], [0, 0, 16, false])
+  assert.deepEqual(fresh.chapters.map(({ state }) => state), ['not-started', 'not-started'])
+
+  const half = themeProgress(theme, { ...play(love, true), ...play(money, true, 3) })
+  assert.deepEqual(half.chapters.map(({ state }) => state), ['completed', 'in-progress'])
+  assert.equal(half.complete, false)
+
+  const done = themeProgress(theme, { ...play(love, true), ...play(money, false) })
+  assert.equal(done.complete, true)
+  assert.equal(done.total, love.length + money.length)
+  // Partial credit counts: the combined score is the sum of points, not an average of percentages.
+  assert.equal(done.points, done.chapters[0].points + done.chapters[1].points)
+  assert.ok(done.chapters.some(({ points }) => points % 1 !== 0), 'a partial-credit score survives into the total')
+  assert.equal(pointSequence(done.chapters[0]).length, love.length)
+  assert.equal(themeVersion(theme), 'v1:love-attraction+money-ambition-power')
+
+  // Answers from an older edition don't count towards progress.
+  const stale = themeProgress(theme, Object.fromEntries(Object.entries(play(love, true)).map(([id, visit]) => [id, { ...visit, edition: 'v0' }])))
+  assert.equal(stale.chapters[0].state, 'not-started')
+  // A single-quiz theme never offers combined results.
+  assert.equal(themeProgress(quizById('world')!, {}).complete, false)
 })

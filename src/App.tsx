@@ -12,6 +12,7 @@ import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
 import { hrefFor, type Route } from './lib/route'
 import { analyticsConsent, setAnalyticsConsent, track } from './lib/analytics'
+import { rememberShareOrigin, shareProps } from './lib/shareTracking'
 
 function parse(): { route: Route; params: URLSearchParams } {
   const h = window.location.hash.replace(/^#\/?/, '')
@@ -37,7 +38,12 @@ export default function App() {
   const quiz = route === 'discover'
     ? quizById(params.get('quiz')) ?? (params.get('q') || params.get('mode') ? DEFAULT_QUIZ : undefined)
     : undefined
-  useEffect(() => { track('page_viewed', { section: route, ...(quiz && { quiz_id: quiz.id }) }) }, [route, params, consent, quiz])
+  const fromShare = params.get('from') === 'share' ? params.get('card') ?? 'quiz' : null
+  if (fromShare) rememberShareOrigin(fromShare)
+  useEffect(() => { track('page_viewed', { section: route, ...(quiz && { quiz_id: quiz.id }), ...shareProps() }) }, [route, params, consent, quiz])
+  useEffect(() => {
+    if (fromShare) track('shared_link_visited', { card: fromShare, ...(quiz && { quiz_id: quiz.id }), ...(params.get('chapter') && { chapter_id: params.get('chapter')! }) })
+  }, [fromShare, quiz, params, consent])
   const investigationId = params.get('r') ?? DEFAULT_INVESTIGATION
   const entry = editorialQuestionById(investigationId)
   return (
