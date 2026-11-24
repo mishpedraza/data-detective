@@ -87,8 +87,7 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
             <h1 tabIndex={-1}>How sure are you, <em>really?</em></h1>
             <p className="quiz-subtitle">Make a guess, see what the research found, and challenge a friend to beat your score.</p>
             {featured && chapter && entry && status && <div className="quiz-show-start">
-              <p id="featured-quiz"><span>{status.meta}</span></p>
-              <a className="quiz-show-button" href={entry.href} aria-describedby="featured-quiz"
+              <a className="quiz-show-button" href={entry.href}
                 onClick={follow(navigate, entry.href, () => trackQuizOpen(featured, chapter, entry))}>
                 {status.action}
               </a>
