@@ -2,6 +2,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, RowsQuestion, Side, SlidersQuestion } from '../../data/menWomen'
 import { overlap, parseRows, parseSliders } from '../../lib/chapterScore'
 import { MoneyVisual } from './MoneyVisuals'
+import { HousingVisual } from './HousingVisuals'
 import { useCount, useTiming } from './motion'
 
 function AgeVisual() {
@@ -273,6 +274,15 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'grids': return <GridsVisual />
     case 'bars': return <BarsVisual question={question} />
     case 'facts': return <FactsVisual question={question} />
+    case 'chain':
+    case 'rentcontrol':
+    case 'airbnb':
+    case 'twostudies':
+    case 'ratio':
+    case 'vacant':
+    case 'permits':
+    case 'auckland':
+      return <HousingVisual question={question} pick={pick} />
     default: return <MoneyVisual question={question} pick={pick} />
   }
 }

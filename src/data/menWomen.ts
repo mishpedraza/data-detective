@@ -3,6 +3,7 @@
 export type Side = 'men' | 'similar' | 'women'
 export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'dumbbell' | 'grids' | 'bars' | 'facts'
   | 'leader' | 'negotiate' | 'compete' | 'risk' | 'backlash' | 'week' | 'budget' | 'timeline' | 'power'
+  | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
 
 export interface Evidence {
   citation: string
@@ -75,6 +76,9 @@ export interface EstimateQuestion extends Base {
   actual: number
   near: number
   far: number
+  /** Slider maximum, 100 by default; '' shows a plain count instead of a percentage. */
+  max?: number
+  unit?: '%' | ''
 }
 
 export type ChapterQuestion = ChoiceQuestion | RowsQuestion | SlidersQuestion | EstimateQuestion

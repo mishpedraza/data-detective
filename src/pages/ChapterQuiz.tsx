@@ -25,7 +25,7 @@ const sideLabel: Record<Side, string> = { men: 'Men', similar: 'Similar', women:
 const unitOf = (question: ChapterQuestion) => question.kind === 'sliders' && question.unit === 'h' ? ' h' : '%'
 const off = (guess: number, actual: number, unit: string) => {
   const gap = Math.round(Math.abs(guess - actual) * 10) / 10
-  return gap === 0 ? 'spot on' : `${gap}${unit === '%' ? ' points' : ' hours'} off`
+  return gap === 0 ? 'spot on' : `${gap}${unit === '%' ? ' points' : unit === '' ? '' : ' hours'} off`
 }
 
 function verdictDetail(question: ChapterQuestion, pick: string) {
@@ -34,7 +34,8 @@ function verdictDetail(question: ChapterQuestion, pick: string) {
   if (question.kind === 'rows') return `${parseRows(question, pick)!.filter((side, i) => side === question.rows[i].answer).length} of ${question.rows.length} predictions matched.`
   if (question.kind === 'estimate') {
     const guess = parseEstimate(question, pick)!
-    return `You guessed ${guess}%; it was ${question.actual}% (${off(guess, question.actual, '%')}).`
+    const unit = question.unit ?? '%'
+    return `You guessed ${guess}${unit}; it was ${question.actual}${unit} (${off(guess, question.actual, unit)}).`
   }
   const guess = parseSliders(question, pick)!
   const unit = unitOf(question)
@@ -164,13 +165,13 @@ function RowsInput({ question, pick, onPick }: { question: Extract<ChapterQuesti
   )
 }
 
-function Slider({ label, tone, value, onChange, unit = '%', max = 100 }: { label: string; tone: 'men' | 'women' | 'accent'; value?: number; onChange: (value: number) => void; unit?: '%' | 'h'; max?: number }) {
+function Slider({ label, tone, value, onChange, unit = '%', max = 100 }: { label: string; tone: 'men' | 'women' | 'accent'; value?: number; onChange: (value: number) => void; unit?: '%' | 'h' | ''; max?: number }) {
   const middle = Math.round(max / 2)
-  const spoken = unit === 'h' ? 'hours a week' : 'percent'
+  const spoken = unit === 'h' ? 'hours a week' : unit === '%' ? 'percent' : ''
   return (
     <label className={`ch-slider v-${tone}`}>
-      <span className="ch-slider-head"><span>{label}</span><span className="ch-slider-value">{value === undefined ? '—' : `${value}${unit === 'h' ? ' h' : '%'}`}</span></span>
-      <input type="range" min={0} max={max} step={1} value={value ?? middle} aria-valuetext={value === undefined ? 'Not set' : `${value} ${spoken}`}
+      <span className="ch-slider-head"><span>{label}</span><span className="ch-slider-value">{value === undefined ? '—' : `${value}${unit === 'h' ? ' h' : unit}`}</span></span>
+      <input type="range" min={0} max={max} step={1} value={value ?? middle} aria-valuetext={value === undefined ? 'Not set' : `${value} ${spoken}`.trim()}
         className={value === undefined ? 'is-unset' : ''} onChange={(event) => onChange(Number(event.target.value))}
         onPointerDown={() => value === undefined && onChange(middle)} />
       <span className="ch-people" aria-hidden="true">
@@ -203,7 +204,7 @@ function EstimateInput({ question, pick, onPick }: { question: Extract<ChapterQu
   if (pick) return null
   return (
     <div className="ch-sliders">
-      <Slider label={question.label} tone="accent" value={value} onChange={setValue} />
+      <Slider label={question.label} tone="accent" value={value} onChange={setValue} max={question.max} unit={question.unit} />
       <button type="button" className="challenge-primary ch-reveal" disabled={value === undefined} onClick={() => onPick(String(value))}>
         {value !== undefined ? 'Lock in my estimate →' : 'Set your estimate'}
       </button>
