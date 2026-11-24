@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { track } from '../lib/analytics'
-import { SHARE_MESSAGE, renderScorecard, scorecardAlt, type Scorecard } from '../lib/scorecard'
+import { SHARE_MESSAGE, renderScorecard, scoreSummary, scorecardAlt, type Scorecard } from '../lib/scorecard'
 
 type Props = Record<string, string | number | boolean>
 
@@ -59,7 +59,7 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
     }
     try {
       // The link goes in the text too: some apps drop the url field when an image is attached.
-      await navigator.share(withImage ? { files: [png!], text: `${SHARE_MESSAGE}\n${url}` } : { text: SHARE_MESSAGE, url })
+      await navigator.share(withImage ? { files: [png!], text: `${SHARE_MESSAGE}\n${url}` } : { text: `${scoreSummary(card)} ${SHARE_MESSAGE}`, url })
       track('scorecard_shared', { ...props, method })
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') track('scorecard_share_cancelled', { ...props, method })

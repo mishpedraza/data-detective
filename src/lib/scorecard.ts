@@ -22,6 +22,11 @@ const PAD = 96
 
 export const scoreLabel = (points: number, total: number) => `${formatPoints(points)}/${total}`
 
+/** The score in words, for shares that can't carry the image. */
+export const scoreSummary = (card: Scorecard) => card.kind === 'quiz'
+  ? `I scored ${scoreLabel(card.points, card.total)} on “${card.title}”.`
+  : `I scored ${scoreLabel(card.points, card.total)} across all ${card.parts.length} quizzes of “${card.prompt}”`
+
 export function scorecardAlt(card: Scorecard) {
   return card.kind === 'quiz'
     ? `Data Detective scorecard: ${card.title}, ${scoreLabel(card.points, card.total)}. ${SIGNATURE}`
