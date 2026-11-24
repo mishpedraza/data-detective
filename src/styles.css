@@ -813,7 +813,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .quiz-dots .right { background: #2f6b4f; }
 .quiz-dots .partial { background: #b98b2e; }
 .quiz-dots .wrong { background: var(--b); }
-.quiz-action { grid-column: 2; grid-row: 1 / span 2; align-self: end; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .55rem 1.05rem; border-radius: 999px; background: var(--accent); color: #fff; font: 600 .88rem/1 var(--sans); white-space: nowrap; transition: gap .3s var(--ease); }
+.quiz-action { flex-shrink: 0; grid-column: 2; grid-row: 1 / span 2; align-self: end; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .55rem 1.05rem; border-radius: 999px; background: var(--accent); color: #fff; font: 600 .88rem/1 var(--sans); white-space: nowrap; transition: gap .3s var(--ease); }
 .quiz-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (hover: hover) {
   .quiz-card:hover { transform: translateY(-3px); background: color-mix(in srgb, var(--accent) 9%, var(--paper)); box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--accent) 70%, transparent); }
@@ -823,7 +823,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .quiz-soon .quiz-title { color: var(--muted); }
 .quiz-browse { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .8rem 1.5rem; margin-top: clamp(2.4rem, 6vw, 4rem); padding: clamp(1.1rem, 3vw, 1.5rem) clamp(1.2rem, 3vw, 1.75rem); border: 1px dashed var(--rule-strong); border-radius: 4px; color: var(--ink-2); text-decoration: none; font: 400 1.02rem/1.45 var(--serif); transition: border-color .2s, background .2s; }
 .quiz-browse-title { color: var(--ink); font-weight: 600; }
-.quiz-browse-go { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .55rem 1.05rem; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink); font: 600 .88rem/1 var(--sans); white-space: nowrap; transition: gap .3s var(--ease); }
+.quiz-browse-go { flex-shrink: 0; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .55rem 1.05rem; border: 1px solid var(--ink); border-radius: 999px; color: var(--ink); font: 600 .88rem/1 var(--sans); white-space: nowrap; transition: gap .3s var(--ease); }
 .quiz-browse:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 @media (hover: hover) {
   .quiz-browse:hover { border-color: var(--ink); background: var(--paper-2); }
