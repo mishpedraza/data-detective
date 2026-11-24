@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Redirect GitHub Pages to Cloudflare Pages
 
 on:
   push:
@@ -19,18 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-        env:
-          BASE_PATH: /${{ github.event.repository.name }}/
+      # The app now lives on Cloudflare Pages; GitHub Pages only forwards old links there.
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: redirect
   deploy:
     needs: build
     runs-on: ubuntu-latest
