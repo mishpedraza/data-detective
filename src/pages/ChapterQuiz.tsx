@@ -276,9 +276,9 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
           )
         })}
       </ol>
-      <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
       <ScoreShare card={card} url={shareLink({ quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) }, 'quiz')}
         analytics={{ quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, max_points: questions.length }} />
+      <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
       {hasChapterList(quiz) && <ThemeNext quiz={quiz} theme={theme} navigate={navigate} combined={combined || undefined}
         next={nextInTheme && nextHref ? { title: nextInTheme.chapter.title, href: nextHref, state: nextInTheme.state } : undefined} />}
       <div className="ch-actions">
