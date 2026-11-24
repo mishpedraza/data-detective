@@ -912,7 +912,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .ch-rail button[aria-current='step']::before { background: var(--rule-strong); }
 .ch-rail button:disabled { cursor: default; }
 
-.ch-question h1 { max-width: 18ch; margin-bottom: .9rem; }
+.ch-question h1 { max-width: 22ch; margin-bottom: .9rem; font-size: clamp(1.85rem, 4.2vw, 3.1rem); line-height: 1.08; }
 .ch-prompt { margin: 0 0 1.6rem; max-width: 40ch; font-size: clamp(1rem, 2.2vw, 1.12rem); color: var(--ink-2); }
 .ch-options { display: grid; gap: .55rem; }
 .ch-option { display: grid; grid-template-columns: 2rem 1fr auto; align-items: center; gap: .75rem; width: 100%; min-height: 3.6rem; padding: .8rem 1rem; text-align: left; background: rgba(255, 255, 255, .55); border-radius: 12px; font-size: 1rem; line-height: 1.35; box-shadow: inset 0 0 0 1px var(--rule); transition: box-shadow .2s, background .2s, transform .15s var(--ease), opacity .3s; }
@@ -955,7 +955,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .ch-verdict strong { font: 600 1.05rem/1.2 var(--sans); color: var(--ink); }
 .ch-points { margin-left: auto; padding: .15rem .55rem; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 650; font-size: .82rem; }
 .ch-verdict.is-wrong .ch-points { background: rgba(23, 23, 28, .06); color: var(--ink-2); }
-.ch-finding { margin: 0 0 1.4rem; max-width: 20ch; font: 500 clamp(1.7rem, 5vw, 2.6rem)/1.1 var(--serif); letter-spacing: -.025em; color: var(--accent); }
+.ch-finding { margin: 0 0 1.4rem; max-width: 26ch; font: 500 clamp(1.4rem, 3.6vw, 2rem)/1.15 var(--serif); letter-spacing: -.025em; color: var(--accent); }
 .ch-visual { margin: 0 -.25rem 1.2rem; }
 .ch-visual svg { display: block; width: 100%; height: auto; overflow: visible; }
 .ch-takeaway { margin: 0 0 1rem; max-width: 46ch; font-size: 1.02rem; color: var(--ink-2); }
