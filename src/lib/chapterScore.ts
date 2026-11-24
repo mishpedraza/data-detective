@@ -21,7 +21,7 @@ export function parseSliders(question: ChapterQuestion, pick: string): { men: nu
 export function parseEstimate(question: ChapterQuestion, pick: string): number | undefined {
   if (question.kind !== 'estimate' || !/^\d{1,3}$/.test(pick)) return
   const value = Number(pick)
-  return value <= 100 ? value : undefined
+  return value <= (question.max ?? 100) ? value : undefined
 }
 
 /** A choice with a warm-up stores both as "answer|warm-up"; the warm-up is never scored. */
