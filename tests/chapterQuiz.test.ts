@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { DEFAULT_QUIZ, quizById, quizQuestions } from '../src/data/quizzes'
 import { LOVE_QUESTIONS, type ChapterQuestion } from '../src/data/menWomen'
 import { MONEY_QUESTIONS } from '../src/data/moneyPower'
+import { NATURE_QUESTIONS } from '../src/data/natureNurture'
 import { chapterAnswers, chapterQuestions, estimatePoints, formatPoints, overlap, recordAnswer, scoreQuestion, totalPoints } from '../src/lib/chapterScore'
 import { challengeReaction, partialReaction } from '../src/lib/discoveryChallenge'
 import { challengeAnswers } from '../src/lib/discoveryChallenge'
@@ -12,14 +13,15 @@ import { hrefFor } from '../src/lib/route'
 const quiz = quizById('men-and-women')!
 const byId = (id: string) => LOVE_QUESTIONS.find((question) => question.id === id) as ChapterQuestion
 
-test('the Men & Women quiz plays Love (7 questions) and Money, ambition & power (9 questions)', () => {
+test('the Men & Women quiz plays Love (7), Money, ambition & power (9) and Nature, nurture & society (4)', () => {
   assert.equal(quiz.format, 'chapter')
-  assert.deepEqual(quiz.chapters.map(({ id, title }) => [id, title]), [['love-attraction', 'Love, attraction & relationships'], ['money-ambition-power', 'Money, ambition & power']])
+  assert.deepEqual(quiz.chapters.map(({ id, title }) => [id, title]), [['love-attraction', 'Love, attraction & relationships'], ['money-ambition-power', 'Money, ambition & power'], ['nature-nurture-society', 'Nature, nurture & society']])
+  assert.equal(chapterQuestions(quiz, 'nature-nurture-society').length, 4)
   assert.equal(chapterQuestions(quiz, 'love-attraction').length, 7)
   assert.equal(chapterQuestions(quiz, 'money-ambition-power').length, 9)
-  assert.deepEqual(quizQuestions(quiz).map(({ id }) => id), [...LOVE_QUESTIONS, ...MONEY_QUESTIONS].map(({ id }) => id))
+  assert.deepEqual(quizQuestions(quiz).map(({ id }) => id), [...LOVE_QUESTIONS, ...MONEY_QUESTIONS, ...NATURE_QUESTIONS].map(({ id }) => id))
   assert.equal(hrefFor('discover', { quiz: quiz.id, q: LOVE_QUESTIONS[0].id }), '#/discover?quiz=men-and-women&q=mw-age-attraction')
-  for (const question of [...LOVE_QUESTIONS, ...MONEY_QUESTIONS]) {
+  for (const question of [...LOVE_QUESTIONS, ...MONEY_QUESTIONS, ...NATURE_QUESTIONS]) {
     assert.ok(question.evidence, question.id)
     assert.match(question.evidence!.url, /^https:\/\//)
     if (question.kind === 'choice') assert.ok(question.options.some(({ id }) => id === question.answer), question.id)
