@@ -57,8 +57,8 @@ export function chapterResult(points: number, total: number) {
   return 'You just learned more than most people ever check.'
 }
 
-export function chapterQuestions(quiz: Quiz): ChapterQuestion[] {
-  return quiz.chapters.flatMap(({ questionIds }) => questionIds.flatMap((id) => CHAPTER_QUESTIONS[id] ? [CHAPTER_QUESTIONS[id]] : []))
+export function chapterQuestions(quiz: Quiz, chapterId?: string): ChapterQuestion[] {
+  return quiz.chapters.filter(({ id }) => !chapterId || id === chapterId).flatMap(({ questionIds }) => questionIds.flatMap((id) => CHAPTER_QUESTIONS[id] ? [CHAPTER_QUESTIONS[id]] : []))
 }
 
 /** Saves an answer once; going back to a question keeps the first prediction. */

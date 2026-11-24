@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, Side } from '../data/menWomen'
-import { QUIZZES, quizQuestions, type Quiz } from '../data/quizzes'
+import { QUIZZES, hasChapterList, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
 import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual, useCount } from '../components/chapter/Visuals'
 import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseRows, parseSliders, scoreQuestion, totalPoints } from '../lib/chapterScore'
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
+import { chapterEntry, follow, playStatus } from '../lib/quizEntry'
+import { PlayCard } from './Quizzes'
 
 const plainClick = (event: MouseEvent) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
@@ -126,16 +128,15 @@ function Reveal({ question, pick, points, onEvidence, explore }: { question: Cha
   )
 }
 
-function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: {
+function Results({ quiz, chapter, questions, attempt, restart, navigate, openQuestion }: {
   openQuestion: (id: string) => void
-  quiz: Quiz; questions: ChapterQuestion[]; attempt: DiscoveryProgress; restart: () => void; navigate: (href: string) => void
+  quiz: Quiz; chapter: QuizChapter; questions: ChapterQuestion[]; attempt: DiscoveryProgress; restart: () => void; navigate: (href: string) => void
 }) {
   const answers = chapterAnswers(attempt, questions, quiz.edition)
   const points = totalPoints(answers)
   const shown = useCount(points, 0, 1300, 200)
   const [status, setStatus] = useState('')
   const heading = useRef<HTMLHeadingElement>(null)
-  const chapter = quiz.chapters[0]
   useEffect(() => { heading.current?.focus() }, [])
 
   async function share() {
@@ -196,25 +197,63 @@ function Results({ quiz, questions, attempt, restart, navigate, openQuestion }: 
   )
 }
 
-export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; navigate: (href: string) => void; selected: string | null; mode: string | null }) {
-  const questions = useMemo(() => chapterQuestions(quiz), [quiz])
-  const chapter = quiz.chapters[0]
+function ChapterList({ quiz, navigate }: { quiz: Quiz; navigate: (href: string) => void }) {
+  const home = hrefFor('discover')
+  return (
+    <div className="discover discover-edition discovery-reader chapter-quiz">
+      <nav className="discovery-reader-nav" aria-label="Quiz navigation">
+        <a className="discovery-contents-trigger" href={home} onClick={follow(navigate, home)}>← All quizzes</a>
+      </nav>
+      <section className="discovery-reading quiz-collection">
+        <h1 tabIndex={-1}>{quiz.title}</h1>
+        <p className="discovery-context">Pick a chapter.</p>
+        <ol className="quiz-list">
+          {quiz.chapters.map((chapter, i) => {
+            const entry = chapterEntry(quiz, chapter.id)
+            return <li key={chapter.id}>
+              <PlayCard kicker={`Chapter ${i + 1}`} title={chapter.title} description={chapter.description} navigate={navigate}
+                href={entry.href} status={playStatus(entry.questions, entry.answers, chapter.minutes)} questions={entry.questions} answers={entry.answers}
+                onOpen={() => track(entry.event, { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, answered_count: entry.answers.length })} />
+            </li>
+          })}
+          {quiz.moreChapters && <li><PlayCard kicker={`Chapter ${quiz.chapters.length + 1}`} title="More chapters" status="Coming soon" navigate={navigate} /></li>}
+        </ol>
+      </section>
+    </div>
+  )
+}
+
+export function ChapterQuiz({ quiz, navigate, selected, mode, chapterId }: { quiz: Quiz; navigate: (href: string) => void; selected: string | null; mode: string | null; chapterId: string | null }) {
+  const themed = hasChapterList(quiz)
+  // Older links name a question but no chapter; open the chapter that holds it.
+  const chapter = !themed ? quiz.chapters[0]
+    : quiz.chapters.find(({ id }) => id === chapterId)
+      ?? (selected || mode ? quiz.chapters.find(({ questionIds }) => questionIds.includes(selected ?? '')) ?? quiz.chapters[0] : undefined)
+  if (!chapter) return <ChapterList quiz={quiz} navigate={navigate} />
+  return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={themed} navigate={navigate} selected={selected} mode={mode} />
+}
+
+function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { quiz: Quiz; chapter: QuizChapter; themed: boolean; navigate: (href: string) => void; selected: string | null; mode: string | null }) {
+  const questions = useMemo(() => chapterQuestions(quiz, chapter.id), [quiz, chapter.id])
   const total = questions.length
   const [attempt, setAttempt] = useState(() => readDiscoveryProgress(quiz.attemptKey))
   const answers = chapterAnswers(attempt, questions, quiz.edition)
   const complete = answers.length === total
   const firstOpen = questions.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
   const lastReachable = firstOpen < 0 ? total - 1 : firstOpen
-  const requested = questions.findIndex(({ id }) => id === selected)
+  // A link without a question opens the next one; stay on it after answering so the reveal shows.
+  const [entered] = useState(() => (selected || complete ? null : questions[firstOpen].id))
+  const current = selected ?? entered
+  const requested = questions.findIndex(({ id }) => id === current)
   const index = Math.min(requested < 0 ? lastReachable : requested, lastReachable)
   const question = questions[index]
   const answer = answers.find(({ id }) => id === question.id)
-  const view = (mode === 'results' || mode === 'review') && complete ? 'results' : selected || mode === 'challenge' ? 'question' : 'welcome'
-  const focusNext = useRef(false)
+  const view = (mode === 'results' || mode === 'review' || (!current && !mode)) && complete ? 'results' : 'question'
+  // Opening a card replaces the focused link, so start on the question heading.
+  const focusNext = useRef(true)
   const reduce = useReducedMotion()
-  const link = (params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...params })
+  const link = (params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...(themed && { chapter: chapter.id }), ...params })
   const ids = { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id }
-  const partial = questions.filter(({ kind }) => kind !== 'choice').length
 
   useEffect(() => {
     try { localStorage.setItem(quiz.attemptKey, JSON.stringify(attempt)) } catch { /* Storage is optional. */ }
@@ -231,11 +270,6 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
     if (position < 0 || position > lastReachable) return
     focusNext.current = true
     navigate(link({ q: questions[position].id, mode: 'challenge' }))
-  }
-  function start() {
-    focusNext.current = true
-    track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { ...ids, answered_count: answers.length })
-    navigate(complete ? link({ mode: 'results' }) : link({ q: questions[lastReachable].id, mode: 'challenge' }))
   }
   function restart() {
     track('quiz_restarted', ids)
@@ -254,47 +288,20 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
     setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...current }, question.id, pick, quiz.edition))
   }
 
-  const home = hrefFor('discover')
+  const back = themed ? hrefFor('discover', { quiz: quiz.id }) : hrefFor('discover')
   const nav = (
     <nav className="discovery-reader-nav" aria-label="Quiz navigation">
-      <a className="discovery-contents-trigger" href={view === 'welcome' ? home : link()} onClick={(event) => {
-        if (!plainClick(event)) return
-        event.preventDefault()
-        navigate(view === 'welcome' ? home : link())
-      }}>{view === 'welcome' ? '← All quizzes' : '← Quiz home'}</a>
+      <a className="discovery-contents-trigger" href={back} onClick={follow(navigate, back)}>{themed ? '← Chapters' : '← All quizzes'}</a>
       {view === 'question' && answers.length > 0 && <button className="discovery-contents-trigger" type="button" onClick={() => {
         if (window.confirm('Start again? This clears your answers for this quiz.')) restart()
       }}>Start again</button>}
     </nav>
   )
 
-  if (view === 'welcome') return (
-    <div className="discover discover-edition discovery-reader chapter-quiz">
-      {nav}
-      <section className="discovery-reading discovery-welcome ch-welcome">
-        <p className="discovery-kicker">{chapter.title === quiz.title ? chapter.title : `Chapter 1 · ${chapter.title}`}</p>
-        <h1 tabIndex={-1}>{quiz.prompt}</h1>
-        <p className="ch-description">{chapter.description}</p>
-        <p className="ch-steps" aria-label="Predict. Reveal. Rethink."><span>Predict.</span> <span>Reveal.</span> <span>Rethink.</span></p>
-        <p className="discovery-context">{total} questions · about {chapter.minutes} minutes · one point each{partial ? `, with partial credit on ${partial === 2 ? 'two' : partial}` : ''}.</p>
-        <div className="discovery-welcome-actions">
-          <button className="challenge-primary" type="button" onClick={start}>
-            {complete ? 'See my results' : answers.length ? `Resume · question ${lastReachable + 1}` : 'Start the quiz'} →
-          </button>
-          {quiz.browse && <a className="discovery-link" href={link({ mode: 'browse' })} onClick={(event) => {
-            if (!plainClick(event)) return
-            event.preventDefault()
-            navigate(link({ mode: 'browse' }))
-          }}>Or browse all discoveries →</a>}
-        </div>
-      </section>
-    </div>
-  )
-
   if (view === 'results') return (
     <div className="discover discover-edition discovery-reader chapter-quiz">
       {nav}
-      <Results quiz={quiz} questions={questions} attempt={attempt} restart={restart} navigate={navigate}
+      <Results quiz={quiz} chapter={chapter} questions={questions} attempt={attempt} restart={restart} navigate={navigate}
         openQuestion={(id) => { focusNext.current = true; navigate(link({ q: id, mode: 'challenge' })) }} />
     </div>
   )

@@ -17,8 +17,10 @@ export interface QuizChapter {
 export interface Quiz {
   id: string
   title: string
-  /** Welcome headline, phrased as the challenge to the player. */
+  /** The challenge to the player, used in shared results. */
   prompt: string
+  /** One line for the quiz card. */
+  description: string
   tagline?: string
   /** Changing the edition invalidates stored answers when a quiz's questions are revised. */
   edition: string
@@ -26,6 +28,8 @@ export interface Quiz {
   format?: 'chapter'
   /** Also offers browsing every discovery without scoring. */
   browse?: boolean
+  /** More chapters are planned, so the theme opens on its chapter list. */
+  moreChapters?: boolean
   attemptKey: string
   resultKey: string
   chapters: readonly QuizChapter[]
@@ -37,6 +41,7 @@ export const QUIZZES: readonly Quiz[] = [
     title: 'The World Around Us',
     prompt: 'How Well Do You Know the World?',
     tagline: 'A few surprises. Absolutely no judgment.',
+    description: 'Homes, work, family, crime and conflict. Nine beliefs, checked against the data.',
     edition: DISCOVERY_QUIZ_EDITION,
     format: 'chapter',
     browse: true,
@@ -53,8 +58,10 @@ export const QUIZZES: readonly Quiz[] = [
   },
   {
     id: 'men-and-women',
-    title: 'Men and Women',
+    title: 'Men & Women',
     prompt: 'How well do you really understand men and women?',
+    description: 'Love, dating and relationships. How different are we, really?',
+    moreChapters: true,
     edition: 'v1',
     format: 'chapter',
     attemptKey: 'data-detective.quiz.men-and-women.v1',
@@ -68,6 +75,7 @@ export const QUIZZES: readonly Quiz[] = [
     id: 'housing-crisis',
     title: 'The Housing Crisis',
     prompt: 'How Well Do You Understand the Housing Crisis?',
+    description: 'Prices, rents and who can still afford a home.',
     edition: 'v1',
     attemptKey: 'data-detective.quiz.housing-crisis.v1',
     resultKey: 'data-detective.quiz.housing-crisis.last-result.v1',
@@ -76,6 +84,11 @@ export const QUIZZES: readonly Quiz[] = [
 ]
 
 export const DEFAULT_QUIZ = QUIZZES[0]
+
+/** Themes with several chapters open on a chapter list; single-chapter quizzes start straight away. */
+export function hasChapterList(quiz: Quiz) {
+  return quiz.chapters.length > 1 || !!quiz.moreChapters
+}
 
 export function quizById(id: string | null | undefined) {
   return QUIZZES.find((quiz) => quiz.id === id)

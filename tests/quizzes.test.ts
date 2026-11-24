@@ -55,3 +55,29 @@ test('the original quiz plays in the chapter format and keeps saved answers', as
     if (question.visual === 'bars') assert.ok(question.bars?.length, question.id)
   }
 })
+
+test('playing goes straight to the next unanswered question, or results when finished', async () => {
+  const { chapterEntry } = await import('../src/lib/quizEntry')
+  const { hasChapterList } = await import('../src/data/quizzes')
+  const store = new Map<string, string>()
+  Object.assign(globalThis, { localStorage: { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => store.set(k, v), removeItem: (k: string) => store.delete(k) } })
+  const world = quizById('world')!
+  const menWomen = quizById('men-and-women')!
+  assert.equal(hasChapterList(world), false)
+  assert.equal(hasChapterList(menWomen), true)
+  const ids = quizQuestions(world).map(({ id }) => id)
+  const fresh = chapterEntry(world, world.chapters[0].id)
+  assert.equal(fresh.href, hrefFor('discover', { quiz: 'world', q: ids[0], mode: 'challenge' }))
+  assert.equal(fresh.event, 'quiz_started')
+  const pick = (id: string) => DISCOVER_TEASERS[id]!.interaction!.answer
+  store.set(world.attemptKey, JSON.stringify({ [ids[0]]: { pick: pick(ids[0]), edition: world.edition } }))
+  const resumed = chapterEntry(world, world.chapters[0].id)
+  assert.equal(resumed.href, hrefFor('discover', { quiz: 'world', q: ids[1], mode: 'challenge' }))
+  assert.equal(resumed.event, 'quiz_resumed')
+  store.set(world.attemptKey, JSON.stringify(Object.fromEntries(ids.map((id) => [id, { pick: pick(id), edition: world.edition }]))))
+  const done = chapterEntry(world, world.chapters[0].id)
+  assert.equal(done.href, hrefFor('discover', { quiz: 'world', mode: 'results' }))
+  assert.equal(done.event, 'quiz_results_opened')
+  const love = chapterEntry(menWomen, menWomen.chapters[0].id)
+  assert.equal(love.href, hrefFor('discover', { quiz: 'men-and-women', chapter: 'love-attraction', q: quizQuestions(menWomen)[0].id, mode: 'challenge' }))
+})
