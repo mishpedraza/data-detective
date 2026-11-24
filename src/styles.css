@@ -1344,3 +1344,9 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
   .v-permit-cards { gap: .6rem; }
   .v-permit-card { padding: .8rem; }
 }
+
+/* Share a quiz before finishing it */
+.ch-nav-actions { display: flex; align-items: center; gap: 1.2rem; }
+.quiz-invite { display: inline-flex; align-items: center; gap: .6rem; }
+.quiz-invite-status { font-size: .8rem; color: var(--muted); }
+.quiz-invite-status:empty { display: none; }

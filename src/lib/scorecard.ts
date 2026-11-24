@@ -3,6 +3,8 @@ import { formatPoints } from './chapterScore'
 export const SIGNATURE = 'Can you beat my score?'
 export const SHARE_MESSAGE = 'Can you beat my score on Data Detective?'
 export const SITE_LABEL = 'data-detective.pages.dev'
+/** The message for sharing a quiz before finishing it; it carries no score. */
+export const inviteMessage = (title: string) => `Try this quiz on Data Detective: “${title}”`
 
 export type Scorecard =
   | { kind: 'quiz'; theme: string; title: string; points: number; total: number; sequence: number[]; accent: string }

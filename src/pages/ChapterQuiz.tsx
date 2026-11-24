@@ -13,6 +13,7 @@ import { track } from '../lib/analytics'
 import { follow } from '../lib/quizEntry'
 import { shareLink } from '../lib/site'
 import { ScoreShare } from '../components/ScoreShare'
+import { QuizShare } from '../components/QuizShare'
 import type { Scorecard } from '../lib/scorecard'
 import { chapterProgress, pointSequence, themeProgress, themeVersion } from '../lib/themeProgress'
 import { nextAttempt, shareOrigin, shareProps } from '../lib/shareTracking'
@@ -385,9 +386,13 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   const nav = (
     <nav className="discovery-reader-nav" aria-label="Quiz navigation">
       <a className="discovery-contents-trigger" href={back} onClick={follow(navigate, back)}>← All quizzes</a>
-      {view === 'question' && answers.length > 0 && <button className="discovery-contents-trigger" type="button" onClick={() => {
-        if (window.confirm('Start again? This clears your answers for this quiz.')) restart()
-      }}>Start again</button>}
+      {view === 'question' && <span className="ch-nav-actions">
+        <QuizShare title={chapter.title} url={shareLink({ quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) }, 'invite')}
+          analytics={{ ...ids, question_number: index + 1, answered_count: answers.length }} />
+        {answers.length > 0 && <button className="discovery-contents-trigger" type="button" onClick={() => {
+          if (window.confirm('Start again? This clears your answers for this quiz.')) restart()
+        }}>Start again</button>}
+      </span>}
     </nav>
   )
 
