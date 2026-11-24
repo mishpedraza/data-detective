@@ -1217,7 +1217,15 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 @media (max-width: 520px) { .v-week-grid { grid-template-columns: 1fr; } }
 
 /* Housing Crisis: "Why is housing so expensive?" */
-.chapter-quiz:is([data-visual='chain'], [data-visual='rentcontrol'], [data-visual='airbnb'], [data-visual='twostudies'], [data-visual='ratio'], [data-visual='vacant'], [data-visual='permits'], [data-visual='auckland']) { --accent: #a8532f; --accent-soft: rgba(168, 83, 47, .1); }
+/* Same rotating palette as Money, ambition & power. */
+.chapter-quiz[data-visual='chain'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
+.chapter-quiz[data-visual='rentcontrol'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
+.chapter-quiz[data-visual='airbnb'] { --accent: #9a6a12; --accent-soft: rgba(154, 106, 18, .1); }
+.chapter-quiz[data-visual='twostudies'] { --accent: #56682a; --accent-soft: rgba(86, 104, 42, .11); }
+.chapter-quiz[data-visual='ratio'] { --accent: #a3472b; --accent-soft: rgba(163, 71, 43, .1); }
+.chapter-quiz[data-visual='vacant'] { --accent: #3d5a6c; --accent-soft: rgba(61, 90, 108, .1); }
+.chapter-quiz[data-visual='permits'] { --accent: #7a5a2f; --accent-soft: rgba(122, 90, 47, .1); }
+.chapter-quiz[data-visual='auckland'] { --accent: #5b4a7a; --accent-soft: rgba(91, 74, 122, .1); }
 .v-hs-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 3px; max-width: 26rem; margin: .4rem 0 .6rem; }
 .v-hs-cell { aspect-ratio: 1; border-radius: 2px; background: rgba(0, 0, 0, .09); }
 .v-hs-cell.is-on { background: var(--accent); }
@@ -1235,7 +1243,7 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-hs-bars li { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr 3.2rem; align-items: center; gap: .6rem; font-size: .85rem; color: var(--ink-2); }
 .v-hs-bars strong { text-align: right; font-variant-numeric: tabular-nums; }
 .v-hs-track { height: .8rem; border-radius: 99px; background: rgba(0, 0, 0, .07); overflow: hidden; }
-.v-hs-track i { display: block; height: 100%; border-radius: inherit; background: rgba(168, 83, 47, .45); }
+.v-hs-track i { display: block; height: 100%; border-radius: inherit; background: color-mix(in srgb, var(--accent) 45%, transparent); }
 .v-hs-bars li.is-strong .v-hs-track i { background: var(--accent); }
 .v-toggle { display: flex; flex-wrap: wrap; gap: .4rem; margin: 0 0 .8rem; }
 .v-toggle button { padding: .4rem .85rem; border: 1px solid var(--line, rgba(0, 0, 0, .15)); border-radius: 99px; background: transparent; font: 500 .8rem var(--sans); color: var(--ink-2); cursor: pointer; }
@@ -1248,7 +1256,7 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .v-hs-col { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; text-align: center; }
 .v-hs-col strong { font: 600 1.2rem var(--serif); }
 .v-hs-col i { display: block; width: 70%; margin-top: .3rem; border-radius: 4px 4px 0 0; background: var(--accent); }
-.v-hs-col:first-child i { background: rgba(168, 83, 47, .45); }
+.v-hs-col:first-child i { background: color-mix(in srgb, var(--accent) 45%, transparent); }
 .v-hs-col span { margin-top: .3rem; font-size: .85rem; } .v-hs-col small { font-size: .72rem; color: var(--muted); }
 .v-hs-ratio .v-note { grid-column: 1 / -1; }
 .v-hs-vacant section + section { margin-top: .8rem; }
