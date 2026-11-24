@@ -11,6 +11,7 @@ import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryP
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 import { follow } from '../lib/quizEntry'
+import { SITE_URL } from '../lib/site'
 
 const plainClick = (event: MouseEvent) => event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
 
@@ -241,7 +242,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
 
   async function share() {
     track('share_clicked', { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, total_questions: questions.length })
-    const url = new URL(window.location.href)
+    const url = new URL(SITE_URL)
     url.hash = hrefFor('discover', { quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) })
     const text = `I scored ${formatPoints(points)}/${questions.length} on “${chapter.title}” in Data Detective. ${quiz.prompt}`
     if (navigator.share) {
