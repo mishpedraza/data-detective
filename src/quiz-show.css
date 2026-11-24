@@ -13,8 +13,8 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
   align-items: center;
-  gap: 2rem;
-  padding: clamp(1.4rem, 3.5vw, 3rem);
+  gap: clamp(1rem, 3vw, 2rem);
+  padding: clamp(1.25rem, 2.8vw, 2.25rem) clamp(1.25rem, 4vw, 3.25rem);
   color: white;
   background: radial-gradient(ellipse at 84% 45%, #593598, transparent 65%), var(--show-violet);
   border-radius: clamp(1rem, 3vw, 2rem);
@@ -22,9 +22,9 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
 }
 .quiz-show-intro { position: relative; z-index: 1; }
 .quiz-show-hero h1 {
-  margin: 0 0 1.25rem;
+  margin: 0 0 .85rem;
   color: white;
-  font-size: clamp(3rem, 6.7vw, 6.2rem);
+  font-size: clamp(2.65rem, 5.2vw, 4.75rem);
   line-height: .94;
   letter-spacing: -.065em;
 }
@@ -32,7 +32,7 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
 .quiz-show-hero .quiz-subtitle { color: #eee1ff; font: 400 clamp(1rem, 1.6vw, 1.16rem)/1.6 var(--sans); }
 .quiz-show-art {
   position: relative;
-  width: min(100%, 19rem);
+  width: min(100%, 15rem);
   aspect-ratio: 1.19;
   justify-self: center;
   container-type: inline-size;
@@ -127,7 +127,7 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
 
 @media (max-width: 650px) {
   .quiz-show-hero { grid-template-columns: 1fr; gap: .35rem; }
-  .quiz-show-art { width: min(80%, 17rem); }
+  .quiz-show-art { width: min(58%, 10rem); }
   .ch-results .score-share { grid-template-columns: 1fr; }
   .scorecard-preview { width: min(100%, 13rem); justify-self: center; }
 }
@@ -135,7 +135,7 @@ body:has(.quiz-home, .chapter-quiz) { background: var(--show-paper); }
   .quiz-home .quiz-card, .quiz-home .quiz-browse { transition: none; }
 }
 
-.quiz-show-start { margin-top: 1.5rem; }
+.quiz-show-start { margin-top: 1.05rem; }
 .quiz-show-start p { margin: 0 0 .65rem; color: white; font-weight: 650; }
 .quiz-show-start p span { color: #eee1ff; font-weight: 400; }
 .quiz-show-button {
