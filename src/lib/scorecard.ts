@@ -12,10 +12,10 @@ export type Scorecard =
 export const CARD_WIDTH = 1080
 export const CARD_HEIGHT = 1350
 
-const PAPER = '#202820'
+const PAPER = '#301960'
 const INK = '#ffffff'
-const INK_2 = '#eef1e8'
-const MUTED = '#c5cfbc'
+const INK_2 = '#eee1ff'
+const MUTED = '#d8c2f7'
 const HIGHLIGHT = '#e5ff77'
 const SERIF = '"Fraunces Variable", "Iowan Old Style", Georgia, serif'
 const SANS = '"Inter Variable", Inter, system-ui, sans-serif'
