@@ -200,7 +200,7 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   const question = questions[index]
   const answer = answers.find(({ id }) => id === question.id)
   const view = mode === 'results' && complete ? 'results' : selected || mode === 'challenge' ? 'question' : 'welcome'
-  const headline = useRef<HTMLHeadingElement>(null)
+  const focusNext = useRef(false)
   const reduce = useReducedMotion()
   const link = (params: Record<string, string> = {}) => hrefFor('discover', { quiz: quiz.id, ...params })
   const ids = { quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id }
@@ -208,19 +208,28 @@ export function ChapterQuiz({ quiz, navigate, selected, mode }: { quiz: Quiz; na
   useEffect(() => {
     try { localStorage.setItem(quiz.attemptKey, JSON.stringify(attempt)) } catch { /* Storage is optional. */ }
   }, [attempt, quiz.attemptKey])
-  useEffect(() => { if (view === 'question') headline.current?.focus({ preventScroll: true }) }, [view, question.id])
+  // The incoming heading mounts after the outgoing question's exit animation, so focus it on mount.
+  const headline = (element: HTMLHeadingElement | null) => {
+    if (element && focusNext.current) {
+      element.focus({ preventScroll: true })
+      focusNext.current = false
+    }
+  }
 
   const goTo = (position: number) => {
     if (position < 0 || position > lastReachable) return
+    focusNext.current = true
     navigate(link({ q: questions[position].id }))
   }
   function start() {
+    focusNext.current = true
     track(complete ? 'quiz_results_opened' : answers.length ? 'quiz_resumed' : 'quiz_started', { ...ids, answered_count: answers.length })
     navigate(complete ? link({ mode: 'results' }) : link({ q: questions[lastReachable].id }))
   }
   function restart() {
     track('quiz_restarted', ids)
     setAttempt({})
+    focusNext.current = true
     navigate(link({ q: questions[0].id }))
   }
   function onPick(pick: string) {
