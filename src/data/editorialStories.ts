@@ -1,4 +1,5 @@
 import { INVESTIGATION_FIGURES } from './investigationFigures'
+import { adoptionPenalties, violentCrime2025 } from './studyEvidence'
 import type { ReviewedAnswer } from './reviewedAnswers'
 
 type EditorialStory = ReviewedAnswer & { readingNote: string }
@@ -51,6 +52,9 @@ export const EDITORIAL_STORIES: Readonly<Partial<Record<string, EditorialStory>>
     explanation: [{
       text: 'The Danish researchers found that three changes mattered about equally over the long run. Mothers were less likely to be working, worked fewer hours when employed and earned less per hour. That helps explain why qualifications can coexist with an earnings gap. Goldin’s research shows how jobs that pay a premium for long hours or availability at particular times can widen hourly pay differences. The Danish chart does not measure how much that premium mattered there.',
       refs: ['kleven2019', 'goldin2014'],
+    }, {
+      text: `Biology doesn’t explain the gap. A follow-up study by the same team found that six to ten years after a child arrived, adoptive mothers’ earnings penalty (${adoptionPenalties.adopted.long}%) was virtually identical to that of mothers who gave birth (${adoptionPenalties.birth.long}%).`,
+      refs: ['kleven2021'],
     }],
     limitation: { text: 'The Danish comparison concerns earnings after childbirth. It cannot account for the full EU hourly pay gap. The EU education and hourly pay figures cover different populations and years.', refs: ['eurostatGender', 'goldin2014', 'kleven2019'] },
     readingNote: 'Eurostat reports that 49.8% of women and 38.6% of men aged 25–34 had tertiary qualifications in 2024. Its separate 2022 analysis reports a 12.2% unadjusted hourly pay gap across a wider working population.',
@@ -90,7 +94,7 @@ export const EDITORIAL_STORIES: Readonly<Partial<Record<string, EditorialStory>>
   'crime-perceptions': {
     figure: INVESTIGATION_FIGURES['crime-perceptions'],
     headline: 'Americans often said crime was up during decades when recorded rates fell',
-    scope: 'US public opinion and crime trends, 1993–2022.',
+    scope: 'US public opinion and crime trends, 1993–2026.',
     finding: {
       text: 'Pew found that in 23 of 27 Gallup polls since 1993, at least 60% of US adults said national crime was higher than a year earlier. Across 1993–2022, the FBI’s recorded violent crime rate fell 49%. The national murder rate still had a sharp rise in 2020.',
       refs: ['pewCrime2024', 'gallupCrime'],
@@ -99,6 +103,9 @@ export const EDITORIAL_STORIES: Readonly<Partial<Record<string, EditorialStory>>
     explanation: [{
       text: 'In October 2023, 77% of respondents said crime rose nationally over the previous year, compared with 55% who said it rose in their own area. To judge whether either group was right, we would need records for the same place, year and kinds of crime. The long decline in recorded violent crime included real short-term reversals, such as the sharp rise in murder in 2020.',
       refs: ['gallupCrime2023', 'pewCrime2024'],
+    }, {
+      text: `More recently, opinion followed the record down. The FBI estimates violent crime fell ${-violentCrime2025.change}% from 2024 to 2025, the largest one-year drop since its estimates began in ${violentCrime2025.since}. The share telling Gallup crime was rising nationally fell from 77% in 2023 to 46% in 2026.`,
+      refs: ['fbi2025', 'gallupCrime2026'],
     }],
     limitation: { text: 'The poll asks whether crime rose over one year. The FBI figure measures the long-run change in reported violent crime. They show a recurring disconnect over the period, while leaving open how accurate any one year’s impression was.', refs: ['pewCrime2024', 'gallupCrime'] },
     readingNote: 'In Gallup’s tables, compare “More Crime US” with “Crime Your Area.” Pew also compares the FBI’s police records with the federal victimisation survey, which captures many offences that were never reported.',
@@ -117,6 +124,6 @@ export const EDITORIAL_STORIES: Readonly<Partial<Record<string, EditorialStory>>
       refs: ['toulemon2008', 'fagnani2002', 'dorbritz2008'],
     }],
     limitation: { text: 'The studies cannot tell us how much of the national gap in 2000 came from childcare, parental leave or other differences. The annual fertility rate can also fall when people postpone births, even if they eventually have similar-sized families.', refs: ['doepke2022'] },
-    readingNote: 'Compare Figure 1, which charts the long-run fertility decline, with Figure 8, which compares affluent countries in 1980 and 2000. In that sample, the income–fertility relationship had reversed by 2000.',
+    readingNote: 'Compare Figure 1, which charts the long-run fertility decline, with Figure 8, which compares affluent countries in 1980 and 2000. In that sample, the income–fertility relationship had reversed by 2000. Recalculated with World Bank data for the same 13 countries, it was still positive in 2024.',
   },
 }
