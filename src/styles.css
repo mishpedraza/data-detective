@@ -858,7 +858,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .theme-results-cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 @media (hover: hover) { .theme-results-cta:hover { filter: brightness(1.08); transform: translateY(-2px); } }
 .theme-next { display: grid; gap: .8rem; margin: 1.6rem 0 0; padding: 1.1rem 1.25rem; border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 5%, var(--paper)); }
-.theme-next .theme-results-cta { margin: 0; }
+.theme-next .theme-results-cta { margin: 0; flex-wrap: nowrap; }
 .theme-breakdown { display: grid; gap: .7rem; margin: 0 0 1rem; padding: 0; list-style: none; }
 .theme-breakdown a { display: grid; grid-template-columns: 1fr auto; gap: .45rem 1rem; padding: 1rem 1.15rem; border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 4px; background: color-mix(in srgb, var(--accent) 5%, var(--paper)); color: var(--ink); text-decoration: none; transition: background .2s; }
 .theme-breakdown-title { font: 450 clamp(1.15rem, 2.4vw, 1.4rem)/1.2 var(--serif); }
