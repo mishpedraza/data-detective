@@ -3,7 +3,7 @@ import type { Route } from '../lib/route'
 
 export function Nav({ route, go }: { route: Route; go: (r: Route) => void }) {
   const items: { id: Route; label: string }[] = [
-    { id: 'discover', label: 'Discover' },
+    { id: 'discover', label: 'Quizzes' },
     { id: 'investigate', label: 'Investigate' },
     { id: 'explore', label: 'Explore' },
   ]
