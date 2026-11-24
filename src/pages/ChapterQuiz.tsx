@@ -359,8 +359,9 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     track('quiz_question_answered', event)
     track('discovery_revealed', event)
     if (answers.length + 1 === total) track('quiz_completed', { ...ids, score: totalPoints(answers) + points, total_questions: total })
-    // Merge what other tabs saved so a stale tab never overwrites newer answers.
-    setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...current }, question.id, pick, quiz.edition))
+    // Start from what other tabs saved; this tab only speaks for its own chapter, so a stale tab can't restore another chapter's cleared answers.
+    setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...Object.fromEntries(Object.entries(current).filter(([id]) => chapter.questionIds.includes(id))) },
+      question.id, pick, quiz.edition))
   }
 
   const back = hrefFor('discover')
