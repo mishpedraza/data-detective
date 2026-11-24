@@ -21,7 +21,7 @@ export function Nav({ route, go }: { route: Route; go: (r: Route) => void }) {
     <header className="nav" ref={ref}>
       <a className="brand" href="#/" onClick={(e) => { e.preventDefault(); go('discover') }}>
         <span className="brand-mark" aria-hidden>
-          <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10" cy="10" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" /><path d="M15 15l6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /><path d="M6.5 11.5l2.2-2.4 2 1.6 2.6-3.2" fill="none" stroke="var(--b)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          <svg viewBox="0 0 64 64" width="24" height="24"><rect width="64" height="64" rx="14" fill="#301960" /><path d="M41.5 41.5 52 54" stroke="#ffe45b" strokeWidth="7" strokeLinecap="round" /><circle cx="28" cy="27" r="19.5" fill="#d6baff" stroke="#ffe45b" strokeWidth="2.6" /><circle cx="28" cy="27" r="17.1" fill="none" stroke="#361968" strokeWidth="2.2" /><text x="28" y="38" textAnchor="middle" transform="rotate(12 28 27)" fontFamily="var(--serif)" fontStyle="italic" fontWeight="600" fontSize="31" fill="#301960">?</text></svg>
         </span>
         Data Detective
       </a>
