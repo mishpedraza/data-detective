@@ -48,10 +48,11 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
   async function share() {
     const png = image && new File([image.blob], `${file}.png`, { type: 'image/png' })
     const withImage = !!png && !!navigator.canShare?.({ files: [png] })
-    const method = withImage ? 'native_image' : navigator.share ? 'native_link' : 'copy_fallback'
+    const canShare = 'share' in navigator
+    const method = withImage ? 'native_image' : canShare ? 'native_link' : 'copy_fallback'
     track('share_clicked', props)
     track('scorecard_share_opened', { ...props, method })
-    if (!navigator.share) {
+    if (!canShare) {
       // No share sheet: copy the link and offer the image to post alongside it.
       if (await copy('share_fallback')) setStatus('Link copied. Download the image to post it with your link.')
       return
