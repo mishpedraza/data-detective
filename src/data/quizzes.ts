@@ -4,6 +4,7 @@ import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
+import { MIND_CHAPTER, MIND_QUESTIONS } from './humanMind'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -100,6 +101,21 @@ export const QUIZZES: readonly Quiz[] = [
     chapters: [{
       ...HOUSING_CHAPTER,
       questionIds: HOUSING_QUESTIONS.map(({ id }) => id),
+    }],
+  },
+  {
+    id: 'human-mind',
+    title: 'The Human Mind',
+    prompt: 'How Easily Can Your Brain Fool You?',
+    accent: '#624575',
+    description: 'Memory, creativity, confidence and judgment.',
+    edition: 'v1',
+    format: 'chapter',
+    attemptKey: 'data-detective.quiz.human-mind.v1',
+    resultKey: 'data-detective.quiz.human-mind.last-result.v1',
+    chapters: [{
+      ...MIND_CHAPTER,
+      questionIds: MIND_QUESTIONS.map(({ id }) => id),
     }],
   },
 ]

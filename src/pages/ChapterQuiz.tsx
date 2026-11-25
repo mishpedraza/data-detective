@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEve
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, ChoiceQuestion, Side, Warmup } from '../data/menWomen'
 import { QUIZZES, hasChapterList, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
+import { SLEEP_LIST } from '../data/humanMind'
 import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual } from '../components/chapter/Visuals'
 import { useCount } from '../components/chapter/motion'
@@ -82,9 +83,39 @@ export function WeekCalendar({ label, days, onChange }: { label: string; days?: 
   )
 }
 
+const RECALL = [{ id: 'yes', label: 'Yes, it was there' }, { id: 'no', label: 'No, it wasn’t' }] as const
+
+function WordsWarmup({ prompt, value, onDone }: { prompt: string; value?: string; onDone?: (warm: string) => void }) {
+  const reduce = useReducedMotion()
+  const locked = value !== undefined
+  const [read, setRead] = useState(locked)
+  return (
+    <div className="ch-warmup">
+      <p className="ch-warmup-kicker">Not scored</p>
+      <p className="ch-warmup-prompt">{read ? 'Without looking back: was the word “sleep” on the list?' : prompt}</p>
+      {!read && <>
+        <ul className="hm-words" aria-label="Word list">
+          {SLEEP_LIST.map((word, i) => (
+            <motion.li key={word} initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={reduce ? { duration: 0 } : { delay: 0.2 + i * 0.32, duration: 0.45 }}>{word}</motion.li>
+          ))}
+        </ul>
+        <button type="button" className="challenge-primary ch-reveal" onClick={() => setRead(true)}>I’ve read them →</button>
+      </>}
+      {read && <div className={`ch-options${locked ? ' is-revealed' : ''}`} role="group" aria-label="Was sleep on the list?">
+        {RECALL.map(({ id, label }, i) => (
+          <button key={id} type="button" className={`ch-option${locked ? id === value ? ' is-chosen' : ' is-other' : ''}`} disabled={locked} aria-pressed={value === id} onClick={() => onDone?.(id)}>
+            <span className="ch-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span><span>{label}</span>
+          </button>
+        ))}
+      </div>}
+    </div>
+  )
+}
+
 function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string; onDone?: (warm: string) => void }) {
   const [days, setDays] = useState<[number?, number?]>([])
   const locked = value !== undefined
+  if (warmup.kind === 'words') return <WordsWarmup prompt={warmup.prompt} value={value} onDone={onDone} />
   if (warmup.kind === 'choice') return (
     <div className="ch-warmup">
       <p className="ch-warmup-kicker">Not scored</p>
