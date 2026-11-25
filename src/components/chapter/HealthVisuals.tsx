@@ -23,7 +23,7 @@ function FitFatVisual() {
   const x = (hr: number) => `${(Math.log(hr / 0.5) / Math.log(6)) * 100}%`
   return (
     <div className="v-hl-fitfat">
-      <div className="v-hl-people" role="img" aria-label={FIT_FAT.map(({ bmi, fit, hr }) => `${fit ? 'Fit' : 'Unfit'}, ${bmi.toLowerCase()}: ${hr.toFixed(2)}`).join('; ')}>
+      <div className="v-hl-people" role="img" aria-label={FIT_FAT.map(({ bmi, fit, hr, ci: range }) => `${fit ? 'Fit' : 'Unfit'}, ${bmi.toLowerCase()}: ${hr.toFixed(2)}${range ? ` (${ci(range)})` : ', reference'}`).join('; ')}>
         {FIT_FAT.map(({ id, bmi, fit, hr, ci: range }, i) => (
           <motion.figure key={id} className={`v-hl-person${hr > 1.5 ? ' is-high' : ''}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={t(0.1 + i * 0.12, 0.5)}>
             <Figure fit={fit} />
@@ -195,7 +195,7 @@ function AlcoholVisual() {
         <button type="button" aria-pressed={view === 'raw'} onClick={() => setView('raw')}>Before correcting</button>
         <button type="button" aria-pressed={view === 'adjusted'} onClick={() => setView('adjusted')}>After correcting for bias</button>
       </div>
-      <svg viewBox="0 0 316 172" className="v-hl-curve" role="img" aria-label={ALCOHOL.map(({ label, raw, adjusted }) => `${label}: ${raw.rr.toFixed(2)} before, ${adjusted.rr.toFixed(2)} after`).join('; ')}>
+      <svg viewBox="0 0 316 172" className="v-hl-curve" role="img" aria-label={ALCOHOL.map(({ label, raw, adjusted }) => `${label}: ${raw.rr.toFixed(2)} before (${ci(raw.ci)}), ${adjusted.rr.toFixed(2)} after (${ci(adjusted.ci)})`).join('; ')}>
         <line x1={10} x2={306} y1={y(1)} y2={y(1)} className="v-hl-target" />
         <text x={306} y={y(1) - 5} textAnchor="end" className="v-hl-label">Lifetime non-drinkers</text>
         {ALCOHOL.map((row, i) => {
