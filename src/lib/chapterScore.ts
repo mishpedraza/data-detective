@@ -48,6 +48,7 @@ function validWarmup(question: ChoiceQuestion, warm?: string) {
   if (!question.warmup) return warm === undefined
   if (question.warmup.kind === 'week') return !!parseWeek(warm)
   if (question.warmup.kind === 'holiday') return !!parseHoliday(warm)
+  if (question.warmup.kind === 'words') return warm === 'yes' || warm === 'no'
   return question.warmup.options.some(({ id }) => id === warm)
 }
 

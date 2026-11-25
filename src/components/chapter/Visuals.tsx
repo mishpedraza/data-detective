@@ -5,6 +5,7 @@ import { MoneyVisual } from './MoneyVisuals'
 import { NatureVisual } from './NatureVisuals'
 import { HousingVisual } from './HousingVisuals'
 import { HappinessVisual } from './HappinessVisuals'
+import { MindVisual } from './MindVisuals'
 import { HealthVisual } from './HealthVisuals'
 import { WorldVisual } from './WorldVisuals'
 import { useCount, useTiming } from './motion'
@@ -291,6 +292,8 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
       return <HousingVisual question={question} pick={pick} />
     case 'ceiling': case 'rank': case 'smarts': case 'ambition': case 'youth': case 'giving': case 'choiceset':
       return <HappinessVisual question={question} pick={pick} />
+    case 'halfstory': case 'aistory': case 'humble': case 'news': case 'lure': case 'lies': case 'ideas':
+      return <MindVisual question={question} pick={pick} />
     case 'fitfat': case 'sleepweek': case 'warrior': case 'bursts': case 'steps': case 'vitamins': case 'alcohol':
       return <HealthVisual question={question} />
     default: return <MoneyVisual question={question} pick={pick} />
