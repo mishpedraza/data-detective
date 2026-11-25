@@ -222,7 +222,7 @@ function IdeasVisual() {
       {kind === 'talk'
         ? seats.map(([dx, dy], i) => (
           <motion.path key={i} d={`M${cx + dx * 1.45 + 9} ${66 + dy * 1.45 - 16} h16 a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-10 l-5 4 v-4 h-1 a4 4 0 0 1 -4 -4 v-6 a4 4 0 0 1 4 -4 z`} className="v-hm-bubble"
-            initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 1, 0.25] }} transition={{ ...t(0.3 + i * 0.9, 0.9), times: [0, 0.2, 0.8, 1] }} />
+            initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={t(0.3 + i * 0.9, 0.5)} />
         ))
         : seats.flatMap(([dx, dy], i) => [0, 1, 2].map((n) => (
           <motion.rect key={`${i}-${n}`} x={cx + dx * 0.5 - 5 + n * 3} y={66 + dy * 0.5 - 6 - n * 3} width={10} height={10} rx={1.5} className="v-hm-note"
@@ -247,7 +247,7 @@ function IdeasVisual() {
           </div>
         ))}
       </div>
-      <p className="v-hm-aside">Not on video: pairs meeting in person came up with <strong>more creative ideas</strong> than pairs on a video call, but weren’t better at choosing one.</p>
+      <p className="v-hm-aside">Choosing is a different job: when picking their best idea, writing groups chose <strong>more original</strong> ones, talking groups <strong>more feasible</strong> ones.</p>
       <p className="v-note">Illustration above. Rows show only who came out ahead, not by how much: the first three from {IDEAS_GROUPS.online} online groups (2025), the last two from {IDEAS_GROUPS.cohesion} three-person groups (2026).</p>
     </div>
   )
