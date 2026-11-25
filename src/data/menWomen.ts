@@ -7,6 +7,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
   | 'pedestrian' | 'freefare' | 'height' | 'roads' | 'bikelanes' | 'citywage' | 'cooling' | 'tourism'
+  | 'ceiling' | 'rank' | 'smarts' | 'ambition' | 'youth' | 'giving' | 'choiceset'
   | 'halfstory' | 'aistory' | 'humble' | 'news' | 'lure' | 'lies' | 'ideas'
   | 'fitfat' | 'sleepweek' | 'warrior' | 'bursts' | 'steps' | 'vitamins' | 'alcohol'
 
@@ -46,6 +47,8 @@ interface Base {
 export type Warmup =
   | { kind: 'choice'; prompt: string; options: readonly { id: string; label: string }[] }
   | { kind: 'week'; prompt: string }
+  /** Pick from a short list, then a long one, then say which felt better to choose. */
+  | { kind: 'holiday'; prompt: string }
   /** Study a word list, then say whether one word was on it. */
   | { kind: 'words'; prompt: string }
 

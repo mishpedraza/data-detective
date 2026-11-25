@@ -5,6 +5,7 @@ import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
 import { CITIES_CHAPTER, CITIES_QUESTIONS } from './cities'
+import { MH_CHAPTER, MH_QUESTIONS } from './moneyHappiness'
 import { MIND_CHAPTER, MIND_QUESTIONS } from './humanMind'
 import { HEALTH_CHAPTER, HEALTH_QUESTIONS } from './health'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
@@ -106,6 +107,21 @@ export const QUIZZES: readonly Quiz[] = [
     }, {
       ...CITIES_CHAPTER,
       questionIds: CITIES_QUESTIONS.map(({ id }) => id),
+    }],
+  },
+  {
+    id: 'money-happiness',
+    title: 'Money & Happiness',
+    prompt: 'Do You Know What Actually Makes Us Happy?',
+    accent: '#2e6f6a',
+    description: 'Income, status, giving and choice.',
+    edition: 'v1',
+    format: 'chapter',
+    attemptKey: 'data-detective.quiz.money-happiness.v1',
+    resultKey: 'data-detective.quiz.money-happiness.last-result.v1',
+    chapters: [{
+      ...MH_CHAPTER,
+      questionIds: MH_QUESTIONS.map(({ id }) => id),
     }],
   },
   {
