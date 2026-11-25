@@ -85,7 +85,7 @@ function AiStoryVisual() {
       </div>
       <div className="v-hm-pair">
         <p><span className="v-big v-hm-violet">+{novelty.toFixed(1)}%</span>Each story: rated more novel, with five AI ideas</p>
-        <p><span className="v-big v-hm-amber">+{AI_STORIES.similarityOfRange.one}%</span>The collection: more alike, as a share of the range among stories without AI</p>
+        <p><span className="v-big v-hm-amber">+{AI_STORIES.similarityOfRange.five}%</span>The collection, with five AI ideas: more alike, as a share of the range among stories without AI</p>
       </div>
       <p className="v-hm-aside">For the least creative writers, stories were rated up to <strong>{AI_STORIES.lowCreative.wellWritten}%</strong> better written.</p>
       <p className="v-note">The dots are an illustration, not the study’s stories. Each dot is a story; closer dots are more similar; the centre mark is the AI’s ideas.</p>

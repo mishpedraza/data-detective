@@ -68,8 +68,8 @@ export const MIND_QUESTIONS: readonly ChapterQuestion[] = [
       { id: 'none', label: 'No real difference' },
     ],
     answer: 'alike',
-    finding: 'Rated more creative, but more alike. Each story improved, while the collection became less diverse.',
-    takeaway: 'The gains were biggest for the least creative writers, which narrowed the gap between writers. But stories built on AI ideas resembled each other, and the AI ideas, more than human-only stories did. What helps each person can still shrink the variety of the whole.',
+    finding: 'Rated more creative, but more alike. On average, stories were rated better, while the collection became less diverse.',
+    takeaway: 'The gains were biggest for the least creative writers; the most creative gained little, which narrowed the gap between writers. But stories built on AI ideas resembled each other, and the AI ideas, more than human-only stories did. What helps each person can still shrink the variety of the whole.',
     visual: 'aistory',
     evidence: {
       citation: 'Doshi & Hauser (2024), Science Advances',
