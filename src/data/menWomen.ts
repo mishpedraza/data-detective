@@ -6,7 +6,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'eyes' | 'maths' | 'moral' | 'paradox'
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
-  | 'ceiling' | 'rank' | 'ambition' | 'youth' | 'giving' | 'choiceset'
+  | 'ceiling' | 'rank' | 'smarts' | 'ambition' | 'youth' | 'giving' | 'choiceset'
 
 export interface Evidence {
   citation: string

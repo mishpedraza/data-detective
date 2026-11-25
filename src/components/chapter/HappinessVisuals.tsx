@@ -1,7 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion } from '../../data/menWomen'
-import { ASPIRATIONS, DESTINATIONS, RANK, YOUTH } from '../../data/moneyHappiness'
+import { ASPIRATIONS, DESTINATIONS, RANK, SMARTS, YOUTH } from '../../data/moneyHappiness'
 import { parseEstimate, parseHoliday, splitPick } from '../../lib/chapterScore'
 import { useTiming } from './motion'
 
@@ -73,6 +73,65 @@ function RankVisual({ question, pick }: { question: ChapterQuestion; pick?: stri
           {OFFERS.map(({ id, label }) => <button key={id} type="button" className={`mh-offer${offer === id ? ' is-chosen' : ''}`} aria-pressed={offer === id} onClick={() => setOffer(id)}>{label}</button>)}
         </div>
         {offer && <p className="v-note" role="status">The study compared people, it did not assign salaries, so it cannot say which offer would make you happier. Earning less is not a route to happiness.</p>}
+      </div>
+    </div>
+  )
+}
+
+const COHORT = [
+  { id: 'iq', label: 'IQ at age 8', min: 40, max: 150, ...SMARTS.iq, digits: 0 },
+  { id: 'happiness', label: 'Subjective happiness at 26 (1–7)', min: 1, max: 7, ...SMARTS.happiness, digits: 2 },
+  { id: 'life', label: 'Life satisfaction at 26 (5–35)', min: 5, max: 35, ...SMARTS.life, digits: 2 },
+] as const
+
+const GENES = [
+  { id: 'education', label: 'Education', unit: 'per 3.6 more years of schooling', ...SMARTS.education },
+  { id: 'intelligence', label: 'Intelligence', unit: 'per standard deviation of intelligence', ...SMARTS.intelligence },
+] as const
+
+const signed = (n: number, digits = 2) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${Math.abs(n).toFixed(digits)}`
+const SPAN = 0.2
+const at = (n: number) => `${50 + (n / SPAN) * 50}%`
+
+/** Q3: what the cohort showed, then the genetic estimates that pull education and intelligence apart. */
+function SmartsVisual() {
+  const t = useTiming()
+  return (
+    <div className="mh-smarts">
+      <section className="mh-panel">
+        <p className="v-kicker">1 · What the cohort showed · observed</p>
+        <p className="mh-keys"><span><i className="is-degree" /> Degree</span><span><i /> No degree</span></p>
+        {COHORT.map(({ id, label, min, max, degree, none, digits }, i) => (
+          <div key={id} className="mh-cohort" role="img" aria-label={`${label}: ${degree.toFixed(digits)} with a degree, ${none.toFixed(digits)} without`}>
+            <p>{label}</p>
+            {([['is-degree', degree], ['', none]] as const).map(([cls, value], j) => (
+              <div key={j} className={`mh-track ${cls}`}>
+                <motion.i initial={{ width: 0 }} animate={{ width: `${((value - min) / (max - min)) * 100}%` }} transition={t(0.15 + i * 0.2 + j * 0.08, 0.7)} />
+                <span>{value.toFixed(digits)}</span>
+              </div>
+            ))}
+          </div>
+        ))}
+        <p className="v-note">Same happiness, higher life satisfaction, and graduates had higher childhood IQ. Education and intelligence are tangled together here.</p>
+      </section>
+      <section className="mh-panel">
+        <p className="v-kicker">2 · Pulled apart with genetic data · estimated</p>
+        {GENES.map(({ id, label, unit, beta, low, high }, i) => (
+          <div key={id} className={`mh-gene is-${id}`}>
+            <p><strong>{label}</strong> <span>{unit}</span></p>
+            <div className="mh-scale" role="img" aria-label={`${label}: ${signed(beta, 3)} on the well-being score, 95% interval ${signed(low)} to ${signed(high)}`}>
+              <span className="mh-zero" aria-hidden="true" />
+              <motion.i className={beta < 0 ? 'is-neg' : ''} style={{ [beta < 0 ? 'right' : 'left']: '50%' }} initial={{ width: 0 }} animate={{ width: `${(Math.abs(beta) / SPAN) * 50}%` }} transition={t(0.9 + i * 0.3, 0.8)} />
+              <motion.b className="mh-ci" style={{ left: at(low), width: `calc(${at(high)} - ${at(low)})` }} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={t(1.5 + i * 0.3, 0.4)} aria-hidden="true" />
+            </div>
+            <p className="mh-goal-r"><strong>{signed(beta, beta === SMARTS.education.beta ? 3 : 2)}</strong> on a combined well-being score (95% interval {signed(low)} to {signed(high)})</p>
+          </div>
+        ))}
+        <p className="v-note">Holding the other constant. The genetic signals were weak, so treat these as tentative.</p>
+      </section>
+      <div className="mh-extra">
+        <p className="v-kicker">Another twist</p>
+        <p>In the cohort, a degree went with higher life satisfaction for women than for men. For subjective happiness the directions split: women with a degree tended to be happier, men with a degree slightly less happy.</p>
       </div>
     </div>
   )
@@ -178,6 +237,7 @@ export function HappinessVisual({ question, pick }: { question: ChapterQuestion;
   switch (question.visual) {
     case 'ceiling': return <CeilingVisual />
     case 'rank': return <RankVisual question={question} pick={pick} />
+    case 'smarts': return <SmartsVisual />
     case 'ambition': return <AmbitionVisual />
     case 'youth': return <YouthVisual />
     case 'giving': return <GivingVisual />

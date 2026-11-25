@@ -1353,6 +1353,7 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 /* Money & Happiness: "What actually makes us happy?" (same rotating palette as the Men & Women quizzes) */
 .chapter-quiz[data-visual='ceiling'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
 .chapter-quiz[data-visual='rank'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
+.chapter-quiz[data-visual='smarts'] { --accent: #8a3a5c; --accent-soft: rgba(138, 58, 92, .1); }
 .chapter-quiz[data-visual='ambition'] { --accent: #9a6a12; --accent-soft: rgba(154, 106, 18, .1); }
 .chapter-quiz[data-visual='youth'] { --accent: #3d5a6c; --accent-soft: rgba(61, 90, 108, .1); }
 .chapter-quiz[data-visual='giving'] { --accent: #a3472b; --accent-soft: rgba(163, 71, 43, .1); }
@@ -1401,6 +1402,24 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .mh-value .is-strong i { background: var(--accent); }
 .mh-value small { order: 2; position: relative; top: 1.3rem; font-size: .75rem; color: var(--muted); }
 .mh-choice .mh-pair section > p:last-child { margin-top: 1.2rem; }
+.mh-smarts { display: grid; gap: .9rem; }
+.mh-panel { padding: 1rem 1.1rem; border-radius: 12px; background: var(--accent-soft); }
+.mh-panel .v-note { margin-bottom: 0; }
+.mh-keys { display: flex; gap: 1rem; margin: .2rem 0 .6rem; font-size: .8rem; color: var(--ink-2); }
+.mh-keys i { display: inline-block; width: .7rem; height: .7rem; margin-right: .3rem; border-radius: 3px; background: #8a7e72; vertical-align: -1px; }
+.mh-keys i.is-degree { background: var(--accent); }
+.mh-cohort { margin-bottom: .7rem; }
+.mh-cohort > p, .mh-gene > p:first-child { margin: 0 0 .3rem; font-size: .85rem; color: var(--ink-2); }
+.mh-gene > p:first-child strong { font: 600 1rem var(--serif); color: var(--ink); margin-right: .3rem; }
+.mh-track { display: flex; align-items: center; gap: .5rem; margin: .2rem 0; }
+.mh-track i { display: block; height: .7rem; border-radius: 99px; background: #8a7e72; }
+.mh-track.is-degree i { background: var(--accent); }
+.mh-track span { font: 600 .85rem var(--sans); font-variant-numeric: tabular-nums; color: var(--ink); }
+.mh-gene { margin-bottom: .8rem; }
+.mh-gene .mh-scale { background: rgba(255, 255, 255, .7); }
+.mh-ci { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: var(--ink); }
+.mh-ci::before, .mh-ci::after { content: ''; position: absolute; top: -4px; width: 2px; height: 10px; background: var(--ink); }
+.mh-ci::before { left: 0; } .mh-ci::after { right: 0; }
 .mh-you { margin: .8rem 0 0; font-size: .9rem; color: var(--ink-2); }
 @media (max-width: 560px) {
   .mh-pair { grid-template-columns: 1fr; }

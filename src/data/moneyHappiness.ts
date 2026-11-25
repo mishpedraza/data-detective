@@ -3,6 +3,14 @@ import type { ChapterQuestion } from './menWomen'
 
 /** Nature Communications (2026): share of 109 countries where income rank beat absolute income, and the two moderators. */
 export const RANK = { countries: 109, people: '90,000', share: 80, materialism: 3, civic: 80 } as const
+/** Armitage et al. (2024): ALSPAC descriptives (graduates vs not) and multivariable MR estimates on the wellbeing spectrum. */
+export const SMARTS = {
+  iq: { degree: 112.21, none: 99.07 },
+  happiness: { degree: 4.89, none: 4.89 },
+  life: { degree: 24.78, none: 23.09 },
+  education: { beta: 0.103, low: 0.05, high: 0.16 },
+  intelligence: { beta: -0.04, low: -0.08, high: -0.01 },
+} as const
 /** Bradshaw et al. (2023): meta-analytic correlations with well-being. */
 export const ASPIRATIONS = { intrinsic: 0.24, extrinsic: 0.02, predominance: -0.22 } as const
 /** World Happiness Report 2026: under-25 life evaluations, 2023–2025 vs 2006–2010. */
@@ -52,6 +60,29 @@ export const MH_QUESTIONS: readonly ChapterQuestion[] = [
       sample: 'More than 90,000 people in 109 countries, Gallup World Poll 2023–2024.',
       method: 'Compared absolute income, income rank within the country and relative deprivation as predictors of life evaluations, then tested national materialism and civic engagement as moderators.',
       limitation: 'Cross-sectional and correlational. Rank effects were over three times larger in the most materialistic countries and about 80% smaller where civic engagement was highest.',
+    },
+  },
+  {
+    id: 'mh-smarts', kind: 'choice', short: 'Intelligence',
+    question: 'Are more intelligent people happier?',
+    prompt: 'Education and intelligence go together: in one British cohort, people who went on to get a degree had scored about 13 points higher on an IQ test at age 8. Using genetic data, researchers separated the two. Holding the other one constant, how was each linked to well-being?',
+    options: [
+      { id: 'both-up', label: 'Both education and intelligence raised it' },
+      { id: 'edu-up', label: 'Education raised it, intelligence lowered it slightly' },
+      { id: 'iq-up', label: 'Intelligence raised it, education lowered it slightly' },
+      { id: 'neither', label: 'Neither made a difference' },
+    ],
+    answer: 'edu-up',
+    finding: 'They pulled in opposite directions: education up, intelligence slightly down.',
+    takeaway: 'More years of schooling went with higher well-being even at the same level of intelligence, while higher intelligence went with slightly lower well-being at the same level of schooling. The genetic signals were weak, so these are tentative estimates, not proof that being clever makes anyone unhappy. Education is not the same thing as intelligence.',
+    visual: 'smarts',
+    evidence: {
+      citation: 'Armitage, Wootton, Davis & Haworth (2024), npj Mental Health Research',
+      url: 'https://doi.org/10.1038/s44184-024-00066-x',
+      more: [{ citation: 'Full text (PubMed Central)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC11082190/' }],
+      sample: 'Observational: the Avon Longitudinal Study of Parents and Children (Bristol area, born 1991–92), IQ tested at 8 and well-being at 26; 2,844 people had complete data. Genetic: published genome-wide studies, including 293,723 people for education.',
+      method: 'Compared graduates and non-graduates on subjective happiness (1–7) and life satisfaction (5–35). Then used multivariable Mendelian randomisation, which treats inherited genetic variants as a natural experiment, to estimate the independent effects on a combined well-being score: +0.103 (95% CI 0.05 to 0.16) per 3.6 extra years of schooling, −0.04 (−0.08 to −0.01) per standard deviation of intelligence.',
+      limitation: 'The genetic instruments were relatively weak (F ≈ 7–8, below the usual threshold of 10), the combined well-being score is hard to translate into everyday terms, and the genetic data lean on UK Biobank volunteers, who are more educated than average. The cohort is one British generation measured at 26, with only degree versus no degree.',
     },
   },
   {
@@ -154,7 +185,7 @@ export const MH_QUESTIONS: readonly ChapterQuestion[] = [
 export const MH_CHAPTER = {
   id: 'what-makes-us-happy',
   title: 'What actually makes us happy?',
-  summary: 'Money, status, giving and choice. Do the things we chase actually make us happier?',
-  minutes: 5,
+  summary: 'Money, status, intelligence, giving and choice. Do the things we chase actually make us happier?',
+  minutes: 6,
   scoring: 'One point per question. Income rank: 1 point within 5 points of the real share, ½ within 15.',
 }

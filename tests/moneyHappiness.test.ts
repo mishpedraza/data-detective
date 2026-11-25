@@ -26,6 +26,7 @@ test('Money & Happiness answers match the audited sources', () => {
   const answer = (id: string) => { const q = byId(id); return q.kind === 'choice' ? q.answer : q.kind === 'estimate' ? q.actual : undefined }
   assert.equal(answer('mh-income'), 'none')
   assert.equal(answer('mh-rank'), 80)
+  assert.equal(answer('mh-smarts'), 'edu-up')
   assert.equal(answer('mh-aspirations'), 'intrinsic')
   assert.equal(answer('mh-youth'), 'mixed')
   assert.equal(answer('mh-giving'), 'other')
