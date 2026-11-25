@@ -889,6 +889,8 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 
 /* chapter quizzes: visual, prediction-first questions */
 .chapter-quiz { --men: #1f6470; --women: #c4512f; --accent: #1f6470; --accent-soft: rgba(31, 100, 112, .1); }
+/* Answer choices share one palette in every quiz, independent of each question's chart accent. */
+.chapter-quiz { --choice: #2b5f66; --choice-soft: rgba(43, 95, 102, .09); --choice-line: rgba(43, 95, 102, .55); }
 .chapter-quiz[data-visual='gauges'] { --accent: #9a6a12; --accent-soft: rgba(154, 106, 18, .1); }
 .chapter-quiz[data-visual='rotation'] { --accent: #56682a; --accent-soft: rgba(86, 104, 42, .11); }
 .chapter-quiz[data-visual='curves'] { --accent: #5b4a7a; --accent-soft: rgba(91, 74, 122, .1); }
@@ -916,16 +918,17 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .ch-prompt { margin: 0 0 1.6rem; max-width: 40ch; font-size: clamp(1rem, 2.2vw, 1.12rem); color: var(--ink-2); }
 .ch-options { display: grid; gap: .55rem; }
 .ch-option { display: grid; grid-template-columns: 2rem 1fr auto; align-items: center; gap: .75rem; width: 100%; min-height: 3.6rem; padding: .8rem 1rem; text-align: left; background: rgba(255, 255, 255, .55); border-radius: 12px; font-size: 1rem; line-height: 1.35; box-shadow: inset 0 0 0 1px var(--rule); transition: box-shadow .2s, background .2s, transform .15s var(--ease), opacity .3s; }
-.ch-option:hover:not(:disabled) { background: #fff; box-shadow: inset 0 0 0 1.5px var(--accent); transform: translateY(-1px); }
+.ch-option:hover:not(:disabled) { background: #fff; box-shadow: inset 0 0 0 1.5px var(--choice-line); transform: translateY(-1px); }
 .ch-option:active:not(:disabled) { transform: scale(.985); }
-.ch-letter { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font: 650 .8rem/1 var(--sans); }
+.ch-letter { display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; background: var(--choice-soft); color: var(--choice); font: 650 .8rem/1 var(--sans); transition: background .2s, color .2s; }
+.ch-option:hover:not(:disabled) .ch-letter { background: var(--choice); color: #fff; }
 .ch-option:disabled { cursor: default; }
 .ch-options.is-revealed .ch-option { min-height: 0; padding-block: .55rem; font-size: .92rem; }
 .ch-option.is-other { opacity: .45; }
-.ch-option.is-answer { background: var(--accent-soft); box-shadow: inset 0 0 0 1.5px var(--accent); }
-.ch-option.is-answer .ch-letter { background: var(--accent); color: #fff; }
+.ch-option.is-answer { background: var(--choice-soft); box-shadow: inset 0 0 0 1.5px var(--choice); }
+.ch-option.is-answer .ch-letter { background: var(--choice); color: #fff; }
 .ch-option.is-pick { box-shadow: inset 0 0 0 1.5px var(--rule-strong); }
-.ch-mark { font-weight: 700; color: var(--accent); }
+.ch-mark { font-weight: 700; color: var(--choice); }
 .ch-option.is-pick .ch-mark { color: var(--muted); }
 
 .ch-rows { display: grid; gap: 1.1rem; }
@@ -934,7 +937,7 @@ p.synthesis-note { font-size: 14px; color: var(--muted); margin: 8px 0 0; }
 .ch-segment { display: grid; grid-template-columns: repeat(3, 1fr); padding: 3px; background: rgba(23, 23, 28, .06); border-radius: 999px; }
 .ch-segment label { position: relative; display: grid; place-items: center; min-height: 2.6rem; border-radius: 999px; font-size: .9rem; font-weight: 550; color: var(--ink-2); cursor: pointer; transition: background .2s, color .2s; }
 .ch-segment input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
-.ch-segment label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 1px; }
+.ch-segment label:has(input:focus-visible) { outline: 2px solid var(--choice); outline-offset: 1px; }
 .ch-segment label.is-on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
 .ch-reveal { justify-self: start; margin-top: .4rem; }
 
@@ -1095,7 +1098,8 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .ch-warmup-kicker { margin: 0; font: 650 .68rem/1.4 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
 .ch-warmup-prompt { margin: 0; max-width: 42ch; font: 400 1.12rem/1.4 var(--serif); }
 .ch-warmup-hint { margin: 0; font-size: .82rem; color: var(--muted); }
-.ch-option.is-chosen { box-shadow: inset 0 0 0 1.5px var(--ink-2); background: #fff; }
+.ch-option.is-chosen { box-shadow: inset 0 0 0 1.5px var(--choice); background: #fff; }
+.ch-option.is-chosen .ch-letter { background: var(--choice); color: #fff; }
 .ch-slider.v-accent { --tone: var(--accent); }
 
 .ch-week { margin: 0; padding: 0; border: 0; min-width: 0; }
