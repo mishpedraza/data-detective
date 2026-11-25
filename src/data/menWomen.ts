@@ -6,6 +6,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'eyes' | 'maths' | 'moral' | 'paradox'
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
+  | 'halfstory' | 'aistory' | 'humble' | 'news' | 'lure' | 'lies' | 'ideas'
   | 'fitfat' | 'sleepweek' | 'warrior' | 'bursts' | 'steps' | 'vitamins' | 'alcohol'
 
 export interface Evidence {
@@ -44,6 +45,8 @@ interface Base {
 export type Warmup =
   | { kind: 'choice'; prompt: string; options: readonly { id: string; label: string }[] }
   | { kind: 'week'; prompt: string }
+  /** Study a word list, then say whether one word was on it. */
+  | { kind: 'words'; prompt: string }
 
 export interface ChoiceQuestion extends Base {
   kind: 'choice'

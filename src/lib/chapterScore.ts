@@ -39,7 +39,9 @@ export function parseWeek(warm?: string): [number, number] | undefined {
 
 function validWarmup(question: ChoiceQuestion, warm?: string) {
   if (!question.warmup) return warm === undefined
-  return question.warmup.kind === 'week' ? !!parseWeek(warm) : question.warmup.options.some(({ id }) => id === warm)
+  if (question.warmup.kind === 'week') return !!parseWeek(warm)
+  if (question.warmup.kind === 'words') return warm === 'yes' || warm === 'no'
+  return question.warmup.options.some(({ id }) => id === warm)
 }
 
 /** Half a point per estimate within `near` of the real figure, a quarter within `far`. */
