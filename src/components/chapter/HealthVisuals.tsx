@@ -163,8 +163,8 @@ function StepsVisual() {
       <div className="v-hl-stops" role="group" aria-label="Choose a step count">
         {STEPS.map(({ steps }, i) => <button key={steps} type="button" aria-pressed={i === at} onClick={() => setAt(i)}>{steps.toLocaleString('en-GB')}</button>)}
       </div>
-      <p className="v-hl-readout" aria-live="polite">{point.hr === 1 ? 'Reference group: the least active quarter.' : <><strong>{Math.round((1 - point.hr) * 100)}% lower</strong> risk of dying than the least active quarter ({ci(point.ci)})</>}</p>
-      <p className="v-hl-aside">7,000 vs 2,000 steps a day, across 57 studies: <strong>{Math.round((1 - STEPS_7K.hr) * 100)}% lower</strong> risk ({ci(STEPS_7K.ci)}).</p>
+      <p className="v-hl-readout" aria-live="polite">{point.hr === 1 ? 'Reference group: the least active quarter.' : <><strong>{Math.round((1 - point.hr) * 100)}% lower</strong> risk of dying than the least active quarter (HR {point.hr.toFixed(2)}, {ci(point.ci)})</>}</p>
+      <p className="v-hl-aside">7,000 vs 2,000 steps a day, across 57 studies: <strong>{Math.round((1 - STEPS_7K.hr) * 100)}% lower</strong> risk (HR {STEPS_7K.hr.toFixed(2)}, {ci(STEPS_7K.ci)}).</p>
       <p className="v-note">Each point is the median of a quarter of 47,471 adults. Lines connect the estimates.</p>
     </div>
   )
