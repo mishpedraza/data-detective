@@ -346,6 +346,8 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   const questions = useMemo(() => chapterQuestions(quiz, chapter.id), [quiz, chapter.id])
   const total = questions.length
   const [attempt, setAttempt] = useState(() => readDiscoveryProgress(quiz.attemptKey))
+  // Bumped on restart so the current question remounts and drops any half-finished warm-up.
+  const [round, setRound] = useState(0)
   const answers = chapterAnswers(attempt, questions, quiz.edition)
   const complete = answers.length === total
   const firstOpen = questions.findIndex(({ id }) => !answers.some((answer) => answer.id === id))
@@ -386,6 +388,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     // Start from what is stored, so a stale tab can't bring back answers another tab cleared.
     setAttempt(Object.fromEntries(Object.entries(readDiscoveryProgress(quiz.attemptKey))
       .filter(([id]) => !chapter.questionIds.includes(id))))
+    setRound((r) => r + 1)
     focusNext.current = true
     navigate(link({ q: questions[0].id, mode: 'challenge' }))
   }
@@ -450,7 +453,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
         })}
       </ol>
       <AnimatePresence mode="wait">
-        <motion.article key={question.id} className="discovery-reading ch-question"
+        <motion.article key={`${question.id}-${round}`} className="discovery-reading ch-question"
           initial={reduce ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={reduce ? undefined : { opacity: 0, x: -24 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           <p className="discovery-kicker">Question {index + 1} of {total} · {question.short}</p>
           <h1 ref={headline} tabIndex={-1}>{question.question}</h1>
