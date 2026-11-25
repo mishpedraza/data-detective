@@ -4,6 +4,7 @@ import { overlap, parseRows, parseSliders } from '../../lib/chapterScore'
 import { MoneyVisual } from './MoneyVisuals'
 import { NatureVisual } from './NatureVisuals'
 import { HousingVisual } from './HousingVisuals'
+import { HappinessVisual } from './HappinessVisuals'
 import { MindVisual } from './MindVisuals'
 import { HealthVisual } from './HealthVisuals'
 import { WorldVisual } from './WorldVisuals'
@@ -289,6 +290,8 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'permits':
     case 'auckland':
       return <HousingVisual question={question} pick={pick} />
+    case 'ceiling': case 'rank': case 'smarts': case 'ambition': case 'youth': case 'giving': case 'choiceset':
+      return <HappinessVisual question={question} pick={pick} />
     case 'halfstory': case 'aistory': case 'humble': case 'news': case 'lure': case 'lies': case 'ideas':
       return <MindVisual question={question} pick={pick} />
     case 'fitfat': case 'sleepweek': case 'warrior': case 'bursts': case 'steps': case 'vitamins': case 'alcohol':

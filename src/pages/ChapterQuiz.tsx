@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type MouseEve
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion, ChoiceQuestion, Side, Warmup } from '../data/menWomen'
 import { QUIZZES, hasChapterList, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
+import { DESTINATIONS } from '../data/moneyHappiness'
 import { SLEEP_LIST } from '../data/humanMind'
 import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual } from '../components/chapter/Visuals'
 import { useCount } from '../components/chapter/motion'
-import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseEstimate, parseRows, parseSliders, parseWeek, scoreQuestion, splitPick, totalPoints } from '../lib/chapterScore'
+import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseEstimate, parseRows, parseSliders, parseWeek, parseHoliday, scoreQuestion, splitPick, totalPoints } from '../lib/chapterScore'
 import { challengeReaction, partialReaction } from '../lib/discoveryChallenge'
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
@@ -83,6 +84,44 @@ export function WeekCalendar({ label, days, onChange }: { label: string; days?: 
   )
 }
 
+const FEELS = [{ id: 's', label: 'The short list of 4' }, { id: 'l', label: 'The long list of 16' }, { id: 'n', label: 'No difference' }] as const
+
+function HolidayWarmup({ prompt, value, onDone }: { prompt: string; value?: string; onDone?: (warm: string) => void }) {
+  const saved = parseHoliday(value)
+  const [short, setShort] = useState<number | undefined>(saved?.short)
+  const [long, setLong] = useState<number | undefined>(saved?.long)
+  const locked = !!saved
+  const list = (items: readonly string[], chosen: number | undefined, onPick: (i: number) => void, label: string) => (
+    <div className="mh-dests" role="group" aria-label={label} data-count={items.length}>
+      {items.map((place, i) => (
+        <button key={place} type="button" className={`mh-dest${chosen === i ? ' is-chosen' : ''}`} aria-pressed={chosen === i} disabled={locked || chosen !== undefined} onClick={() => onPick(i)}>{place}</button>
+      ))}
+    </div>
+  )
+  return (
+    <div className="ch-warmup">
+      <p className="ch-warmup-kicker">Not scored</p>
+      <p className="ch-warmup-prompt">{prompt}</p>
+      <p className="ch-warmup-hint">Choose one of these 4 destinations.</p>
+      {list(DESTINATIONS.slice(0, 4), short, setShort, 'Short list of 4 destinations')}
+      {short !== undefined && <>
+        <p className="ch-warmup-hint">Now choose one of these 16.</p>
+        {list(DESTINATIONS, long, setLong, 'Long list of 16 destinations')}
+      </>}
+      {short !== undefined && long !== undefined && <>
+        <p className="ch-warmup-hint">Which list was more enjoyable to choose from?</p>
+        <div className={`ch-options${locked ? ' is-revealed' : ''}`} role="group" aria-label="Which list felt better">
+          {FEELS.map(({ id, label }, i) => (
+            <button key={id} type="button" className={`ch-option${locked ? id === saved.feel ? ' is-chosen' : ' is-other' : ''}`} disabled={locked} aria-pressed={saved?.feel === id} onClick={() => onDone?.(`${short}-${long}-${id}`)}>
+              <span className="ch-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span><span>{label}</span>
+            </button>
+          ))}
+        </div>
+      </>}
+    </div>
+  )
+}
+
 const RECALL = [{ id: 'yes', label: 'Yes, it was there' }, { id: 'no', label: 'No, it wasn’t' }] as const
 
 function WordsWarmup({ prompt, value, onDone }: { prompt: string; value?: string; onDone?: (warm: string) => void }) {
@@ -129,6 +168,7 @@ function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string
       </div>
     </div>
   )
+  if (warmup.kind === 'holiday') return <HolidayWarmup prompt={warmup.prompt} value={value} onDone={onDone} />
   const saved = parseWeek(value)
   const ready = days[0] !== undefined && days[1] !== undefined
   return (
