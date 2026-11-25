@@ -1,7 +1,6 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const PORT = 4330
-const links = !!process.env.LINKS
 
 export default defineConfig({
   testDir: 'e2e',
@@ -26,14 +25,12 @@ export default defineConfig({
     // Reveals animate; reduced motion keeps runs fast and deterministic. One project keeps full motion.
     contextOptions: { reducedMotion: 'reduce' },
   },
-  projects: links
-    ? [{ name: 'links', testMatch: /links\.spec\.ts/ }]
-    : [
-      { name: 'desktop', testIgnore: /(links|motion)\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } } },
-      { name: 'mobile', testIgnore: /(links|motion)\.spec\.ts/, use: { ...devices['Pixel 7'] } },
-      { name: 'motion', testMatch: /motion\.spec\.ts/, use: { ...devices['Desktop Chrome'], contextOptions: { reducedMotion: 'no-preference' } } },
-    ],
-  webServer: links ? undefined : {
+  projects: [
+    { name: 'desktop', testIgnore: /(links|motion)\.spec\.ts/, use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 900 } } },
+    { name: 'mobile', testIgnore: /(links|motion)\.spec\.ts/, use: { ...devices['Pixel 7'] } },
+    { name: 'motion', testMatch: /motion\.spec\.ts/, use: { ...devices['Desktop Chrome'], contextOptions: { reducedMotion: 'no-preference' } } },
+  ],
+  webServer: {
     command: `npm run build && npx vite preview --host 127.0.0.1 --port ${PORT} --strictPort`,
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,
