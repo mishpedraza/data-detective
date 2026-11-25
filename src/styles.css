@@ -1348,6 +1348,67 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 .quiz-invite { display: inline-flex; align-items: center; gap: .6rem; }
 .quiz-invite-status { font-size: .8rem; color: var(--muted); }
 
+/* The surprising science of cities */
+.chapter-quiz[data-visual='pedestrian'], .chapter-quiz[data-visual='freefare'], .chapter-quiz[data-visual='height'], .chapter-quiz[data-visual='roads'],
+.chapter-quiz[data-visual='bikelanes'], .chapter-quiz[data-visual='citywage'], .chapter-quiz[data-visual='cooling'], .chapter-quiz[data-visual='tourism'] { --accent: #2f5f8a; --accent-soft: rgba(47, 95, 138, .1); }
+.v-ct-div { display: grid; gap: .55rem; margin: .5rem 0; padding: 0; list-style: none; }
+.v-ct-div li { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr 6.5rem; align-items: center; gap: .6rem; font-size: .85rem; color: var(--ink-2); }
+.v-ct-div strong { font-variant-numeric: tabular-nums; font-size: .82rem; }
+.v-ct-axis { position: relative; height: .9rem; border-radius: 99px; background: rgba(0, 0, 0, .06); }
+.v-ct-axis::before { content: ''; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--rule-strong); }
+.v-ct-axis i { position: absolute; top: 0; bottom: 0; border-radius: 99px; background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.v-ct-axis i.is-up { left: 50%; }
+.v-ct-axis i.is-down { right: 50%; background: color-mix(in srgb, #c0583b 50%, transparent); }
+.v-ct-div li.is-strong .v-ct-axis i.is-up { background: var(--accent); }
+.v-ct-div li.is-strong .v-ct-axis i.is-down { background: #c0583b; }
+.v-ct-div li.is-strong { color: var(--ink); font-weight: 600; }
+.v-ct-street { display: flex; gap: .35rem; height: 3rem; margin: .2rem 0 .8rem; padding-bottom: .4rem; border-bottom: 6px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+.v-ct-street i { flex: 1; border-radius: 6px 6px 0 0; background: var(--accent); }
+.v-ct-street i.is-closed { background: repeating-linear-gradient(135deg, rgba(0, 0, 0, .12) 0 6px, rgba(0, 0, 0, .04) 6px 12px); }
+.v-ct-effects { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .6rem; margin: .4rem 0; padding: 0; list-style: none; }
+.v-ct-effects li { display: grid; gap: .15rem; padding: .7rem .8rem; border-radius: 10px; background: var(--accent-soft); font-size: .85rem; color: var(--ink-2); }
+.v-ct-effects b { font: 600 1.5rem/1 var(--serif); color: var(--accent); }
+.v-ct-effects li[data-effect='down'] b { color: #c0583b; }
+.v-ct-effects li[data-effect='none'] b { color: var(--muted); }
+.v-ct-effects span { color: var(--ink); font-weight: 600; }
+.v-ct-height svg { width: 100%; max-width: 26rem; height: auto; display: block; }
+.v-ct-band { fill: var(--accent-soft); }
+.v-ct-band-label, .v-ct-axis-label { font: 600 10px var(--sans); fill: var(--muted); }
+.v-ct-curve { stroke: var(--accent); stroke-width: 3; stroke-linecap: round; }
+.v-ct-base { stroke: var(--rule-strong); }
+.v-ct-towers { display: flex; align-items: flex-end; gap: .5rem; height: 4.4rem; max-width: 26rem; margin-top: .3rem; }
+.v-ct-towers i { flex: 1; border-radius: 3px 3px 0 0; background: color-mix(in srgb, var(--accent) 60%, transparent); }
+.v-ct-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; margin: .8rem 0 0; }
+.v-ct-facts p { margin: 0; padding: .6rem .75rem; border-radius: 10px; background: var(--accent-soft); font-size: .82rem; color: var(--ink-2); }
+.v-ct-facts strong { display: block; font: 600 1.2rem/1.2 var(--serif); color: var(--accent); }
+.v-ct-big { margin: .2rem 0; font: 600 clamp(2rem, 5vw, 2.8rem)/1 var(--serif); color: var(--accent); }
+.v-ct-bikes section, .v-ct-tour > p { font-size: .9rem; color: var(--ink-2); }
+.v-ct-bikes section { padding: 1rem 1.1rem; border-radius: 12px; background: var(--accent-soft); }
+.v-ct-bikes section p { margin: .25rem 0; }
+.v-ct-also { color: var(--ink); }
+.v-ct-scale { display: flex; height: 1.4rem; max-width: 28rem; border-radius: 99px; background: rgba(0, 0, 0, .07); overflow: hidden; }
+.v-ct-scale i.is-low { background: var(--accent); }
+.v-ct-scale i.is-range { background: color-mix(in srgb, var(--accent) 40%, transparent); }
+.v-ct-scale-key { position: relative; max-width: 28rem; height: 1.2rem; margin: .2rem 0 .7rem; font-size: .75rem; color: var(--muted); }
+.v-ct-scale-key span { position: absolute; transform: translateX(-50%); }
+.v-ct-scale-key span:nth-child(1) { left: 0; transform: none; }
+.v-ct-scale-key span:nth-child(2) { left: 45%; }
+.v-ct-scale-key span:nth-child(3) { left: 73%; }
+.v-ct-scale-key span:nth-child(4) { right: 0; transform: none; }
+.v-hs-key i.is-blank { background: rgba(0, 0, 0, .1); }
+.v-ct-thermo { display: flex; align-items: center; gap: 1rem; margin: 0 0 .8rem; }
+.v-ct-thermo p { margin: 0; display: grid; font-size: .85rem; color: var(--ink-2); }
+.v-ct-tube { position: relative; width: 1.1rem; height: 4.5rem; border-radius: 99px; background: rgba(0, 0, 0, .07); overflow: hidden; }
+.v-ct-tube i { position: absolute; left: 0; right: 0; bottom: 0; background: color-mix(in srgb, #c0583b calc(var(--warm) * 100%), var(--accent)); }
+@media (max-width: 560px) {
+  .v-ct-div li { grid-template-columns: 1fr 5.5rem; }
+  .v-ct-div li > span:first-child { grid-column: 1 / -1; }
+}
+.v-ct-div.is-temperature .v-ct-axis i.is-down { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.v-ct-div.is-temperature li.is-strong .v-ct-axis i.is-down { background: var(--accent); }
+.v-ct-div.is-temperature .v-ct-axis i.is-up { background: color-mix(in srgb, #c0583b 50%, transparent); }
+.v-ct-div.is-temperature li.is-strong .v-ct-axis i.is-up { background: #c0583b; }
+
 /* Money & Happiness: "What actually makes us happy?" (same rotating palette as the Men & Women quizzes) */
 .chapter-quiz[data-visual='ceiling'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
 .chapter-quiz[data-visual='rank'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }

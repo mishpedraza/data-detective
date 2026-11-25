@@ -4,6 +4,7 @@ import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
+import { CITIES_CHAPTER, CITIES_QUESTIONS } from './cities'
 import { MH_CHAPTER, MH_QUESTIONS } from './moneyHappiness'
 import { MIND_CHAPTER, MIND_QUESTIONS } from './humanMind'
 import { HEALTH_CHAPTER, HEALTH_QUESTIONS } from './health'
@@ -103,6 +104,9 @@ export const QUIZZES: readonly Quiz[] = [
     chapters: [{
       ...HOUSING_CHAPTER,
       questionIds: HOUSING_QUESTIONS.map(({ id }) => id),
+    }, {
+      ...CITIES_CHAPTER,
+      questionIds: CITIES_QUESTIONS.map(({ id }) => id),
     }],
   },
   {
