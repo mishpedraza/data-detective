@@ -145,20 +145,30 @@ function BurstsVisual() {
 function StepsVisual() {
   const t = useTiming()
   const [at, setAt] = useState(2)
-  const x = (s: number) => 8 + ((s - 2000) / 10000) * 300
-  const y = (hr: number) => 10 + ((1.05 - hr) / 0.65) * 120
+  const x = (s: number) => 34 + ((s - 2000) / 10000) * 272
+  const y = (hr: number) => 18 + ((1.05 - hr) / 0.65) * 112
   const path = STEPS.map(({ steps, hr }, i) => `${i ? 'L' : 'M'}${x(steps)} ${y(hr)}`).join(' ')
   const point = STEPS[at]
   return (
     <div className="v-hl-steps">
-      <svg viewBox="0 0 316 150" className="v-hl-curve" role="img" aria-label={`Risk of dying by daily steps: ${STEPS.map(({ steps, hr }) => `${steps.toLocaleString('en-GB')} steps ${hr.toFixed(2)}`).join(', ')}.`}>
-        <line x1={x(10000)} x2={x(10000)} y1={6} y2={136} className="v-hl-target" />
-        <text x={x(10000) - 4} y={16} textAnchor="end" className="v-hl-label">10,000 target</text>
+      <svg viewBox="0 0 316 168" className="v-hl-curve" role="img" aria-label={`Risk of dying by daily steps: ${STEPS.map(({ steps, hr }) => `${steps.toLocaleString('en-GB')} steps ${hr.toFixed(2)}`).join(', ')}.`}>
+        <text x={0} y={8} className="v-hl-label">Risk of dying</text>
+        {[1, 0.8, 0.6, 0.4].map((v) => (
+          <g key={v}>
+            <line x1={34} x2={306} y1={y(v)} y2={y(v)} className="v-hl-grid" />
+            <text x={28} y={y(v) + 3} textAnchor="end" className="v-hl-label">{v.toFixed(1)}</text>
+          </g>
+        ))}
+        <line x1={34} x2={306} y1={y(0.4)} y2={y(0.4)} className="v-hl-axisline" />
+        {[2000, 4000, 6000, 8000, 10000, 12000].map((v) => (
+          <text key={v} x={x(v)} y={y(0.4) + 13} textAnchor="middle" className="v-hl-label">{v / 1000}k</text>
+        ))}
+        <text x={170} y={164} textAnchor="middle" className="v-hl-label">Steps a day</text>
+        <line x1={x(10000)} x2={x(10000)} y1={y(1.05)} y2={y(0.4)} className="v-hl-target" />
+        <text x={x(10000) - 4} y={y(1.05) + 8} textAnchor="end" className="v-hl-label is-target">10,000 goal</text>
         <motion.path d={path} className="v-hl-path" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={t(0.2, 1.4)} />
         {STEPS.map(({ steps, hr }, i) => <circle key={steps} cx={x(steps)} cy={y(hr)} r={i === at ? 0 : 3.5} className="v-hl-node" />)}
         <motion.circle r={7} className="v-hl-walker" initial={false} animate={{ cx: x(point.steps), cy: y(point.hr) }} transition={t(0, 0.6)} />
-        <text x={8} y={146} className="v-hl-label">2,000</text>
-        <text x={308} y={146} textAnchor="end" className="v-hl-label">12,000 steps</text>
       </svg>
       <div className="v-hl-stops" role="group" aria-label="Choose a step count">
         {STEPS.map(({ steps }, i) => <button key={steps} type="button" aria-pressed={i === at} onClick={() => setAt(i)}>{steps.toLocaleString('en-GB')}</button>)}
