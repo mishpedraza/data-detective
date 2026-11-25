@@ -26,7 +26,7 @@ export function PlayCard({ kicker, title, description, minutes, questions = [], 
           return <span key={id} className={answer ? (answer.points === 1 ? 'right' : answer.points > 0 ? 'partial' : 'wrong') : ''} />
         })}
       </span>}
-      {href && <span className="quiz-action">{state === 'not-started' ? 'Start' : action} <span aria-hidden="true">→</span></span>}
+      {href && <span className="quiz-action">{state === 'not-started' ? 'Play' : action} <span aria-hidden="true">→</span></span>}
     </span>
   </>
   return href

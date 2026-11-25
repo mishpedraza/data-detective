@@ -447,7 +447,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
   const next = questions[index + 1]
   const reactionIndex = quizQuestions(quiz).findIndex(({ id }) => id === question.id)
   return (
-    <div className="discover discover-edition discovery-reader chapter-quiz" data-visual={question.visual}>
+    <div className="discover discover-edition discovery-reader chapter-quiz" data-quiz={quiz.id} data-visual={question.visual}>
       {nav}
       <ol className="ch-rail" aria-label="Progress" style={{ '--steps': total } as CSSProperties}>
         {questions.map(({ id, short }, i) => {

@@ -7,6 +7,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
   | 'ceiling' | 'rank' | 'smarts' | 'ambition' | 'youth' | 'giving' | 'choiceset'
+  | 'fitfat' | 'sleepweek' | 'warrior' | 'bursts' | 'steps' | 'vitamins' | 'alcohol'
 
 export interface Evidence {
   citation: string

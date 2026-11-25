@@ -5,6 +5,7 @@ import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
 import { MH_CHAPTER, MH_QUESTIONS } from './moneyHappiness'
+import { HEALTH_CHAPTER, HEALTH_QUESTIONS } from './health'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -116,6 +117,21 @@ export const QUIZZES: readonly Quiz[] = [
     chapters: [{
       ...MH_CHAPTER,
       questionIds: MH_QUESTIONS.map(({ id }) => id),
+    }],
+  },
+  {
+    id: 'health-longevity',
+    title: 'Health & Longevity',
+    prompt: 'What Actually Helps Us Live Longer?',
+    accent: '#387c83',
+    description: 'Exercise, sleep and everyday habits.',
+    edition: 'v1',
+    format: 'chapter',
+    attemptKey: 'data-detective.quiz.health-longevity.v1',
+    resultKey: 'data-detective.quiz.health-longevity.last-result.v1',
+    chapters: [{
+      ...HEALTH_CHAPTER,
+      questionIds: HEALTH_QUESTIONS.map(({ id }) => id),
     }],
   },
 ]
