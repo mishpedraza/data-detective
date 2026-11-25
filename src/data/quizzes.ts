@@ -4,6 +4,7 @@ import { LOVE_CHAPTER, LOVE_QUESTIONS } from './menWomen'
 import { MONEY_CHAPTER, MONEY_QUESTIONS } from './moneyPower'
 import { NATURE_CHAPTER, NATURE_QUESTIONS } from './natureNurture'
 import { HOUSING_CHAPTER, HOUSING_QUESTIONS } from './housing'
+import { CITIES_CHAPTER, CITIES_QUESTIONS } from './cities'
 import { CHAPTER_QUESTIONS } from './chapterQuestions'
 
 // A chapter is an ordered group of questions within a theme. Quizzes with one chapter play as a single run.
@@ -100,6 +101,9 @@ export const QUIZZES: readonly Quiz[] = [
     chapters: [{
       ...HOUSING_CHAPTER,
       questionIds: HOUSING_QUESTIONS.map(({ id }) => id),
+    }, {
+      ...CITIES_CHAPTER,
+      questionIds: CITIES_QUESTIONS.map(({ id }) => id),
     }],
   },
 ]

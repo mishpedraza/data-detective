@@ -8,9 +8,10 @@ import { scoreQuestion } from '../src/lib/chapterScore'
 test('Housing Crisis plays "Why is housing so expensive?" as an 8-question chapter', () => {
   const quiz = quizById('housing-crisis')!
   assert.equal(quiz.format, 'chapter')
-  assert.equal(quiz.chapters.length, 1)
+  assert.equal(quiz.chapters.length, 2)
   assert.equal(quiz.chapters[0].title, 'Why is housing so expensive?')
-  assert.deepEqual(quizQuestions(quiz).map(({ id }) => id), HOUSING_QUESTIONS.map(({ id }) => id))
+  assert.deepEqual(quiz.chapters[0].questionIds, HOUSING_QUESTIONS.map(({ id }) => id))
+  assert.equal(quizQuestions(quiz).length, HOUSING_QUESTIONS.length + quiz.chapters[1].questionIds.length)
   assert.equal(HOUSING_QUESTIONS.length, 8)
   for (const question of HOUSING_QUESTIONS) {
     assert.equal(CHAPTER_QUESTIONS[question.id], question)
