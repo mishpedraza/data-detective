@@ -9,14 +9,16 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
   const [status, setStatus] = useState('')
   const props = { ...analytics, card: card.kind }
 
-  async function copy(source: string) {
+  const message = `${scoreSummary(card)} ${SHARE_MESSAGE}`
+
+  async function copy(source: string, text = url) {
     try {
-      await navigator.clipboard.writeText(url)
+      await navigator.clipboard.writeText(text)
       track('quiz_link_copied', { ...props, source })
       setStatus('Link copied.')
       return true
     } catch {
-      window.prompt('Copy this link:', url)
+      window.prompt('Copy this link:', text)
       return false
     }
   }
@@ -26,15 +28,15 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
     track('share_clicked', props)
     track('scorecard_share_opened', { ...props, method })
     if (method === 'copy_fallback') {
-      if (await copy('share_fallback')) setStatus('Link copied. Paste it to a friend.')
+      if (await copy('share_fallback', `${message}\n${url}`)) setStatus('Your score and the link are copied. Paste them to a friend.')
       return
     }
     try {
-      await navigator.share({ text: `${scoreSummary(card)} ${SHARE_MESSAGE}`, url })
+      await navigator.share({ text: message, url })
       track('scorecard_shared', { ...props, method })
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') track('scorecard_share_cancelled', { ...props, method })
-      else if (await copy('share_fallback')) setStatus('Sharing isn’t available here, so the link was copied.')
+      else if (await copy('share_fallback', `${message}\n${url}`)) setStatus('Sharing isn’t available here, so your score and the link were copied.')
     }
   }
 
