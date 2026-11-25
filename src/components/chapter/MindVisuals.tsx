@@ -41,7 +41,7 @@ function HalfStoryVisual() {
       <ul className="v-hm-unseen">
         {MERGE_CASE.separate.map((line, i) => <motion.li key={line} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={t(1.6 + i * 0.25, 0.4)}>{line}</motion.li>)}
       </ul>
-      <p className="v-kicker">Thought most people would agree with them</p>
+      <p className="v-kicker">Average guess of how many people would agree with them</p>
       <ul className="v-hm-agree">
         {HALF_STORY.agree.map(({ id, label, share }, i) => (
           <li key={id}>

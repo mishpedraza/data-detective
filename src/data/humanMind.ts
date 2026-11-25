@@ -1,7 +1,7 @@
 // "How easily can your brain fool you?" Every figure is checked against the cited source; see the PR's source audit.
 import type { ChapterQuestion } from './menWomen'
 
-/** Gehlbach, Robinson & Fletcher (2024): conditions, and the share in each who thought most people would agree with them. */
+/** Gehlbach, Robinson & Fletcher (2024): conditions, and each group's average guess of the share of people who would agree with them. */
 export const HALF_STORY = {
   people: 1261,
   adequacy: { b: 0.0, low: -0.021, high: 0.022 },
