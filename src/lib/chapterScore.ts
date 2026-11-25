@@ -37,9 +37,18 @@ export function parseWeek(warm?: string): [number, number] | undefined {
   return days.every((day) => day <= 5) ? days : undefined
 }
 
+/** "short-long-feel" for the holiday warm-up: an index into the 4 short-list and 16 long-list destinations, then which felt better to choose. */
+export function parseHoliday(warm?: string): { short: number; long: number; feel: 's' | 'l' | 'n' } | undefined {
+  const match = warm?.match(/^([0-3])-(\d{1,2})-([sln])$/)
+  if (!match || Number(match[2]) > 15) return
+  return { short: Number(match[1]), long: Number(match[2]), feel: match[3] as 's' | 'l' | 'n' }
+}
+
 function validWarmup(question: ChoiceQuestion, warm?: string) {
   if (!question.warmup) return warm === undefined
-  return question.warmup.kind === 'week' ? !!parseWeek(warm) : question.warmup.options.some(({ id }) => id === warm)
+  if (question.warmup.kind === 'week') return !!parseWeek(warm)
+  if (question.warmup.kind === 'holiday') return !!parseHoliday(warm)
+  return question.warmup.options.some(({ id }) => id === warm)
 }
 
 /** Half a point per estimate within `near` of the real figure, a quarter within `far`. */

@@ -6,6 +6,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'eyes' | 'maths' | 'moral' | 'paradox'
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
+  | 'ceiling' | 'rank' | 'ambition' | 'youth' | 'giving' | 'choiceset'
 
 export interface Evidence {
   citation: string
@@ -43,6 +44,8 @@ interface Base {
 export type Warmup =
   | { kind: 'choice'; prompt: string; options: readonly { id: string; label: string }[] }
   | { kind: 'week'; prompt: string }
+  /** Pick from a short list, then a long one, then say which felt better to choose. */
+  | { kind: 'holiday'; prompt: string }
 
 export interface ChoiceQuestion extends Base {
   kind: 'choice'
