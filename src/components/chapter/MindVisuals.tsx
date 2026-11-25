@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import type { ChapterQuestion } from '../../data/menWomen'
-import { AI_STORIES, HALF_STORY, LIES, LURE, MERGE_CASE, NEWS, SLEEP_LIST } from '../../data/humanMind'
+import { AI_STORIES, HALF_STORY, IDEAS, IDEAS_GROUPS, LIES, LURE, MERGE_CASE, NEWS, SLEEP_LIST } from '../../data/humanMind'
 import { splitPick } from '../../lib/chapterScore'
 import { useCount, useTiming } from './motion'
 
@@ -210,6 +210,49 @@ function LiesVisual() {
   )
 }
 
+/** Q7: two rooms, then who came out ahead on each outcome (direction only). */
+function IdeasVisual() {
+  const t = useTiming()
+  const seats = [[0, -26], [-26, 18], [26, 18]] as const
+  const room = (cx: number, kind: 'talk' | 'write', title: string) => (
+    <g>
+      <text x={cx} y={14} textAnchor="middle" className={`v-hm-label is-${kind}`}>{title}</text>
+      <circle cx={cx} cy={66} r={22} className="v-hm-table" />
+      {seats.map(([dx, dy], i) => <circle key={i} cx={cx + dx * 1.45} cy={66 + dy * 1.45} r={6} className="v-hm-seat" />)}
+      {kind === 'talk'
+        ? seats.map(([dx, dy], i) => (
+          <motion.path key={i} d={`M${cx + dx * 1.45 + 9} ${66 + dy * 1.45 - 16} h16 a4 4 0 0 1 4 4 v6 a4 4 0 0 1 -4 4 h-10 l-5 4 v-4 h-1 a4 4 0 0 1 -4 -4 v-6 a4 4 0 0 1 4 -4 z`} className="v-hm-bubble"
+            initial={{ opacity: 0 }} animate={{ opacity: [0, 1, 1, 0.25] }} transition={{ ...t(0.3 + i * 0.9, 0.9), times: [0, 0.2, 0.8, 1] }} />
+        ))
+        : seats.flatMap(([dx, dy], i) => [0, 1, 2].map((n) => (
+          <motion.rect key={`${i}-${n}`} x={cx + dx * 0.5 - 5 + n * 3} y={66 + dy * 0.5 - 6 - n * 3} width={10} height={10} rx={1.5} className="v-hm-note"
+            initial={{ opacity: 0, scale: 0.4 }} animate={{ opacity: 1, scale: 1 }} transition={t(0.3 + n * 0.8 + i * 0.1, 0.4)} />
+        )))}
+    </g>
+  )
+  return (
+    <div className="v-hm-ideas">
+      <svg viewBox="0 0 320 112" className="v-hm-rooms" role="img" aria-label="Illustration: one group takes turns talking; the other writes ideas silently at the same time.">
+        {room(80, 'talk', 'Talking it through')}
+        {room(240, 'write', 'Writing silently')}
+      </svg>
+      <div className="v-hm-tug" role="list" aria-label="Who came out ahead">
+        <p className="v-hm-tug-head" aria-hidden="true"><span className="is-talk">Talking</span><span>came out ahead</span><span className="is-write">Writing</span></p>
+        {IDEAS.map(({ outcome, winner }, i) => (
+          <div key={outcome} className={`v-hm-tug-row is-${winner}`} role="listitem" aria-label={`${outcome}: ${winner === 'write' ? 'writing' : 'talking'} came out ahead`}>
+            <span className="v-hm-tug-label">{outcome}</span>
+            <span className="v-hm-tug-track" aria-hidden="true">
+              <motion.i initial={{ left: '50%' }} animate={{ left: winner === 'write' ? '88%' : '12%' }} transition={t(0.6 + i * 0.25, 0.8)} />
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="v-hm-aside">Not on video: pairs meeting in person came up with <strong>more creative ideas</strong> than pairs on a video call, but weren’t better at choosing one.</p>
+      <p className="v-note">Illustration above. Rows show only who came out ahead, not by how much: the first three from {IDEAS_GROUPS.online} online groups (2025), the last two from {IDEAS_GROUPS.cohesion} three-person groups (2026).</p>
+    </div>
+  )
+}
+
 export function MindVisual({ question, pick }: { question: ChapterQuestion; pick?: string }) {
   switch (question.visual) {
     case 'halfstory': return <HalfStoryVisual />
@@ -218,6 +261,7 @@ export function MindVisual({ question, pick }: { question: ChapterQuestion; pick
     case 'news': return <NewsVisual />
     case 'lure': return <LureVisual pick={pick} />
     case 'lies': return <LiesVisual />
+    case 'ideas': return <IdeasVisual />
     default: return null
   }
 }

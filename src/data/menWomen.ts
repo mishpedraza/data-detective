@@ -6,7 +6,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'eyes' | 'maths' | 'moral' | 'paradox'
   | 'permitcards' | 'adoption' | 'crimedrop' | 'fertility'
   | 'chain' | 'rentcontrol' | 'airbnb' | 'twostudies' | 'ratio' | 'vacant' | 'permits' | 'auckland'
-  | 'halfstory' | 'aistory' | 'humble' | 'news' | 'lure' | 'lies'
+  | 'halfstory' | 'aistory' | 'humble' | 'news' | 'lure' | 'lies' | 'ideas'
   | 'fitfat' | 'sleepweek' | 'warrior' | 'bursts' | 'steps' | 'vitamins' | 'alcohol'
 
 export interface Evidence {

@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { quizById, quizQuestions } from '../src/data/quizzes'
-import { LIES, LURE, MIND_QUESTIONS, NEWS, SLEEP_LIST } from '../src/data/humanMind'
+import { IDEAS, IDEAS_GROUPS, LIES, LURE, MIND_QUESTIONS, NEWS, SLEEP_LIST } from '../src/data/humanMind'
 import { CHAPTER_QUESTIONS } from '../src/data/chapterQuestions'
 import { scoreQuestion } from '../src/lib/chapterScore'
 
@@ -37,4 +37,15 @@ test('Human Mind figures match the audited sources', () => {
   assert.deepEqual([LURE.hits, LURE.lure], [86, 84])
   assert.equal(SLEEP_LIST.length, 15)
   assert.ok(!SLEEP_LIST.includes('sleep' as never))
+})
+
+test('Q7 brainstorming shows only the directions the 2022–2026 abstracts report', () => {
+  const q = MIND_QUESTIONS.find(({ id }) => id === 'hm-brainstorm')!
+  assert.equal(MIND_QUESTIONS.length, 7)
+  assert.equal(MIND_QUESTIONS.at(-1), q)
+  assert.equal(q.kind === 'choice' && q.answer, 'split')
+  assert.deepEqual([q.evidence!.url, ...q.evidence!.more!.map(({ url }) => url)], ['https://doi.org/10.1002/jocb.70058', 'https://doi.org/10.1080/1041794X.2026.2638815', 'https://doi.org/10.1038/s41586-022-04643-y'])
+  assert.deepEqual(IDEAS.filter(({ winner }) => winner === 'write').map(({ study }) => study), [2025, 2025, 2025])
+  assert.deepEqual(IDEAS.filter(({ winner }) => winner === 'talk').map(({ study }) => study), [2026, 2026])
+  assert.deepEqual([IDEAS_GROUPS.online, IDEAS_GROUPS.students, IDEAS_GROUPS.cohesion], [57, 157, 54])
 })

@@ -28,6 +28,16 @@ export const SLEEP_LIST = ['bed', 'rest', 'awake', 'tired', 'dream', 'wake', 'sn
 /** Recent recognition studies: share of studied words and of the missing related word that people said they had seen. */
 export const LURE = { hits: 86, lure: 84, unrelated: 10, frontiers: 75 } as const
 /** von Schenk et al. (2024): unaided human accuracy, the algorithm's accuracy, and how often people accused anyone. */
+/** Who came out ahead on each outcome: direction only, because the open abstracts give no effect sizes. */
+export const IDEAS = [
+  { outcome: 'Number of ideas', winner: 'write', study: 2025 },
+  { outcome: 'Original ideas', winner: 'write', study: 2025 },
+  { outcome: 'Share of good ideas', winner: 'write', study: 2025 },
+  { outcome: 'Building on each other’s ideas', winner: 'talk', study: 2026 },
+  { outcome: 'Group cohesion', winner: 'talk', study: 2026 },
+] as const
+export const IDEAS_GROUPS = { online: 57, students: 157, cohesion: 54 } as const
+
 export const LIES = { human: 46.47, algorithm: 66.86, accuse: 19.22, accuseRight: 40.82 } as const
 
 export const MIND_QUESTIONS: readonly ChapterQuestion[] = [
@@ -170,6 +180,32 @@ export const MIND_QUESTIONS: readonly ChapterQuestion[] = [
       limitation: 'One kind of written statement and one algorithm. It doesn’t show that AI can detect lies in general or in real-world settings.',
     },
   },
+  {
+    id: 'hm-brainstorm', kind: 'choice', short: 'Brainstorming',
+    question: 'Do groups come up with better ideas by talking?',
+    prompt: 'Groups solve the same problem either by talking it through or by silently writing ideas down. What happened?',
+    options: [
+      { id: 'talk', label: 'Talking won on both' },
+      { id: 'write', label: 'Writing won on both' },
+      { id: 'split', label: 'Writing produced better ideas, but talking made groups like working together more' },
+      { id: 'same', label: 'No difference' },
+    ],
+    answer: 'split',
+    finding: 'Writing won on the ideas. Talking won on how the group felt.',
+    takeaway: 'Writing groups came up with more ideas, more original ones and a higher share of good ones. Talking groups built more on each other’s ideas and felt more cohesive. Coming up with ideas and choosing one are different jobs: on video calls, pairs came up with fewer creative ideas than in person, but were no worse at picking the best one.',
+    visual: 'ideas',
+    evidence: {
+      citation: 'Baruah, Jimenez & Paulus (2025), Journal of Creative Behavior',
+      url: 'https://doi.org/10.1002/jocb.70058',
+      more: [
+        { citation: 'Henningsen et al. (2026), Southern Communication Journal', url: 'https://doi.org/10.1080/1041794X.2026.2638815' },
+        { citation: 'Brucks & Levav (2022), Nature', url: 'https://doi.org/10.1038/s41586-022-04643-y' },
+      ],
+      sample: '157 working students randomly assigned to 57 small online groups (2025); 54 three-person groups, 18 per condition (2026); a lab study and a field experiment in five countries (2022).',
+      method: '2025: groups either wrote ideas silently in a shared online space or brainstormed out loud on video, then chose their best idea. Writing groups picked more original ideas; video groups picked more feasible ones. 2026: talking groups were compared with silent-writing groups and with people working alone whose ideas were pooled. 2022: pairs on video vs in person; staring at a screen narrowed their focus.',
+      limitation: 'Separate, small studies in different settings, and only their abstracts were open, so the quiz shows who came out ahead, not by how much. The 2026 abstract reports no idea counts. None of these studies tests whether working alone first and then pooling ideas beats both.',
+    },
+  },
 ]
 
 export const MIND_CHAPTER = {
@@ -177,6 +213,6 @@ export const MIND_CHAPTER = {
   title: 'How easily can your brain fool you?',
   description: 'Memory, creativity, confidence and judgment. Discover how much you can really trust your own mind.',
   summary: 'Memory, creativity, confidence and judgment. Discover how much you can really trust your own mind.',
-  minutes: 6,
+  minutes: 7,
   scoring: 'One point per research prediction. The personal exercises are never scored.',
 } as const

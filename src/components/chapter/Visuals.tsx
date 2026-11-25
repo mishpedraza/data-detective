@@ -289,7 +289,7 @@ export function FindingVisual({ question, pick }: { question: ChapterQuestion; p
     case 'permits':
     case 'auckland':
       return <HousingVisual question={question} pick={pick} />
-    case 'halfstory': case 'aistory': case 'humble': case 'news': case 'lure': case 'lies':
+    case 'halfstory': case 'aistory': case 'humble': case 'news': case 'lure': case 'lies': case 'ideas':
       return <MindVisual question={question} pick={pick} />
     case 'fitfat': case 'sleepweek': case 'warrior': case 'bursts': case 'steps': case 'vitamins': case 'alcohol':
       return <HealthVisual question={question} />
