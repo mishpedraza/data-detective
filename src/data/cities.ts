@@ -215,7 +215,7 @@ export const CITIES_QUESTIONS: readonly ChapterQuestion[] = [
     kind: 'choice',
     short: 'Tourism',
     question: 'Does tourism make a town richer?',
-    prompt: 'Since the 1960s many Spanish towns have built their economies around tourists. Comparing municipalities, what was income per person like in 2019 where tourism had grown the most?',
+    prompt: 'Since the 1960s many Spanish towns have built their economies around tourists. Researchers estimated how tourism growth changed income per person by 2019. For a town whose tourism grew at the typical (median) rate, what was the estimated effect?',
     options: [
       { id: 'much-higher', label: 'Much higher' },
       { id: 'higher', label: 'A little higher' },
