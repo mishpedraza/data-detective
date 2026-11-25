@@ -28,7 +28,7 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
     track('share_clicked', props)
     track('scorecard_share_opened', { ...props, method })
     if (method === 'copy_fallback') {
-      if (await copy('share_fallback', `${message}\n${url}`)) setStatus('Your score and the link are copied. Paste them to a friend.')
+      if (await copy('share_fallback', `${message} ${url}`)) setStatus('Your score and the link are copied. Paste them to a friend.')
       return
     }
     try {
@@ -36,7 +36,7 @@ export function ScoreShare({ card, url, analytics }: { card: Scorecard; url: str
       track('scorecard_shared', { ...props, method })
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') track('scorecard_share_cancelled', { ...props, method })
-      else if (await copy('share_fallback', `${message}\n${url}`)) setStatus('Sharing isn’t available here, so your score and the link were copied.')
+      else if (await copy('share_fallback', `${message} ${url}`)) setStatus('Sharing isn’t available here, so your score and the link were copied.')
     }
   }
 
