@@ -47,14 +47,14 @@ export const HEALTH_QUESTIONS: readonly ChapterQuestion[] = [
   {
     id: 'hl-fitfat', kind: 'choice', short: 'Fit or thin',
     question: 'Who is more likely to live longer: a fit person with obesity or an unfit person of normal weight?',
-    prompt: 'Researchers pooled studies that measured fitness on a treadmill or bike test and followed people for years. Compared with fit people of normal weight, which group had the higher risk of dying?',
+    prompt: 'Researchers pooled studies that measured fitness on a treadmill or bike test and followed people for years. Which group had the lower risk of dying?',
     options: [
       { id: 'obese', label: 'Fit people with obesity' },
       { id: 'unfit', label: 'Unfit people of normal weight' },
       { id: 'same', label: 'Both about the same' },
     ],
-    answer: 'unfit',
-    finding: 'Unfit people of normal weight: about twice the risk, while fit people with obesity showed no clear difference.',
+    answer: 'obese',
+    finding: 'Fit people with obesity. Their risk wasn’t clearly higher than fit people of normal weight; unfit people of normal weight had about twice the risk.',
     takeaway: 'In every weight group, low fitness went with roughly double the risk. Fitness doesn’t erase every risk linked to obesity, and these are group averages from observational studies, not anyone’s life expectancy.',
     visual: 'fitfat',
     evidence: {
