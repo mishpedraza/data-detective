@@ -7,13 +7,14 @@ import { parseHoliday, scoreQuestion } from '../src/lib/chapterScore'
 
 const byId = (id: string) => MH_QUESTIONS.find((question) => question.id === id)!
 
-test('Money & Happiness plays "What actually makes us happy?" as its own chapter', () => {
+test('Money & Happiness plays "What actually makes us happy?" as its first chapter', () => {
   const quiz = quizById('money-happiness')!
   assert.equal(quiz.title, 'Money & Happiness')
   assert.equal(quiz.format, 'chapter')
-  assert.equal(quiz.chapters.length, 1)
+  assert.equal(quiz.chapters.length, 2)
   assert.equal(quiz.chapters[0].title, 'What actually makes us happy?')
-  assert.deepEqual(quizQuestions(quiz).map(({ id }) => id), MH_QUESTIONS.map(({ id }) => id))
+  assert.deepEqual(quiz.chapters[0].questionIds, MH_QUESTIONS.map(({ id }) => id))
+  assert.deepEqual(quizQuestions(quiz).map(({ id }) => id).slice(0, MH_QUESTIONS.length), MH_QUESTIONS.map(({ id }) => id))
   assert.notEqual(quiz.attemptKey, quizById('housing-crisis')!.attemptKey)
   for (const question of MH_QUESTIONS) {
     assert.equal(CHAPTER_QUESTIONS[question.id], question)
