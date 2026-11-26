@@ -1,5 +1,5 @@
 import { test, expect, CONSENT_KEY, type Captured } from './support/fixtures'
-import { CHAPTERS, chapterUrl } from './support/data'
+import { CHAPTERS, maxPoints, chapterUrl } from './support/data'
 import { cardFor, playChapter } from './support/play'
 
 // The shortest chapter keeps these runs quick; event names come from the app, so they apply to every quiz.
@@ -60,7 +60,7 @@ test.describe('without an analytics choice', () => {
       }
     }
     const completed = analytics.find(({ event }) => event === 'quiz_completed')!
-    expect(completed.properties).toMatchObject({ quiz_id: chapter.quiz.id, score: chapter.questions.length, max_points: chapter.questions.length })
+    expect(completed.properties).toMatchObject({ quiz_id: chapter.quiz.id, score: maxPoints(chapter.questions), max_points: maxPoints(chapter.questions) })
   })
 })
 
@@ -71,9 +71,24 @@ test.describe('with analytics allowed', () => {
     await page.addInitScript(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async () => {} }))
     await page.goto(chapterUrl(chapter))
     await playChapter(page, chapter, () => 'correct', { checkLayout: false })
-    await page.getByRole('button', { name: 'Challenge a friend' }).click()
+    await page.getByRole('button', { name: 'More options' }).click()
     await expect.poll(() => events(analytics)).toContain('scorecard_shared')
     for (const name of ['share_clicked', 'scorecard_share_opened']) expect(events(analytics)).toContain(name)
+  })
+
+  test('tracks WhatsApp and Copy link with the method used', async ({ page, analytics }) => {
+    await page.context().route('https://wa.me/**', (route) => route.fulfill({ body: 'WhatsApp' }))
+    await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => {} } }))
+    await page.goto(chapterUrl(chapter))
+    await playChapter(page, chapter, () => 'correct', { checkLayout: false })
+    const popup = page.waitForEvent('popup')
+    await page.getByRole('link', { name: 'Share on WhatsApp' }).click()
+    await (await popup).close()
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    await expect.poll(() => events(analytics)).toContain('quiz_link_copied')
+    const methods = analytics.filter(({ event }) => event === 'share_clicked').map(({ properties }) => properties.method)
+    expect(methods).toEqual(['whatsapp', 'copy'])
+    expect(analytics.find(({ event }) => event === 'scorecard_share_opened')!.properties).toMatchObject({ method: 'whatsapp', quiz_id: chapter.quiz.id })
   })
 
   test('tracks opening a shared link', async ({ page, analytics }) => {
@@ -89,7 +104,12 @@ test.describe('with analytics declined', () => {
     await page.addInitScript(() => Object.defineProperty(navigator, 'share', { configurable: true, value: async () => {} }))
     await page.goto(chapterUrl(chapter))
     await playChapter(page, chapter, () => 'correct', { checkLayout: false })
-    await page.getByRole('button', { name: 'Challenge a friend' }).click()
+    await page.context().route('https://wa.me/**', (route) => route.fulfill({ body: 'WhatsApp' }))
+    const popup = page.waitForEvent('popup')
+    await page.getByRole('link', { name: 'Share on WhatsApp' }).click()
+    await (await popup).close()
+    await page.getByRole('button', { name: 'Copy link' }).click()
+    await page.getByRole('button', { name: 'More options' }).click()
     await page.waitForTimeout(300)
     expect(events(analytics)).toEqual([])
   })

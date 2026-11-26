@@ -95,12 +95,13 @@ test('quiz cards offer play, resume or play again with matching progress', async
 
 test('theme progress sums real points across quizzes and unlocks combined results only when every quiz is done', async () => {
   const { themeProgress, pointSequence, themeVersion } = await import('../src/lib/themeProgress')
-  const { chapterQuestions } = await import('../src/lib/chapterScore')
+  const { chapterQuestions, maxPoints } = await import('../src/lib/chapterScore')
   const theme = quizById('men-and-women')!
   const love = chapterQuestions(theme, 'love-attraction')
   const money = chapterQuestions(theme, 'money-ambition-power')
   const nature = chapterQuestions(theme, 'nature-nurture-society')
   const pickFor = (question: (typeof love)[number], right: boolean) => {
+    if (question.kind === 'week') return '3,2'
     if (question.kind === 'choice') {
       const main = right ? question.answer : question.options.find(({ id }) => id !== question.answer)!.id
       const warm = question.warmup ? `|${question.warmup.kind === 'week' ? '3,2' : question.warmup.options[0].id}` : ''
@@ -114,7 +115,7 @@ test('theme progress sums real points across quizzes and unlocks combined result
     Object.fromEntries(questions.slice(0, count).map((question) => [question.id, { pick: pickFor(question, right), edition: theme.edition }]))
 
   const fresh = themeProgress(theme, {})
-  assert.deepEqual([fresh.completed, fresh.points, fresh.total, fresh.complete], [0, 0, 20, false])
+  assert.deepEqual([fresh.completed, fresh.points, fresh.total, fresh.complete], [0, 0, 19, false])
   assert.deepEqual(fresh.chapters.map(({ state }) => state), ['not-started', 'not-started', 'not-started'])
 
   const half = themeProgress(theme, { ...play(love, true), ...play(money, true, 3) })
@@ -123,7 +124,7 @@ test('theme progress sums real points across quizzes and unlocks combined result
 
   const done = themeProgress(theme, { ...play(love, true), ...play(money, false), ...play(nature, true) })
   assert.equal(done.complete, true)
-  assert.equal(done.total, love.length + money.length + nature.length)
+  assert.equal(done.total, maxPoints(love) + maxPoints(money) + maxPoints(nature))
   // Partial credit counts: the combined score is the sum of points, not an average of percentages.
   assert.equal(done.points, done.chapters.reduce((sum, { points }) => sum + points, 0))
   assert.ok(done.chapters.some(({ points }) => points % 1 !== 0), 'a partial-credit score survives into the total')

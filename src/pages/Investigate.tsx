@@ -54,11 +54,12 @@ export function Investigate({ params, relationshipId }: { params: URLSearchParam
   const [playing, setPlaying] = useState(false)
   const [ctx, setCtx] = useState(false)
   const playRef = useRef<number | null>(null)
+  const [fromQuiz] = useState(() => ({ quiz: params.get('quiz') ?? undefined, chapter: params.get('chapter') ?? undefined, q: params.get('q') ?? undefined }))
 
   useEffect(() => {
-    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined, mode: view === 'scatter' && mode === 'changes' ? 'changes' : undefined })
+    const q = hrefFor('investigate', { r: rel.id, a, b, c: compare === 'none' ? undefined : compare, from, to, view: view === 'scatter' ? 'scatter' : undefined, mode: view === 'scatter' && mode === 'changes' ? 'changes' : undefined, ...fromQuiz })
     if (window.location.hash !== q) window.history.replaceState(null, '', q)
-  }, [rel.id, a, b, compare, from, to, view, mode])
+  }, [rel.id, a, b, compare, from, to, view, mode, fromQuiz])
 
   useEffect(() => {
     if (!playing) return

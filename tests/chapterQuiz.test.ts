@@ -1,10 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { DEFAULT_QUIZ, quizById, quizQuestions } from '../src/data/quizzes'
+import { CHAPTER_QUESTIONS } from '../src/data/chapterQuestions'
 import { LOVE_QUESTIONS, type ChapterQuestion } from '../src/data/menWomen'
 import { MONEY_QUESTIONS } from '../src/data/moneyPower'
 import { NATURE_QUESTIONS } from '../src/data/natureNurture'
-import { chapterAnswers, chapterQuestions, estimatePoints, formatPoints, overlap, recordAnswer, scoreQuestion, totalPoints } from '../src/lib/chapterScore'
+import { chapterAnswers, chapterQuestions, estimatePoints, formatPoints, isScored, maxPoints, overlap, recordAnswer, scoreQuestion, totalPoints } from '../src/lib/chapterScore'
 import { challengeReaction, partialReaction } from '../src/lib/discoveryChallenge'
 import { challengeAnswers } from '../src/lib/discoveryChallenge'
 import { revealDiscovery, type DiscoveryProgress } from '../src/lib/discoveryProgress'
@@ -61,7 +62,7 @@ test('the total is out of seven and keeps partial points', () => {
   let progress: DiscoveryProgress = {}
   const picks: Record<string, string> = { 'mw-age-attraction': 'younger', 'mw-looks-money': 'split', 'mw-first-move': 'gone',
     'mw-desire': 'remains', 'mw-singlehood': 'women,similar,women,men', 'mw-support': '60,74', 'mw-loneliness': 'age' }
-  for (const [id, pick] of Object.entries(picks)) progress = recordAnswer(progress, id, pick, quiz.edition)
+  for (const [id, pick] of Object.entries(picks)) progress = recordAnswer(progress, CHAPTER_QUESTIONS[id], pick, quiz.edition)
   const answers = chapterAnswers(progress, chapterQuestions(quiz, 'love-attraction'), quiz.edition)
   assert.equal(answers.length, 7)
   assert.equal(totalPoints(answers), 4 + 0.75 + 0.75)
@@ -71,8 +72,8 @@ test('the total is out of seven and keeps partial points', () => {
 })
 
 test('going back to an answered question keeps the first prediction', () => {
-  const first = recordAnswer({}, 'mw-desire', 'vanishes', quiz.edition)
-  assert.equal(recordAnswer(first, 'mw-desire', 'remains', quiz.edition), first)
+  const first = recordAnswer({}, CHAPTER_QUESTIONS['mw-desire'], 'vanishes', quiz.edition)
+  assert.equal(recordAnswer(first, CHAPTER_QUESTIONS['mw-desire'], 'remains', quiz.edition), first)
   assert.equal(chapterAnswers(first, chapterQuestions(quiz), quiz.edition)[0].points, 0)
   assert.equal(chapterAnswers(first, chapterQuestions(quiz), 'v0').length, 0)
 })
@@ -81,7 +82,7 @@ test('progress is independent from the World quiz', () => {
   assert.notEqual(quiz.attemptKey, DEFAULT_QUIZ.attemptKey)
   assert.notEqual(quiz.resultKey, DEFAULT_QUIZ.resultKey)
   const world = quizQuestions(DEFAULT_QUIZ)[0].id
-  const mixed = recordAnswer(revealDiscovery({}, world, 'x', 'x', DEFAULT_QUIZ.edition), 'mw-loneliness', 'age', quiz.edition)
+  const mixed = recordAnswer(revealDiscovery({}, world, 'x', 'x', DEFAULT_QUIZ.edition), CHAPTER_QUESTIONS['mw-loneliness'], 'age', quiz.edition)
   assert.deepEqual(chapterAnswers(mixed, chapterQuestions(quiz), quiz.edition).map(({ id }) => id), ['mw-loneliness'])
   assert.ok(challengeAnswers(mixed, DEFAULT_QUIZ).every(({ id }) => id === world))
 })
@@ -93,11 +94,10 @@ test('the illustrative overlap matches the brief for g = 0.54', () => {
 
 const money = (id: string) => MONEY_QUESTIONS.find((question) => question.id === id) as ChapterQuestion
 
-test('leadership and risk score a third of a point per matching prediction', () => {
+test('leadership scores a third of a point per matching prediction', () => {
   assert.equal(scoreQuestion(money('mp-leader'), 'men,women,similar'), 1)
   assert.equal(scoreQuestion(money('mp-leader'), 'men,men,men'), 1 / 3)
-  assert.equal(scoreQuestion(money('mp-risk'), 'similar,men,women'), 2 / 3)
-  assert.equal(scoreQuestion(money('mp-risk'), 'similar,men,similar,men'), undefined)
+  assert.equal(scoreQuestion(money('mp-leader'), 'men,women,similar,men'), undefined)
 })
 
 test('free time estimates score by hours: half a point within 2, a quarter within 5', () => {
@@ -106,36 +106,39 @@ test('free time estimates score by hours: half a point within 2, a quarter withi
   assert.equal(scoreQuestion(q, '33,21'), 0.75)
   assert.equal(scoreQuestion(q, '35,27'), 0)
   assert.equal(scoreQuestion(q, '61,20'), undefined)
-  assert.equal(scoreQuestion(money('mp-negotiate'), '44,49'), 1)
-  assert.equal(scoreQuestion(money('mp-negotiate'), '64,47'), 0.25)
 })
 
-test('the power estimate scores a point within 5, half within 15', () => {
-  const q = money('mp-power')
-  assert.equal(scoreQuestion(q, '66'), 1)
-  assert.equal(scoreQuestion(q, '86'), 0.5)
-  assert.equal(scoreQuestion(q, '87'), 0)
-  assert.equal(scoreQuestion(q, '101'), undefined)
-})
-
-test('warm-ups are stored with the answer but never scored', () => {
-  assert.equal(scoreQuestion(money('mp-compete'), 'smaller|tournament'), 1)
-  assert.equal(scoreQuestion(money('mp-compete'), 'larger|piece'), 0)
-  assert.equal(scoreQuestion(money('mp-compete'), 'smaller'), undefined)
-  assert.equal(scoreQuestion(money('mp-compete'), 'smaller|lottery'), undefined)
-  assert.equal(scoreQuestion(money('mp-week'), 'women-more|3.5,4'), 1)
-  assert.equal(scoreQuestion(money('mp-week'), 'women-more|5.5,4'), undefined)
+test('revised questions are multiple choice with the verified answers', () => {
+  assert.equal(scoreQuestion(money('mp-negotiate-outcome'), 'similar'), 1)
+  assert.equal(scoreQuestion(money('mp-negotiate-outcome'), 'men'), 0)
+  assert.equal(scoreQuestion(money('mp-compete-verbal'), 'negligible'), 1)
+  assert.equal(scoreQuestion(money('mp-compete-verbal'), 'negligible|piece'), undefined)
+  assert.equal(scoreQuestion(money('mp-risk-feedback'), 'similar'), 1)
+  assert.equal(scoreQuestion(money('mp-risk-feedback'), 'women'), 0)
+  assert.equal(scoreQuestion(money('mp-power-match'), 'three-quarters'), 1)
+  assert.equal(scoreQuestion(money('mp-power-match'), '71'), undefined)
   assert.equal(scoreQuestion(money('mp-motherhood'), 'persists'), 1)
 })
 
-test('a perfect Money, ambition & power run scores 9', () => {
-  const perfect: Record<string, string> = { 'mp-leader': 'men,women,similar', 'mp-negotiate': '44,54', 'mp-compete': 'smaller|piece',
-    'mp-risk': 'similar,men,similar', 'mp-assertive': 'hiring', 'mp-week': 'women-more|4,3', 'mp-leisure': '30,21', 'mp-motherhood': 'persists', 'mp-power': '71' }
+test('the working week is an unscored discovery', () => {
+  const week = money('mp-week-ideal')
+  assert.equal(isScored(week), false)
+  assert.equal(scoreQuestion(week, '3.5,4'), 0)
+  assert.equal(scoreQuestion(week, '5.5,4'), undefined)
+  assert.equal(scoreQuestion(week, 'women-more|3.5,4'), undefined)
+})
+
+test('a perfect Money, ambition & power run scores 8 of 8 across 9 discoveries', () => {
+  const perfect: Record<string, string> = { 'mp-leader': 'men,women,similar', 'mp-negotiate-outcome': 'similar', 'mp-compete-verbal': 'negligible',
+    'mp-risk-feedback': 'similar', 'mp-assertive': 'hiring', 'mp-week-ideal': '4,3', 'mp-leisure': '30,21', 'mp-motherhood': 'persists', 'mp-power-match': 'three-quarters' }
   let progress: DiscoveryProgress = {}
-  for (const [id, pick] of Object.entries(perfect)) progress = recordAnswer(progress, id, pick, quiz.edition)
-  const answers = chapterAnswers(progress, chapterQuestions(quiz, 'money-ambition-power'), quiz.edition)
+  for (const [id, pick] of Object.entries(perfect)) progress = recordAnswer(progress, CHAPTER_QUESTIONS[id], pick, quiz.edition)
+  const questions = chapterQuestions(quiz, 'money-ambition-power')
+  const answers = chapterAnswers(progress, questions, quiz.edition)
+  assert.equal(questions.length, 9)
   assert.equal(answers.length, 9)
-  assert.equal(totalPoints(answers), 9)
+  assert.equal(maxPoints(questions), 8)
+  assert.equal(totalPoints(answers), 8)
   assert.equal(formatPoints(1 / 3), '0.33')
 })
 

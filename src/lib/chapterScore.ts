@@ -68,6 +68,7 @@ export function scoreQuestion(question: ChapterQuestion, pick: string): number |
     const sides = parseRows(question, pick)
     return sides && sides.filter((side, i) => side === question.rows[i].answer).length / question.rows.length
   }
+  if (question.kind === 'week') return parseWeek(pick) ? 0 : undefined
   if (question.kind === 'estimate') {
     const value = parseEstimate(question, pick)
     if (value === undefined) return
@@ -78,6 +79,10 @@ export function scoreQuestion(question: ChapterQuestion, pick: string): number |
   const { near = 5, far = 15 } = question
   return estimates && estimatePoints(estimates.men, question.actual.men, near, far) + estimatePoints(estimates.women, question.actual.women, near, far)
 }
+
+/** Unscored discoveries count as answered but add nothing to the maximum. */
+export const isScored = (question: ChapterQuestion) => question.kind !== 'week'
+export const maxPoints = (questions: readonly ChapterQuestion[]) => questions.filter(isScored).length
 
 export type ChapterAnswer = { id: string; pick: string; points: number }
 
@@ -106,9 +111,11 @@ export function chapterQuestions(quiz: Quiz, chapterId?: string): ChapterQuestio
   return quiz.chapters.filter(({ id }) => !chapterId || id === chapterId).flatMap(({ questionIds }) => questionIds.flatMap((id) => CHAPTER_QUESTIONS[id] ? [CHAPTER_QUESTIONS[id]] : []))
 }
 
-/** Saves an answer once; going back to a question keeps the first prediction. */
-export function recordAnswer(progress: DiscoveryProgress, id: string, pick: string, edition: string): DiscoveryProgress {
-  return progress[id]?.edition === edition ? progress : { ...progress, [id]: { pick, edition } }
+/** Saves an answer once; going back to a question keeps the first prediction. A saved pick the question no longer accepts (its options changed) is replaced. */
+export function recordAnswer(progress: DiscoveryProgress, question: ChapterQuestion, pick: string, edition: string): DiscoveryProgress {
+  const prior = progress[question.id]
+  const kept = prior?.edition === edition && scoreQuestion(question, prior.pick) !== undefined
+  return kept ? progress : { ...progress, [question.id]: { pick, edition } }
 }
 
 const erf = (x: number) => {

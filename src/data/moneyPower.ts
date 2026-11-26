@@ -11,13 +11,11 @@ export const BREADWINNER_HOURS = [
   { label: 'Leisure', men: 29.9, women: 21.1 },
 ] as const
 
-/** Markowsky & Beblo (2022), meta-regression: how much smaller the gender gap in entering competition is, in percentage points. */
-export const COMPETITION_SHIFTS = [
-  { id: 'verbal', label: 'A verbal task instead of maths', smaller: '7–8', amount: 7.5 },
-  { id: 'adults', label: 'Adults instead of students', smaller: '11–12', amount: 11.5 },
-  { id: 'feedback', label: 'Players told how they rank', smaller: '6–8', amount: 7 },
-  { id: 'quota', label: 'Affirmative action for women', smaller: 'about 26', amount: 26 },
-] as const
+/** Markowsky & Beblo (2022), meta-regression: how much smaller the gender gap in entering competition is in verbal tasks than in lab maths contests among students, in percentage points. */
+export const VERBAL_SHIFT = '7–8'
+
+/** Morgenroth et al. (2022), Study 4: share choosing the risky pay again after each kind of feedback. */
+export const RISK_AGAIN = { positive: 94, negative: 64, analysed: 398 } as const
 
 /** Williams & Tiedens (2016): effect of dominance on evaluations of women relative to men (Cohen’s d). */
 export const DOMINANCE_EFFECTS = [
@@ -44,6 +42,15 @@ export const WEEK_PREFERENCES = [
 /** Galinsky et al. (2024): 102 meta-analytic gender differences compared with experimental effects of power. */
 export const POWER_COMPARISONS = { total: 102, same: 72, opposite: 8, none: 22 } as const
 
+/** Ids of questions replaced in the November 2026 revision, so old links open their successor. */
+export const MONEY_RETIRED_IDS: Readonly<Record<string, string>> = {
+  'mp-negotiate': 'mp-negotiate-outcome',
+  'mp-compete': 'mp-compete-verbal',
+  'mp-risk': 'mp-risk-feedback',
+  'mp-week': 'mp-week-ideal',
+  'mp-power': 'mp-power-match',
+}
+
 export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
   {
     id: 'mp-leader',
@@ -69,77 +76,72 @@ export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
     },
   },
   {
-    id: 'mp-negotiate',
-    kind: 'sliders',
+    id: 'mp-negotiate-outcome',
+    kind: 'choice',
     short: 'Negotiation',
-    question: 'Do women really negotiate their salaries less?',
-    prompt: 'A business school asked its graduating MBA students: “Did you negotiate your job offer?” What share said yes?',
-    scenario: 'Imagine 100 graduating men and 100 graduating women.',
-    actual: { men: 44, women: 54 },
-    expected: { men: 64, women: 47 },
-    finding: 'Women negotiated more: 54%, against 44% of men.',
-    takeaway: 'The public guessed the opposite. Older studies found women negotiated slightly less often; in these recent MBA classes, the pattern reversed.',
+    question: 'Who achieves better outcomes when negotiating — men or women?',
+    prompt: 'Thousands of people negotiated with each other: face to face in a business school course, and in anonymous online chats. What happened?',
+    options: [
+      { id: 'men', label: 'Men achieve better financial outcomes.' },
+      { id: 'women', label: 'Women achieve better financial outcomes.' },
+      { id: 'similar', label: 'Both achieve similar financial outcomes, but people prefer negotiating with women.' },
+    ],
+    answer: 'similar',
+    finding: 'Similar deals. But people preferred negotiating with women.',
+    takeaway: 'The researchers found no significant gender difference in the deals people reached. But partners said they liked women more, and more often wanted to negotiate with them again, even in anonymous chats where they didn’t know, and couldn’t guess, the other person’s gender.',
     visual: 'negotiate',
     evidence: {
-      citation: 'Kray, Kennedy & Lee (2024), Academy of Management Discoveries',
-      url: 'https://doi.org/10.5465/amd.2022.0021',
-      sample: '990 graduating MBA students (2015–2019) at one top US business school. The public’s guesses come from 296 US adults recruited online, paid a bonus for accurate estimates.',
-      method: 'A yes/no question in the career office’s exit survey, about the job offer each student accepted.',
-      limitation: 'Self-reported, and from MBA graduates of one school rather than the whole workforce. It doesn’t show how hard, or how successfully, people negotiated.',
+      citation: 'Townsend, Kray & Delecourt (2026), PNAS',
+      url: 'https://doi.org/10.1073/pnas.2523202123',
+      sample: 'Five studies, 2,401 participants: 231 MBA students over a 10-week negotiation course; 1,030 anonymous online chat negotiations between 846 US adults; 773 and 371 US adults who rated real chat transcripts; and an analysis of the transcripts.',
+      method: 'Financial outcomes are the points each side won in the deal. Interpersonal outcomes are partners’ own ratings: how much they liked the other person, how satisfied they were and whether they wanted to negotiate with them again. A separate group of 180 students guessed the chat negotiators’ gender no better than chance.',
+      limitation: 'A non-significant difference is not proof that outcomes are identical. Liking and wanting to negotiate again are self-reported. The negotiations were role-plays and chats over fictional resources, not real salaries.',
     },
   },
   {
-    id: 'mp-compete',
+    id: 'mp-compete-verbal',
     kind: 'choice',
     short: 'Competition',
-    question: 'Are men naturally more competitive?',
-    prompt: 'In experiments like this, men choose the competition more often than women. What happens to that gap when the task is verbal instead of maths?',
-    warmup: {
-      kind: 'choice',
-      prompt: 'First, just for you. You have five minutes to solve as many puzzles as you can. How do you want to be paid?',
-      options: [
-        { id: 'piece', label: '€1 for every correct answer' },
-        { id: 'tournament', label: '€4 for every correct answer if you beat three other players. Otherwise nothing.' },
-      ],
-    },
+    question: 'Are men more competitive at everything?',
+    prompt: 'In experiments with maths tasks, men are generally more likely than women to enter a competition. What happens when the task involves verbal skills instead?',
     options: [
-      { id: 'larger', label: 'The gap becomes larger' },
-      { id: 'smaller', label: 'The gap becomes smaller' },
-      { id: 'same', label: 'It stays about the same' },
+      { id: 'same', label: 'The gender gap stays roughly the same.' },
+      { id: 'negligible', label: 'The gender gap becomes almost negligible.' },
+      { id: 'women', label: 'Women become substantially more competitive than men.' },
     ],
-    answer: 'smaller',
-    finding: 'It shrinks, to almost nothing.',
-    takeaway: 'Across 409 estimates, men chose to compete 13 points more often than women on average. How big the gap is depends on what people compete in, and how the contest is set up.',
+    answer: 'negligible',
+    finding: 'It almost disappears.',
+    takeaway: 'Willingness to compete depends on what the competition is about and how it is set up. Gaps were largest in lab maths contests among students, and almost negligible in verbal tasks.',
     visual: 'compete',
     evidence: {
       citation: 'Markowsky & Beblo (2022), Journal of Economic Behavior & Organization',
       url: 'https://doi.org/10.1016/j.jebo.2022.03.030',
-      sample: '110 studies and 409 estimates of the gender gap in choosing a tournament over a piece rate.',
-      method: 'Meta-regression. Each change is compared with an otherwise similar lab maths contest among students, where gaps were largest.',
-      limitation: 'About two-thirds of the experiments used maths tasks and only 7% verbal ones. The figures are differences between study designs, not separate gaps for each task.',
+      sample: '110 studies and 409 estimates of the gender gap in choosing to compete (a tournament) rather than a fixed pay per correct answer.',
+      method: 'Meta-regression. Verbal tasks are compared with otherwise similar lab maths contests among students.',
+      limitation: 'About two-thirds of the experiments used maths tasks and only 7% verbal ones. The 7–8 points are a difference between study designs, not separately measured gaps. The research doesn’t show whether any gender difference is innate.',
     },
   },
   {
-    id: 'mp-risk',
-    kind: 'rows',
+    id: 'mp-risk-feedback',
+    kind: 'choice',
     short: 'Risk',
-    question: 'Are women less willing to take risks at work?',
-    prompt: 'Five studies of 2,280 people looked at taking risks at work. Who came out ahead on each?',
-    rows: [
-      { id: 'new', label: 'Willing to take an unfamiliar risk', answer: 'similar' },
-      { id: 'outcomes', label: 'Got good outcomes from past risks', answer: 'men' },
-      { id: 'again', label: 'Willing to try again after the same outcome', answer: 'similar' },
+    question: 'Are women really more risk-averse at work?',
+    prompt: 'Researchers offered men and women a choice between guaranteed pay and a potentially higher, riskier payment. They then gave participants positive or negative feedback before offering them another choice. How did men and women respond?',
+    options: [
+      { id: 'men', label: 'Men were more willing to take risks regardless of previous outcomes.' },
+      { id: 'women', label: 'Women were more discouraged by negative feedback.' },
+      { id: 'similar', label: 'Men and women responded similarly to feedback.' },
     ],
-    labels: { similar: 'No difference' },
-    finding: 'Equally daring. The difference came afterwards.',
-    takeaway: 'Men reported better outcomes from risks they had taken, so they were readier to take them again. When the outcomes were the same, so was the willingness.',
+    answer: 'similar',
+    finding: 'Feedback mattered. Gender didn’t.',
+    takeaway: 'After positive feedback, 94% chose the risky pay again. After negative feedback, 64% did. The experiment found no statistically significant difference between men and women, either in the first choice or in how they responded to feedback.',
     visual: 'risk',
     evidence: {
       citation: 'Morgenroth, Ryan & Fine (2022), Psychology of Women Quarterly',
       url: 'https://doi.org/10.1177/03616843221084048',
-      sample: 'Two correlational and three experimental studies, 2,280 participants in total.',
-      method: 'Participants reported past workplace risks and their consequences, and responded to scenarios with fixed consequences.',
-      limitation: 'Reported consequences are people’s own accounts. Willingness to take risks may reflect past experience and expected consequences, not an inborn trait.',
+      sample: 'Study 4: 677 US adults recruited online, most of them employed. The 398 who first chose the risky pay (199 women, 199 men) were analysed. The paper has five studies with 2,280 participants in total.',
+      method: 'Participants coded text for 10 minutes, paid either $0.01 a word or $0.05 a word only if their work was above average. A video “supervisor” then told each risk-taker, at random, that they had or hadn’t earned the bonus, before the next choice. The separate surveys asked people about risks they had taken at work and what happened.',
+      limitation: 'An online task, not a real job. No significant gender difference is not proof of none. The paper gives 94.12% and 63.98% but not the number of people in each feedback group. The survey outcomes are people’s own accounts, not independently verified.',
     },
   },
   {
@@ -166,30 +168,20 @@ export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
     },
   },
   {
-    id: 'mp-week',
-    kind: 'choice',
+    id: 'mp-week-ideal',
+    kind: 'week',
     short: 'Working week',
-    question: 'What working week do men and women actually want?',
-    prompt: 'Employed men and women in Sweden, the Netherlands and the UK answered the same kind of question in a survey experiment. What did they prefer?',
-    warmup: {
-      kind: 'week',
-      prompt: 'First, just for you. You and your partner have a young child, and you can both work. How many days a week would you ideally want each of you to work?',
-    },
-    options: [
-      { id: 'same', label: 'Both wanted their partner to work about as much as themselves' },
-      { id: 'women-more', label: 'Women wanted their partner to work more; men wanted their partner to work less' },
-      { id: 'men-more', label: 'Men wanted their partner to work more; women wanted their partner to work less' },
-    ],
-    answer: 'women-more',
-    finding: 'For themselves, men and women wanted the same hours. For their partner, they didn’t.',
-    takeaway: 'Both preferred the father to work more than the mother. Even when the woman earned more, women still wanted their partner to work about 2.5 hours more than themselves, while men chose equal hours.',
+    question: 'Do men and women want the same work–family balance?',
+    prompt: 'Imagine you and your partner have a young child. How many days a week would you ideally want each of you to work?',
+    finding: 'For themselves, men and women wanted similar hours. For their partner, they didn’t.',
+    takeaway: 'On average, men wanted to work more hours than their partner, while women wanted their partner to work more hours than themselves. Both leaned towards the father working more.',
     visual: 'week',
     evidence: {
       citation: 'Begall (2024), European Sociological Review. Survey conducted 2015/16',
       url: 'https://doi.org/10.1093/esr/jcad054',
       sample: '678 employed men and women aged 18–39 (328 men, 350 women) in Sweden, the UK and the Netherlands, from the European Sustainable Workforce Survey, 2015/16. Published in 2024.',
-      method: 'A factorial survey: in 2,493 fictional scenarios that varied who earned more, respondents gave their preferred weekly hours for themselves and their partner after a birth. Averages are weighted (Table 3); the earnings comparison uses model predictions (Figure 2). Calendars convert hours to 8-hour days.',
-      limitation: 'Hypothetical preferences, not how much people actually work. Respondents couldn’t choose more hours than they already worked, so specialization may be understated. Only male–female couples.',
+      method: 'A factorial survey: in 2,493 fictional scenarios about a couple after a birth, varying who earned more, respondents gave their preferred weekly hours for themselves and their partner. Averages are weighted (Table 3). Calendars convert hours to 8-hour days.',
+      limitation: 'Hypothetical preferences, not how much people actually work. Respondents couldn’t choose more hours than they already worked. Only male–female couples. Data Detective players are not part of the study.',
     },
   },
   {
@@ -241,24 +233,26 @@ export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
     },
   },
   {
-    id: 'mp-power',
-    kind: 'estimate',
+    id: 'mp-power-match',
+    kind: 'choice',
     short: 'Power',
     question: 'Are some gender differences really power differences?',
-    prompt: 'Researchers compared 102 documented psychological differences between men and women with what happens when experiments give people more power. In what share did men differ from women in the same direction as high-power people differ from low-power people?',
-    label: 'Same direction',
-    actual: 71,
-    near: 5,
-    far: 15,
-    finding: '71%: 72 of the 102. Only 8 pointed the opposite way.',
-    takeaway: 'Men and people given power both tended to show more agency, less focus on others and more positive self-evaluations. This is agreement in direction. It doesn’t mean power causes 71% of gender differences.',
+    prompt: 'Giving people power can change how they behave. For example, they may become more assertive and more willing to take risks. Researchers compared these changes with 102 psychological differences between men and women. How often did the two patterns match?',
+    options: [
+      { id: 'quarter', label: 'About a quarter of the time.' },
+      { id: 'half', label: 'About half the time.' },
+      { id: 'three-quarters', label: 'About three-quarters of the time.' },
+    ],
+    answer: 'three-quarters',
+    finding: '71% of the time: 72 of the 102. Only 8 pointed the opposite way.',
+    takeaway: 'Many characteristics associated with men, such as more assertiveness and more positive self-evaluations, also appeared in people given more power. That suggests differences in power may partly explain some psychological gender differences. It doesn’t show that power causes 71% of them, or that giving women power would remove them.',
     visual: 'power',
     evidence: {
       citation: 'Galinsky et al. (2024), PNAS Nexus',
       url: 'https://doi.org/10.1093/pnasnexus/pgae025',
       sample: '102 meta-analytic sex/gender differences and 59 experimental effects of power.',
-      method: 'A difference counted as the same direction when both effects exceeded d = 0.10 the same way. The remaining 22 showed no meaningful gender difference (d of 0.10 or less).',
-      limitation: 'It compares separate bodies of research. Directional agreement doesn’t establish that power causes these differences.',
+      method: 'Two separate comparisons: differences observed between men and women, and differences between people randomly given more or less power in experiments. A gender difference matched when both effects exceeded d = 0.10 in the same direction. The remaining 22 showed no meaningful gender difference.',
+      limitation: 'It compares separate bodies of research. Matching direction doesn’t establish that power causes these differences.',
     },
   },
 ]
@@ -268,5 +262,5 @@ export const MONEY_CHAPTER = {
   title: 'Money, ambition & power',
   summary: 'Who negotiates harder, who takes more risks, and how do couples divide work?',
   minutes: '6–8',
-  scoring: 'One point per question. Leadership and Risk: ⅓ point per correct prediction. Negotiation: ½ point per estimate within 5 points, ¼ within 15. Free time: ½ point per estimate within 2 hours, ¼ within 5. Power: 1 point within 5 points, ½ within 15.',
+  scoring: 'One point per question, 8 in total. Leadership: ⅓ point per correct prediction. Free time: ½ point per estimate within 2 hours, ¼ within 5. Working week is a personal discovery and isn’t scored.',
 }

@@ -38,8 +38,8 @@ export function ThemeMeter({ theme }: { theme: ThemeProgress }) {
     <div className="theme-meter">
       <p className="theme-meter-label">{theme.completed} of {count} {count === 1 ? 'quiz' : 'quizzes'} completed</p>
       <span className="theme-meter-bar" aria-hidden="true">
-        {theme.chapters.map(({ chapter, answers, total, state }) =>
-          <span key={chapter.id} className={state}><i style={{ width: `${total ? answers.length / total * 100 : 0}%` }} /></span>)}
+        {theme.chapters.map(({ chapter, answers, questionIds, state }) =>
+          <span key={chapter.id} className={state}><i style={{ width: `${questionIds.length ? answers.length / questionIds.length * 100 : 0}%` }} /></span>)}
       </span>
     </div>
   )
@@ -73,15 +73,15 @@ export function ThemeResults({ quiz, navigate }: { quiz: Quiz; navigate: (href: 
           </p>
           : <p className="discovery-context">Finish every quiz in {quiz.title} to see your combined score.</p>}
         <ol className="theme-breakdown">
-          {theme.chapters.map(({ chapter, points, total, answers, state }, i) => {
+          {theme.chapters.map(({ chapter, points, total, answers, questionIds, state }, i) => {
             const href = hrefFor('discover', { quiz: quiz.id, chapter: chapter.id, ...(state === 'completed' && { mode: 'results' }) })
             return (
               <li key={chapter.id}>
                 <a href={href} onClick={follow(navigate, href, () => track('theme_quiz_opened', { theme_id: quiz.id, chapter_id: chapter.id, state }))}>
                   <span className="theme-breakdown-title">{chapter.title}</span>
-                  <span className="theme-breakdown-score">{state === 'completed' ? scoreLabel(points, total) : `${stateLabel[state]} · ${answers.length} of ${total}`}</span>
+                  <span className="theme-breakdown-score">{state === 'completed' ? scoreLabel(points, total) : `${stateLabel[state]} · ${answers.length} of ${questionIds.length}`}</span>
                   <span className="theme-breakdown-bar" aria-hidden="true">
-                    <motion.i initial={{ width: 0 }} animate={{ width: `${total ? (state === 'completed' ? points : answers.length) / total * 100 : 0}%` }}
+                    <motion.i initial={{ width: 0 }} animate={{ width: `${state === 'completed' ? (total ? points / total * 100 : 0) : answers.length / questionIds.length * 100}%` }}
                       className={state === 'completed' ? '' : 'is-pending'} transition={{ delay: 0.3 + i * 0.12, duration: 0.7 }} />
                   </span>
                   <span className="theme-breakdown-go">{state === 'completed' ? 'Review or replay' : state === 'in-progress' ? 'Resume quiz' : 'Play quiz'} <span aria-hidden="true">→</span></span>
@@ -90,7 +90,7 @@ export function ThemeResults({ quiz, navigate }: { quiz: Quiz; navigate: (href: 
             )
           })}
         </ol>
-        {theme.complete && <p className="discovery-note">Every question is worth up to one point, so the maximum is {theme.total}. Partial credit counts.</p>}
+        {theme.complete && <p className="discovery-note">Every scored question is worth up to one point, so the maximum is {theme.total}. Partial credit counts.</p>}
         {theme.complete && <ScoreShare card={card} url={shareLink({ quiz: quiz.id }, 'theme')}
           analytics={{ theme_id: quiz.id, quiz_id: quiz.id, score: theme.points, max_points: theme.total, theme_version: themeVersion(quiz) }} />}
         <div className="ch-actions">

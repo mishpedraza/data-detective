@@ -30,10 +30,10 @@ export function follow(navigate: (href: string) => void, href: string, then?: ()
 export type Scored = { id: string; points: number }
 
 /** Card copy for a chapter: its size, its state, how far the player got, and the matching call to action. */
-export function playStatus(questions: readonly { id: string }[], answers: readonly Scored[], minutes?: number | string) {
+export function playStatus(questions: readonly { id: string }[], answers: readonly Scored[], minutes?: number | string, max = questions.length) {
   const meta = `${questions.length} questions${minutes ? ` · ${minutes} min` : ''}`
   if (answers.length === questions.length && questions.length) {
-    return { meta, state: 'completed', label: `Completed · ${formatPoints(totalPoints(answers))}/${questions.length}`, progress: '', action: 'Play again' } as const
+    return { meta, state: 'completed', label: `Completed · ${formatPoints(totalPoints(answers))}/${max}`, progress: '', action: 'Play again' } as const
   }
   if (answers.length) return { meta, state: 'in-progress', label: 'In progress', progress: `${answers.length} of ${questions.length} answered`, action: 'Resume quiz' } as const
   return { meta, state: 'not-started', label: 'Not started', progress: '', action: 'Play quiz' } as const

@@ -1,12 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import type { Route } from '../lib/route'
 
-export function Nav({ route, go }: { route: Route; go: (r: Route) => void }) {
-  const items: { id: Route; label: string }[] = [
-    { id: 'discover', label: 'Quizzes' },
-    { id: 'investigate', label: 'Investigate' },
-    { id: 'explore', label: 'Explore' },
-  ]
+export function Nav({ go }: { go: (r: Route) => void }) {
   const ref = useRef<HTMLElement>(null)
   useLayoutEffect(() => {
     const el = ref.current
@@ -25,13 +20,6 @@ export function Nav({ route, go }: { route: Route; go: (r: Route) => void }) {
         </span>
         Data Detective
       </a>
-      <nav aria-label="Main">
-        {items.map((it) => (
-          <a key={it.id} href={`#/${it.id}`} className={route === it.id ? 'active' : ''} aria-current={route === it.id ? 'page' : undefined} onClick={(e) => { e.preventDefault(); go(it.id) }}>
-            {it.label}
-          </a>
-        ))}
-      </nav>
     </header>
   )
 }

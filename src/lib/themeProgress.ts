@@ -1,5 +1,5 @@
 import { hasChapterList, type Quiz, type QuizChapter } from '../data/quizzes'
-import { chapterAnswers, chapterQuestions, totalPoints, type ChapterAnswer } from './chapterScore'
+import { chapterAnswers, chapterQuestions, maxPoints, totalPoints, type ChapterAnswer } from './chapterScore'
 import { readDiscoveryProgress, type DiscoveryProgress } from './discoveryProgress'
 
 export type QuizState = 'not-started' | 'in-progress' | 'completed'
@@ -28,11 +28,11 @@ export function chapterProgress(quiz: Quiz, chapter: QuizChapter, progress: Disc
   const questions = chapterQuestions(quiz, chapter.id)
   const answers = chapterAnswers(progress, questions, quiz.edition)
   const state: QuizState = !answers.length ? 'not-started' : answers.length === questions.length ? 'completed' : 'in-progress'
-  return { chapter, questionIds: questions.map(({ id }) => id), answers, total: questions.length, points: totalPoints(answers), state }
+  return { chapter, questionIds: questions.map(({ id }) => id), answers, total: maxPoints(questions), points: totalPoints(answers), state }
 }
 
 export function themeProgress(quiz: Quiz, progress: DiscoveryProgress = readDiscoveryProgress(quiz.attemptKey)): ThemeProgress {
-  const chapters = quiz.chapters.map((chapter) => chapterProgress(quiz, chapter, progress)).filter(({ total }) => total > 0)
+  const chapters = quiz.chapters.map((chapter) => chapterProgress(quiz, chapter, progress)).filter(({ questionIds }) => questionIds.length > 0)
   const completed = chapters.filter(({ state }) => state === 'completed').length
   return {
     quiz,
