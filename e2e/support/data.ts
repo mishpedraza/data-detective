@@ -1,9 +1,9 @@
 // Everything the suite plays comes from the app's own quiz registry, so new quizzes and questions are covered automatically.
 import { QUIZZES, hasChapterList, type Quiz, type QuizChapter } from '../../src/data/quizzes'
 import type { ChapterQuestion, Side } from '../../src/data/menWomen'
-import { SIDES, chapterQuestions, formatPoints, scoreQuestion } from '../../src/lib/chapterScore'
+import { SIDES, chapterQuestions, formatPoints, isScored, maxPoints, scoreQuestion } from '../../src/lib/chapterScore'
 
-export { QUIZZES, formatPoints, scoreQuestion }
+export { QUIZZES, formatPoints, isScored, maxPoints, scoreQuestion }
 export type { ChapterQuestion, Quiz, QuizChapter }
 
 export type Strategy = 'correct' | 'wrong' | 'partial'
@@ -45,6 +45,7 @@ export function warmupPick(question: ChapterQuestion) {
 
 /** The stored pick for a strategy; `partial` falls back to wrong for single-answer questions. */
 export function pickFor(question: ChapterQuestion, strategy: Strategy): string {
+  if (question.kind === 'week') return '0.5,0.5'
   if (question.kind === 'choice') {
     const main = strategy === 'correct' ? question.answer : question.options.find(({ id }) => id !== question.answer)!.id
     const warm = warmupPick(question)

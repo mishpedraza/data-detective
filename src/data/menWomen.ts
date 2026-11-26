@@ -93,7 +93,12 @@ export interface EstimateQuestion extends Base {
   unit?: '%' | ''
 }
 
-export type ChapterQuestion = ChoiceQuestion | RowsQuestion | SlidersQuestion | EstimateQuestion
+/** An unscored personal discovery: the player sets their ideal working week, then sees the research. */
+export interface WeekQuestion extends Base {
+  kind: 'week'
+}
+
+export type ChapterQuestion = ChoiceQuestion | RowsQuestion | SlidersQuestion | EstimateQuestion | WeekQuestion
 
 const PEW_SUPPORT = 'https://www.pewresearch.org/social-trends/2025/01/16/where-men-and-women-turn-for-emotional-support-and-social-connection/'
 const PEW_REPORT = 'https://www.pewresearch.org/social-trends/2025/01/16/men-women-and-social-connections/'

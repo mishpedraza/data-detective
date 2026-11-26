@@ -1,5 +1,5 @@
 import { test, expect, seedStorage } from './support/fixtures'
-import { CHAPTERS, QUIZZES, THEMES, chapterPoints, chapterUrl, formatPoints, mixedStrategy, seedProgress, type PlayableChapter } from './support/data'
+import { CHAPTERS, maxPoints, QUIZZES, THEMES, chapterPoints, chapterUrl, formatPoints, mixedStrategy, seedProgress, type PlayableChapter } from './support/data'
 import { cardFor, expectScore, kicker, playChapter } from './support/play'
 
 const saved = (page: import('@playwright/test').Page, key: string) =>
@@ -47,7 +47,7 @@ for (const chapter of CHAPTERS) {
       const card = await cardFor(page, chapter)
       await expect(card).toContainText('Play again')
       await card.click()
-      await expectScore(page, chapterPoints(chapter, mixedStrategy), n)
+      await expectScore(page, chapterPoints(chapter, mixedStrategy), maxPoints(chapter.questions))
       await page.getByRole('button', { name: 'Play again' }).click()
       await expect(kicker(page)).toContainText(`Question 1 of ${n}`)
       await expect(page.locator('.ch-reveal-panel')).toHaveCount(0)
@@ -78,7 +78,7 @@ test('progress in one quiz does not affect the others', async ({ page }) => {
 for (const quiz of THEMES) {
   const chapters = chaptersOf(quiz.id)
   const points = chapters.reduce((sum, chapter) => sum + chapterPoints(chapter, mixedStrategy), 0)
-  const total = chapters.reduce((sum, { questions }) => sum + questions.length, 0)
+  const total = chapters.reduce((sum, { questions }) => sum + maxPoints(questions), 0)
 
   test.describe(`${quiz.id} combined results`, () => {
     test('combines every chapter once all are complete', async ({ page }) => {
@@ -123,7 +123,7 @@ for (const chapter of CHAPTERS) {
     await page.goto(chapterUrl(chapter))
     await expect(kicker(page)).toContainText(`Question 1 of ${n}`)
     await playChapter(page, chapter, () => 'correct', { checkLayout: false })
-    await expectScore(page, n, n)
+    await expectScore(page, maxPoints(chapter.questions), maxPoints(chapter.questions))
     expect(Object.values(await saved(page, chapter.quiz.attemptKey)).some(({ pick }) => pick === 'retired-option')).toBe(false)
   })
 }

@@ -1,5 +1,5 @@
 import { test, expect, CONSENT_KEY, type Captured } from './support/fixtures'
-import { CHAPTERS, chapterUrl } from './support/data'
+import { CHAPTERS, maxPoints, chapterUrl } from './support/data'
 import { cardFor, playChapter } from './support/play'
 
 // The shortest chapter keeps these runs quick; event names come from the app, so they apply to every quiz.
@@ -60,7 +60,7 @@ test.describe('without an analytics choice', () => {
       }
     }
     const completed = analytics.find(({ event }) => event === 'quiz_completed')!
-    expect(completed.properties).toMatchObject({ quiz_id: chapter.quiz.id, score: chapter.questions.length, max_points: chapter.questions.length })
+    expect(completed.properties).toMatchObject({ quiz_id: chapter.quiz.id, score: maxPoints(chapter.questions), max_points: maxPoints(chapter.questions) })
   })
 })
 

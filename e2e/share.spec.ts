@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { test, expect, seedStorage } from './support/fixtures'
-import { CHAPTERS, THEMES, chapterPoints, chapterUrl, formatPoints, mixedStrategy, seedProgress } from './support/data'
+import { CHAPTERS, maxPoints, THEMES, chapterPoints, chapterUrl, formatPoints, mixedStrategy, seedProgress } from './support/data'
 import { SITE_URL } from '../src/lib/site'
 import { kicker } from './support/play'
 import { SHARE_MESSAGE, inviteMessage } from '../src/lib/scorecard'
@@ -54,7 +54,7 @@ async function whatsapp(scope: Page | import('@playwright/test').Locator) {
 for (const chapter of CHAPTERS) {
   const n = chapter.questions.length
   const points = chapterPoints(chapter, mixedStrategy)
-  const expected = `I scored ${formatPoints(points)}/${n} on “${chapter.chapter.title}”. ${SHARE_MESSAGE}`
+  const expected = `I scored ${formatPoints(points)}/${maxPoints(chapter.questions)} on “${chapter.chapter.title}”. ${SHARE_MESSAGE}`
   const params = { quiz: chapter.quiz.id, ...(chapter.quiz.chapters.length > 1 && { chapter: chapter.chapter.id }), from: 'share', card: 'quiz' }
   const openResults = async (page: Page) => {
     await seedStorage(page, { [chapter.quiz.attemptKey]: seedProgress(chapter, mixedStrategy) })

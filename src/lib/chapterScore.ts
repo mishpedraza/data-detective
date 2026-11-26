@@ -68,6 +68,7 @@ export function scoreQuestion(question: ChapterQuestion, pick: string): number |
     const sides = parseRows(question, pick)
     return sides && sides.filter((side, i) => side === question.rows[i].answer).length / question.rows.length
   }
+  if (question.kind === 'week') return parseWeek(pick) ? 0 : undefined
   if (question.kind === 'estimate') {
     const value = parseEstimate(question, pick)
     if (value === undefined) return
@@ -78,6 +79,10 @@ export function scoreQuestion(question: ChapterQuestion, pick: string): number |
   const { near = 5, far = 15 } = question
   return estimates && estimatePoints(estimates.men, question.actual.men, near, far) + estimatePoints(estimates.women, question.actual.women, near, far)
 }
+
+/** Unscored discoveries count as answered but add nothing to the maximum. */
+export const isScored = (question: ChapterQuestion) => question.kind !== 'week'
+export const maxPoints = (questions: readonly ChapterQuestion[]) => questions.filter(isScored).length
 
 export type ChapterAnswer = { id: string; pick: string; points: number }
 

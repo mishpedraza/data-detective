@@ -3,17 +3,18 @@ import { QUIZZES, quizQuestions, type Quiz, type QuizChapter } from '../data/qui
 import { hrefFor } from '../lib/route'
 import { track } from '../lib/analytics'
 import { chapterEntry, follow, playStatus, type Scored } from '../lib/quizEntry'
-import { formatPoints } from '../lib/chapterScore'
+import { formatPoints, maxPoints } from '../lib/chapterScore'
+import type { ChapterQuestion } from '../data/menWomen'
 import { themeProgress } from '../lib/themeProgress'
 import { ThemeMeter } from './ThemeResults'
 
 /** A playable quiz card; the whole card is the link. Without an href it shows as coming soon. */
 export function PlayCard({ kicker, title, description, minutes, questions = [], answers = [], href, onOpen, navigate }: {
   kicker?: string; title: string; description?: string; minutes?: number | string
-  questions?: readonly { id: string }[]; answers?: readonly Scored[]
+  questions?: readonly ChapterQuestion[]; answers?: readonly Scored[]
   href?: string; onOpen?: () => void; navigate: (href: string) => void
 }) {
-  const { meta, state, label, progress, action } = playStatus(questions, answers, minutes)
+  const { meta, state, label, progress, action } = playStatus(questions, answers, minutes, maxPoints(questions))
   const body = <>
     {kicker ? <span className="discovery-kicker">{kicker}</span> : href && <span className={`quiz-state is-${state}`}>{label}</span>}
     <span className="quiz-title">{title}</span>
@@ -76,7 +77,7 @@ export function QuizCollection({ navigate }: { navigate: (href: string) => void 
   const featured = playable.find((quiz) => quiz.id === 'world' && quiz.chapters.length === 1)
   const chapter = featured?.chapters[0]
   const entry = featured && chapter ? chapterEntry(featured, chapter.id) : undefined
-  const status = entry && chapter ? playStatus(entry.questions, entry.answers, chapter.minutes) : undefined
+  const status = entry && chapter ? playStatus(entry.questions, entry.answers, chapter.minutes, maxPoints(entry.questions)) : undefined
   const browsable = QUIZZES.find((quiz) => quiz.browse)
   const browse = browsable && hrefFor('discover', { quiz: browsable.id, mode: 'browse' })
   return (

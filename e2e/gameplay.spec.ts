@@ -1,5 +1,5 @@
 import { test } from './support/fixtures'
-import { CHAPTERS, chapterUrl, mixedStrategy, type Strategy } from './support/data'
+import { CHAPTERS, maxPoints, chapterUrl, mixedStrategy, type Strategy } from './support/data'
 import { expectScore, playChapter } from './support/play'
 import { expect, expectNoHorizontalOverflow } from './support/fixtures'
 
@@ -16,8 +16,8 @@ for (const chapter of CHAPTERS) {
       test(`plays through ${label}`, async ({ page }) => {
         await page.goto(chapterUrl(chapter))
         const points = await playChapter(page, chapter, strategy)
-        if (label === 'all correct') expect(points, 'a perfect run should score every point').toBe(chapter.questions.length)
-        await expectScore(page, points, chapter.questions.length)
+        if (label === 'all correct') expect(points, 'a perfect run should score every point').toBe(maxPoints(chapter.questions))
+        await expectScore(page, points, maxPoints(chapter.questions))
         await expect(page.locator('.ch-tally li')).toHaveCount(chapter.questions.length)
         await expectNoHorizontalOverflow(page, `on ${chapter.name} results`)
       })

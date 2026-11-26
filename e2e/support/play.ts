@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect, expectNoHorizontalOverflow } from './fixtures'
-import { formatPoints, pickFor, pointsFor, type ChapterQuestion, type PlayableChapter, type Strategy } from './data'
+import { formatPoints, isScored, pickFor, pointsFor, type ChapterQuestion, type PlayableChapter, type Strategy } from './data'
 
 const max = (question: ChapterQuestion) => ('max' in question && question.max) || 100
 
@@ -29,6 +29,13 @@ async function playWarmup(page: Page, question: ChapterQuestion) {
 
 /** Enters `pick` through the question's controls. */
 export async function answer(page: Page, question: ChapterQuestion, pick: string) {
+  if (question.kind === 'week') {
+    const warm = page.locator('.ch-warmup')
+    await warm.getByRole('button', { name: 'You: work Mon morning' }).click()
+    await warm.getByRole('button', { name: 'Your partner: work Mon morning' }).click()
+    await warm.getByRole('button', { name: 'See how you compare →' }).click()
+    return
+  }
   if (question.kind === 'choice') {
     await playWarmup(page, question)
     const main = pick.split('|')[0]
@@ -78,8 +85,13 @@ export async function expectReveal(page: Page, question: ChapterQuestion, points
   expect(await visual.locator('svg, figure, div, ul, ol, table, canvas, img').count(), `${question.id}: visualization is empty`).toBeGreaterThan(0)
   await expect(visual).not.toContainText(/NaN|undefined|Infinity|\[object Object\]/)
   const verdict = page.locator('.ch-verdict')
-  await expect(verdict).toHaveClass(points === 1 ? /is-right/ : points > 0 ? /is-partial/ : /is-wrong/)
-  await expect(verdict.locator('.ch-points')).toHaveText(`+${formatPoints(points)} ${points === 1 ? 'point' : 'points'}`)
+  if (!isScored(question)) {
+    await expect(verdict).toHaveClass(/is-unscored/)
+    await expect(verdict.locator('.ch-points')).toHaveText('Not scored')
+  } else {
+    await expect(verdict).toHaveClass(points === 1 ? /is-right/ : points > 0 ? /is-partial/ : /is-wrong/)
+    await expect(verdict.locator('.ch-points')).toHaveText(`+${formatPoints(points)} ${points === 1 ? 'point' : 'points'}`)
+  }
   if (question.kind === 'choice' && question.options.length) {
     await expect(page.getByRole('group', { name: 'Your prediction' }).getByLabel('Correct answer')).toHaveCount(1)
   }

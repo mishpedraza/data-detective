@@ -7,7 +7,7 @@ import { SLEEP_LIST } from '../data/humanMind'
 import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual } from '../components/chapter/Visuals'
 import { useCount } from '../components/chapter/motion'
-import { SIDES, chapterAnswers, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseEstimate, parseRows, parseSliders, parseWeek, parseHoliday, scoreQuestion, splitPick, totalPoints } from '../lib/chapterScore'
+import { SIDES, chapterAnswers, isScored, maxPoints, chapterQuestions, recordAnswer, chapterResult, formatPoints, parseEstimate, parseRows, parseSliders, parseWeek, parseHoliday, scoreQuestion, splitPick, totalPoints } from '../lib/chapterScore'
 import { challengeReaction, partialReaction } from '../lib/discoveryChallenge'
 import { readDiscoveryProgress, type DiscoveryProgress } from '../lib/discoveryProgress'
 import { hrefFor } from '../lib/route'
@@ -33,7 +33,7 @@ const off = (guess: number, actual: number, unit: string) => {
 
 function verdictDetail(question: ChapterQuestion, pick: string) {
   // The options already mark the pick and the answer.
-  if (question.kind === 'choice') return null
+  if (question.kind === 'choice' || question.kind === 'week') return null
   if (question.kind === 'rows') return `${parseRows(question, pick)!.filter((side, i) => side === question.rows[i].answer).length} of ${question.rows.length} predictions matched.`
   if (question.kind === 'estimate') {
     const guess = parseEstimate(question, pick)!
@@ -47,6 +47,7 @@ function verdictDetail(question: ChapterQuestion, pick: string) {
 }
 
 function Verdict({ question, pick, points, index }: { question: ChapterQuestion; pick: string; points: number; index: number }) {
+  if (!isScored(question)) return <p className="ch-verdict is-unscored"><strong>Here’s how you compare.</strong> <span className="ch-points">Not scored</span></p>
   // The line rotates by question so a run doesn't repeat itself.
   const line = points === 1 ? challengeReaction(index, true) : points > 0 ? partialReaction(index) : challengeReaction(index, false)
   return (
@@ -151,7 +152,7 @@ function WordsWarmup({ prompt, value, onDone }: { prompt: string; value?: string
   )
 }
 
-function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string; onDone?: (warm: string) => void }) {
+function WarmupInput({ warmup, value, onDone, action = 'Continue →' }: { warmup: Warmup; value?: string; onDone?: (warm: string) => void; action?: string }) {
   const [days, setDays] = useState<[number?, number?]>([])
   const locked = value !== undefined
   if (warmup.kind === 'words') return <WordsWarmup prompt={warmup.prompt} value={value} onDone={onDone} />
@@ -179,7 +180,7 @@ function WarmupInput({ warmup, value, onDone }: { warmup: Warmup; value?: string
       <WeekCalendar key={`you-${locked}`} label="You" days={saved?.[0]} onChange={locked ? undefined : (d) => setDays(([, p]) => [d, p])} />
       <WeekCalendar key={`partner-${locked}`} label="Your partner" days={saved?.[1]} onChange={locked ? undefined : (d) => setDays(([y]) => [y, d])} />
       {!locked && <button type="button" className="challenge-primary ch-reveal" disabled={!ready} onClick={() => onDone?.(`${days[0]},${days[1]}`)}>
-        {ready ? 'Continue →' : 'Set both weeks'}
+        {ready ? action : 'Set both weeks'}
       </button>}
     </div>
   )
@@ -319,7 +320,7 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   useEffect(() => { heading.current?.focus() }, [])
   const theme = themeProgress(quiz, attempt)
   const own = theme.chapters.find((entry) => entry.chapter.id === chapter.id) ?? chapterProgress(quiz, chapter, attempt)
-  const card: Scorecard = { kind: 'quiz', theme: quiz.title, title: chapter.title, points, total: questions.length, sequence: pointSequence(own), accent: quiz.accent }
+  const card: Scorecard = { kind: 'quiz', theme: quiz.title, title: chapter.title, points, total: maxPoints(questions), sequence: pointSequence(own), accent: quiz.accent }
   const nextInTheme = hasChapterList(quiz) && !theme.complete ? theme.chapters.find((entry) => entry.chapter.id !== chapter.id && entry.state !== 'completed') : undefined
   const combined = theme.complete && hrefFor('discover', { quiz: quiz.id, mode: 'theme' })
 
@@ -330,9 +331,9 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
   return (
     <section className="discovery-reading ch-results">
       <p className="discovery-kicker">{chapter.title} · Results</p>
-      <h1 ref={heading} tabIndex={-1}>{chapterResult(points, questions.length)}</h1>
-      <p className="ch-score" aria-label={`${formatPoints(points)} out of ${questions.length} points`}>
-        <span className="ch-score-big">{formatPoints(shown === points ? points : Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {questions.length}</span>
+      <h1 ref={heading} tabIndex={-1}>{chapterResult(points, maxPoints(questions))}</h1>
+      <p className="ch-score" aria-label={`${formatPoints(points)} out of ${maxPoints(questions)} points`}>
+        <span className="ch-score-big">{formatPoints(shown === points ? points : Math.round(shown * 4) / 4)}</span><span className="ch-score-of">/ {maxPoints(questions)}</span>
       </p>
       <ol className="ch-tally" style={{ '--steps': questions.length } as CSSProperties}>
         {questions.map((question, i) => {
@@ -344,14 +345,14 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
                 <span className="ch-tally-bar" aria-hidden="true"><motion.i initial={{ height: 0 }} animate={{ height: `${p * 100}%` }} transition={{ delay: 0.3 + i * 0.08, duration: 0.6 }} /></span>
                 <span className="ch-tally-num">{i + 1}</span>
                 <span className="ch-tally-label">{question.short}</span>
-                <span className="ch-tally-points">{formatPoints(p)}</span>
+                <span className="ch-tally-points">{isScored(question) ? formatPoints(p) : '–'}</span>
               </a>
             </li>
           )
         })}
       </ol>
       <ScoreShare card={card} url={shareLink({ quiz: quiz.id, ...(hasChapterList(quiz) && { chapter: chapter.id }) }, 'quiz')}
-        analytics={{ quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, max_points: questions.length }} />
+        analytics={{ quiz_id: quiz.id, theme_id: quiz.id, chapter_id: chapter.id, score: points, max_points: maxPoints(questions) }} />
       <p className="discovery-note">{chapter.scoring ?? 'One point per question.'}</p>
       {hasChapterList(quiz) && <ThemeNext quiz={quiz} theme={theme} navigate={navigate} combined={combined || undefined}
         next={nextInTheme && nextHref ? { title: nextInTheme.chapter.title, href: nextHref, state: nextInTheme.state } : undefined} />}
@@ -385,6 +386,7 @@ export function ChapterQuiz({ quiz, navigate, selected, mode, chapterId }: { qui
 function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { quiz: Quiz; chapter: QuizChapter; themed: boolean; navigate: (href: string) => void; selected: string | null; mode: string | null }) {
   const questions = useMemo(() => chapterQuestions(quiz, chapter.id), [quiz, chapter.id])
   const total = questions.length
+  const max = maxPoints(questions)
   const [attempt, setAttempt] = useState(() => readDiscoveryProgress(quiz.attemptKey))
   // Bumped on restart so the current question remounts and drops any half-finished warm-up.
   const [round, setRound] = useState(0)
@@ -441,7 +443,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     if (!answers.length && shareOrigin()) track('shared_quiz_started', { ...ids, ...shareProps() })
     if (answers.length + 1 === total) {
       const score = totalPoints(answers) + points
-      track('quiz_completed', { ...ids, ...shareProps(), score, total_questions: total, max_points: total, score_pct: Math.round(score / total * 100),
+      track('quiz_completed', { ...ids, ...shareProps(), score, total_questions: total, max_points: max, score_pct: Math.round(score / max * 100),
         edition: quiz.edition, attempt_number: nextAttempt(`${quiz.id}/${chapter.id}`) })
       const theme = themeProgress(quiz)
       const others = theme.chapters.filter((entry) => entry.chapter.id !== chapter.id)
@@ -486,9 +488,10 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
       <ol className="ch-rail" aria-label="Progress" style={{ '--steps': total } as CSSProperties}>
         {questions.map(({ id, short }, i) => {
           const done = answers.find((entry) => entry.id === id)
+          const unscored = !isScored(questions[i])
           return <li key={id}><button type="button" disabled={i > lastReachable} aria-current={i === index ? 'step' : undefined}
-            aria-label={`Question ${i + 1}: ${short}${done ? `, ${formatPoints(done.points)} points` : ''}`} onClick={() => goTo(i)}>
-            <i style={{ width: done ? `${Math.max(done.points, 0.08) * 100}%` : i === index ? '8%' : 0 }} className={done && done.points === 0 ? 'is-zero' : ''} />
+            aria-label={`Question ${i + 1}: ${short}${done ? unscored ? ', not scored' : `, ${formatPoints(done.points)} points` : ''}`} onClick={() => goTo(i)}>
+            <i style={{ width: done ? `${unscored ? 100 : Math.max(done.points, 0.08) * 100}%` : i === index ? '8%' : 0 }} className={done && done.points === 0 && !unscored ? 'is-zero' : ''} />
           </button></li>
         })}
       </ol>
@@ -497,11 +500,12 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
           initial={reduce ? false : { opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={reduce ? undefined : { opacity: 0, x: -24 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
           <p className="discovery-kicker">Question {index + 1} of {total} · {question.short}</p>
           <h1 ref={headline} tabIndex={-1}>{question.question}</h1>
-          {!(question.kind === 'choice' && question.warmup) && <p className="ch-prompt">{question.prompt}</p>}
+          {!(question.kind === 'choice' && question.warmup) && question.kind !== 'week' && <p className="ch-prompt">{question.prompt}</p>}
           {question.kind === 'choice' && <ChoiceInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'rows' && <RowsInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'sliders' && <SlidersInput question={question} pick={answer?.pick} onPick={onPick} />}
           {question.kind === 'estimate' && <EstimateInput question={question} pick={answer?.pick} onPick={onPick} />}
+          {question.kind === 'week' && <WarmupInput key={question.id} warmup={{ kind: 'week', prompt: question.prompt }} value={answer?.pick} onDone={onPick} action="See how you compare →" />}
           {answer && <Reveal question={question} pick={answer.pick} points={answer.points} index={reactionIndex}
             onEvidence={() => track('evidence_expanded', { ...ids, question_id: question.id })}
             explore={question.explore && (() => {
