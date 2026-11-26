@@ -11,6 +11,7 @@ import { Investigate } from './pages/Investigate'
 import { SurgeryWaits } from './pages/SurgeryWaits'
 import { Explore } from './pages/Explore'
 import { hrefFor, type Route } from './lib/route'
+import { follow } from './lib/quizEntry'
 import { analyticsConsent, setAnalyticsConsent, track } from './lib/analytics'
 import { rememberShareOrigin, shareProps } from './lib/shareTracking'
 
@@ -57,7 +58,7 @@ export default function App() {
             quiz.format === 'chapter' && !(quiz.browse && (params.get('mode') === 'browse' || (params.get('q') && !params.get('mode')))) ? <ChapterQuiz key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} mode={params.get('mode')} chapterId={params.get('chapter')} /> :
             quizQuestions(quiz).length ? <Discover key={quiz.id} quiz={quiz} navigate={navigate} selected={params.get('q')} /> :
               <QuizComingSoon quiz={quiz} navigate={navigate} />)}
-          {backToQuiz && <a className="discovery-contents-trigger investigate-back" href={backToQuiz} onClick={(event) => { event.preventDefault(); navigate(backToQuiz) }}>← Back to the quiz</a>}
+          {backToQuiz && <a className="discovery-contents-trigger investigate-back" href={backToQuiz} onClick={follow(navigate, backToQuiz)}>← Back to the quiz</a>}
           {route === 'investigate' && (
             entry?.status === 'research' ? <EditorialInvestigation key={entry.id} id={entry.id} /> :
               investigationId === 'surgery-waits' ? <SurgeryWaits /> :
