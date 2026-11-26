@@ -106,9 +106,11 @@ export function chapterQuestions(quiz: Quiz, chapterId?: string): ChapterQuestio
   return quiz.chapters.filter(({ id }) => !chapterId || id === chapterId).flatMap(({ questionIds }) => questionIds.flatMap((id) => CHAPTER_QUESTIONS[id] ? [CHAPTER_QUESTIONS[id]] : []))
 }
 
-/** Saves an answer once; going back to a question keeps the first prediction. */
-export function recordAnswer(progress: DiscoveryProgress, id: string, pick: string, edition: string): DiscoveryProgress {
-  return progress[id]?.edition === edition ? progress : { ...progress, [id]: { pick, edition } }
+/** Saves an answer once; going back to a question keeps the first prediction. A saved pick the question no longer accepts (its options changed) is replaced. */
+export function recordAnswer(progress: DiscoveryProgress, question: ChapterQuestion, pick: string, edition: string): DiscoveryProgress {
+  const prior = progress[question.id]
+  const kept = prior?.edition === edition && scoreQuestion(question, prior.pick) !== undefined
+  return kept ? progress : { ...progress, [question.id]: { pick, edition } }
 }
 
 const erf = (x: number) => {

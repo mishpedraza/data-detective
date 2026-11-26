@@ -1,6 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { DEFAULT_QUIZ, quizById, quizQuestions } from '../src/data/quizzes'
+import { CHAPTER_QUESTIONS } from '../src/data/chapterQuestions'
 import { LOVE_QUESTIONS, type ChapterQuestion } from '../src/data/menWomen'
 import { MONEY_QUESTIONS } from '../src/data/moneyPower'
 import { NATURE_QUESTIONS } from '../src/data/natureNurture'
@@ -61,7 +62,7 @@ test('the total is out of seven and keeps partial points', () => {
   let progress: DiscoveryProgress = {}
   const picks: Record<string, string> = { 'mw-age-attraction': 'younger', 'mw-looks-money': 'split', 'mw-first-move': 'gone',
     'mw-desire': 'remains', 'mw-singlehood': 'women,similar,women,men', 'mw-support': '60,74', 'mw-loneliness': 'age' }
-  for (const [id, pick] of Object.entries(picks)) progress = recordAnswer(progress, id, pick, quiz.edition)
+  for (const [id, pick] of Object.entries(picks)) progress = recordAnswer(progress, CHAPTER_QUESTIONS[id], pick, quiz.edition)
   const answers = chapterAnswers(progress, chapterQuestions(quiz, 'love-attraction'), quiz.edition)
   assert.equal(answers.length, 7)
   assert.equal(totalPoints(answers), 4 + 0.75 + 0.75)
@@ -71,8 +72,8 @@ test('the total is out of seven and keeps partial points', () => {
 })
 
 test('going back to an answered question keeps the first prediction', () => {
-  const first = recordAnswer({}, 'mw-desire', 'vanishes', quiz.edition)
-  assert.equal(recordAnswer(first, 'mw-desire', 'remains', quiz.edition), first)
+  const first = recordAnswer({}, CHAPTER_QUESTIONS['mw-desire'], 'vanishes', quiz.edition)
+  assert.equal(recordAnswer(first, CHAPTER_QUESTIONS['mw-desire'], 'remains', quiz.edition), first)
   assert.equal(chapterAnswers(first, chapterQuestions(quiz), quiz.edition)[0].points, 0)
   assert.equal(chapterAnswers(first, chapterQuestions(quiz), 'v0').length, 0)
 })
@@ -81,7 +82,7 @@ test('progress is independent from the World quiz', () => {
   assert.notEqual(quiz.attemptKey, DEFAULT_QUIZ.attemptKey)
   assert.notEqual(quiz.resultKey, DEFAULT_QUIZ.resultKey)
   const world = quizQuestions(DEFAULT_QUIZ)[0].id
-  const mixed = recordAnswer(revealDiscovery({}, world, 'x', 'x', DEFAULT_QUIZ.edition), 'mw-loneliness', 'age', quiz.edition)
+  const mixed = recordAnswer(revealDiscovery({}, world, 'x', 'x', DEFAULT_QUIZ.edition), CHAPTER_QUESTIONS['mw-loneliness'], 'age', quiz.edition)
   assert.deepEqual(chapterAnswers(mixed, chapterQuestions(quiz), quiz.edition).map(({ id }) => id), ['mw-loneliness'])
   assert.ok(challengeAnswers(mixed, DEFAULT_QUIZ).every(({ id }) => id === world))
 })
@@ -132,7 +133,7 @@ test('a perfect Money, ambition & power run scores 9', () => {
   const perfect: Record<string, string> = { 'mp-leader': 'men,women,similar', 'mp-negotiate': '44,54', 'mp-compete': 'smaller|piece',
     'mp-risk': 'similar,men,similar', 'mp-assertive': 'hiring', 'mp-week': 'women-more|4,3', 'mp-leisure': '30,21', 'mp-motherhood': 'persists', 'mp-power': '71' }
   let progress: DiscoveryProgress = {}
-  for (const [id, pick] of Object.entries(perfect)) progress = recordAnswer(progress, id, pick, quiz.edition)
+  for (const [id, pick] of Object.entries(perfect)) progress = recordAnswer(progress, CHAPTER_QUESTIONS[id], pick, quiz.edition)
   const answers = chapterAnswers(progress, chapterQuestions(quiz, 'money-ambition-power'), quiz.edition)
   assert.equal(answers.length, 9)
   assert.equal(totalPoints(answers), 9)

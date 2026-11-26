@@ -1,8 +1,8 @@
 import { formatPoints } from './chapterScore'
 
-export const SHARE_MESSAGE = 'Can you beat my score on Data Detective?'
+export const SHARE_MESSAGE = 'A few of the answers surprised me. Curious how you’d do?'
 /** The message for sharing a quiz before finishing it; it carries no score. */
-export const inviteMessage = (title: string) => `Try this quiz on Data Detective: “${title}”`
+export const inviteMessage = (title: string) => `Try “${title}” on Data Detective. How many of your hunches hold up?`
 
 export type Scorecard =
   | { kind: 'quiz'; theme: string; title: string; points: number; total: number; sequence: number[]; accent: string }
