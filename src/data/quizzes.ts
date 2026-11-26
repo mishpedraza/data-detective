@@ -93,8 +93,8 @@ export const QUIZZES: readonly Quiz[] = [
   },
   {
     id: 'housing-crisis',
-    title: 'The Housing Crisis',
-    prompt: 'How Well Do You Understand the Housing Crisis?',
+    title: 'Housing & Cities',
+    prompt: 'How Well Do You Understand Housing & Cities?',
     accent: '#6d3f61',
     description: 'Prices, rents and who can still afford a home.',
     edition: 'v1',
