@@ -33,3 +33,13 @@ test('Explore why opens the investigation and returns to the same question with 
   await page.getByRole('button', { name: 'Next question →' }).click()
   await expect(kicker(page)).toContainText(`Question ${index + 2} of ${world.questions.length}`)
 })
+
+test('an old link to a revised question opens its replacement and shows the reveal', async ({ page }) => {
+  const money = CHAPTERS.find(({ chapter }) => chapter.id === 'money-ambition-power')!
+  await seedStorage(page, { [money.quiz.attemptKey]: seedProgress(money, 'correct', money.questions.length - 1) })
+  await page.goto(`/#/discover?quiz=${money.quiz.id}&q=mp-power&mode=challenge`)
+  await expect(kicker(page)).toContainText(`Question ${money.questions.length} of ${money.questions.length}`)
+  await page.getByRole('group', { name: 'Your prediction' }).getByRole('button').first().click()
+  await expect(page.locator('.ch-reveal-panel')).toBeVisible()
+  await expect(kicker(page)).toContainText(`Question ${money.questions.length} of`)
+})

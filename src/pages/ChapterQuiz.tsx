@@ -4,6 +4,7 @@ import type { ChapterQuestion, ChoiceQuestion, Side, Warmup } from '../data/menW
 import { QUIZZES, hasChapterList, quizQuestions, type Quiz, type QuizChapter } from '../data/quizzes'
 import { DESTINATIONS } from '../data/moneyHappiness'
 import { SLEEP_LIST } from '../data/humanMind'
+import { QUESTION_ALIASES } from '../data/chapterQuestions'
 import { StorySources } from '../components/StoryEvidence'
 import { FindingVisual } from '../components/chapter/Visuals'
 import { useCount } from '../components/chapter/motion'
@@ -375,12 +376,15 @@ function Results({ quiz, chapter, questions, attempt, restart, navigate, openQue
 }
 
 export function ChapterQuiz({ quiz, navigate, selected, mode, chapterId }: { quiz: Quiz; navigate: (href: string) => void; selected: string | null; mode: string | null; chapterId: string | null }) {
+  const requested = selected && (QUESTION_ALIASES[selected] ?? selected)
   // Older links name a question but no chapter; open the chapter that holds it.
   const chapter = quiz.chapters.find(({ id }) => id === chapterId)
-    ?? quiz.chapters.find(({ questionIds }) => questionIds.includes(selected ?? ''))
+    ?? quiz.chapters.find(({ questionIds }) => questionIds.includes(requested ?? ''))
     ?? quiz.chapters[0]
+  // A question this chapter doesn't have opens like a link without one.
+  const known = requested && chapter.questionIds.includes(requested) ? requested : null
   if (mode === 'theme' && hasChapterList(quiz)) return <ThemeResults quiz={quiz} navigate={navigate} />
-  return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={hasChapterList(quiz)} navigate={navigate} selected={selected} mode={mode} />
+  return <ChapterPlayer key={chapter.id} quiz={quiz} chapter={chapter} themed={hasChapterList(quiz)} navigate={navigate} selected={known} mode={mode} />
 }
 
 function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { quiz: Quiz; chapter: QuizChapter; themed: boolean; navigate: (href: string) => void; selected: string | null; mode: string | null }) {

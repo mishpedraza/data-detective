@@ -42,6 +42,15 @@ export const WEEK_PREFERENCES = [
 /** Galinsky et al. (2024): 102 meta-analytic gender differences compared with experimental effects of power. */
 export const POWER_COMPARISONS = { total: 102, same: 72, opposite: 8, none: 22 } as const
 
+/** Ids of questions replaced in the November 2026 revision, so old links open their successor. */
+export const MONEY_RETIRED_IDS: Readonly<Record<string, string>> = {
+  'mp-negotiate': 'mp-negotiate-outcome',
+  'mp-compete': 'mp-compete-verbal',
+  'mp-risk': 'mp-risk-feedback',
+  'mp-week': 'mp-week-ideal',
+  'mp-power': 'mp-power-match',
+}
+
 export const MONEY_QUESTIONS: readonly ChapterQuestion[] = [
   {
     id: 'mp-leader',
