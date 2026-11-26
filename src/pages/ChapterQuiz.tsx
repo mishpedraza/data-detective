@@ -453,7 +453,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
     }
     // Start from what other tabs saved; this tab only speaks for its own chapter, so a stale tab can't restore another chapter's cleared answers.
     setAttempt((current) => recordAnswer({ ...readDiscoveryProgress(quiz.attemptKey), ...Object.fromEntries(Object.entries(current).filter(([id]) => chapter.questionIds.includes(id))) },
-      question.id, pick, quiz.edition))
+      question, pick, quiz.edition))
   }
 
   const back = hrefFor('discover')
@@ -505,7 +505,7 @@ function ChapterPlayer({ quiz, chapter, themed, navigate, selected, mode }: { qu
           {answer && <Reveal question={question} pick={answer.pick} points={answer.points} index={reactionIndex}
             onEvidence={() => track('evidence_expanded', { ...ids, question_id: question.id })}
             explore={question.explore && (() => {
-              const href = hrefFor('investigate', { r: question.explore.r, ...question.explore.years })
+              const href = hrefFor('investigate', { r: question.explore.r, ...question.explore.years, quiz: quiz.id, ...(themed && { chapter: chapter.id }), q: question.id })
               return <a className="discovery-link ch-explore" href={href} onClick={(event) => {
                 if (!plainClick(event)) return
                 event.preventDefault()

@@ -114,3 +114,27 @@ for (const quiz of THEMES) {
     })
   })
 }
+
+// Regression: Life by the numbers Q4 froze for players whose saved pick came from the question's earlier options.
+for (const chapter of CHAPTERS) {
+  test(`${chapter.name}: a saved pick the question no longer offers doesn't block answering`, async ({ page }) => {
+    const n = chapter.questions.length
+    await seedStorage(page, { [chapter.quiz.attemptKey]: Object.fromEntries(chapter.questions.map(({ id }) => [id, { pick: 'retired-option', edition: chapter.quiz.edition }])) })
+    await page.goto(chapterUrl(chapter))
+    await expect(kicker(page)).toContainText(`Question 1 of ${n}`)
+    await playChapter(page, chapter, () => 'correct', { checkLayout: false })
+    await expectScore(page, n, n)
+    expect(Object.values(await saved(page, chapter.quiz.attemptKey)).some(({ pick }) => pick === 'retired-option')).toBe(false)
+  })
+}
+
+test('Life by the numbers Q4: answering works over a pick saved before the question was revised', async ({ page }) => {
+  const world = CHAPTERS.find(({ quiz }) => quiz.id === 'world')!
+  await seedStorage(page, { [world.quiz.attemptKey]: { ...seedProgress(world, 'correct', 3), 'immigration-crime': { pick: 'Little or none', edition: world.quiz.edition } } })
+  await page.goto(chapterUrl(world, { mode: 'challenge' }))
+  await expect(kicker(page)).toContainText('Question 4 of 9')
+  await page.getByRole('button', { name: /The group that missed out/ }).click()
+  await expect(page.locator('.ch-verdict')).toHaveClass(/is-right/)
+  await page.getByRole('button', { name: 'Next question →' }).click()
+  await expect(kicker(page)).toContainText('Question 5 of 9')
+})
