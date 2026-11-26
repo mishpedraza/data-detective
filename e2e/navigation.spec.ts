@@ -25,6 +25,8 @@ test('Explore why opens the investigation and returns to the same question with 
   await page.goto(chapterUrl(world, { q: 'immigration-crime', mode: 'challenge' }))
   await page.getByRole('link', { name: /Explore why/ }).click()
   await expect(page).toHaveURL(/#\/investigate\?/)
+  await page.reload()
+  await expect(page).toHaveURL(/q=immigration-crime/)
   await page.getByRole('link', { name: '← Back to the quiz' }).click()
   await expect(kicker(page)).toContainText(`Question ${index + 1} of ${world.questions.length}`)
   await expect(page.locator('.ch-verdict')).toHaveClass(/is-right/)
