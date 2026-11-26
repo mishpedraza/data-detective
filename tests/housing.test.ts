@@ -5,7 +5,7 @@ import { HOUSING_QUESTIONS } from '../src/data/housing'
 import { CHAPTER_QUESTIONS } from '../src/data/chapterQuestions'
 import { scoreQuestion } from '../src/lib/chapterScore'
 
-test('Housing Crisis plays "Why is housing so expensive?" as an 8-question chapter', () => {
+test('Housing & Cities plays "Why is housing so expensive?" as an 8-question chapter', () => {
   const quiz = quizById('housing-crisis')!
   assert.equal(quiz.format, 'chapter')
   assert.equal(quiz.chapters.length, 2)

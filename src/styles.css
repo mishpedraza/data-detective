@@ -1250,7 +1250,7 @@ g.v-men .v-value.v-strong, g.v-men .v-label { fill: var(--men); } g.v-women .v-v
 }
 
 
-/* Housing Crisis: "Why is housing so expensive?" */
+/* Housing & Cities: "Why is housing so expensive?" */
 /* Same rotating palette as Money, ambition & power. */
 .chapter-quiz[data-visual='chain'] { --accent: #6a4c93; --accent-soft: rgba(106, 76, 147, .1); }
 .chapter-quiz[data-visual='rentcontrol'] { --accent: #2f6b4f; --accent-soft: rgba(47, 107, 79, .1); }
