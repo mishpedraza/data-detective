@@ -9,6 +9,7 @@ export type Visual = 'age' | 'gauges' | 'rotation' | 'curves' | 'diverging' | 'd
   | 'pedestrian' | 'freefare' | 'height' | 'roads' | 'bikelanes' | 'citywage' | 'cooling' | 'tourism'
   | 'ceiling' | 'rank' | 'smarts' | 'ambition' | 'youth' | 'giving' | 'choiceset'
   | 'halfstory' | 'aistory' | 'humble' | 'news' | 'lure' | 'lies' | 'ideas'
+  | 'lumpsum' | 'funds' | 'fees' | 'gap' | 'cashless' | 'predictors'
   | 'fitfat' | 'sleepweek' | 'warrior' | 'bursts' | 'steps' | 'vitamins' | 'alcohol'
 
 export interface Evidence {
