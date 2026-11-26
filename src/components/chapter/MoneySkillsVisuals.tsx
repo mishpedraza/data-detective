@@ -159,7 +159,7 @@ function GapVisual() {
       </div>
       <div className="mh-extra">
         <p className="v-kicker">Timing or mistakes?</p>
-        <p>Investor B made no mistake: they simply had more money in during the fall. A 2026 re-analysis put the cost of bad timing at about {GAP.timing} points a year.</p>
+        <p>Investor B made no mistake: they simply had more money in during the fall. Re-analysing Morningstar's previous edition (2015–2024), a 2026 study put the cost of bad timing at about {GAP.timing} points a year.</p>
       </div>
     </div>
   )

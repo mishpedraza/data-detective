@@ -16,7 +16,7 @@ export const FUNDS = {
 export const FEES = { amount: 100_000, gross: 7, cheap: 0.1, dear: 1, years: 30 } as const
 export const finalValue = (amount: number, grossPct: number, feePct: number, years: number) =>
   amount * Math.pow(1 + (grossPct - feePct) / 100, years)
-/** Morningstar Mind the Gap 2026, Exhibit 4 (10 years to 31 Dec 2025), and Fulkerson et al. (2026) on timing costs. */
+/** Morningstar Mind the Gap 2026, Exhibit 4 (10 years to 31 Dec 2025). `timing`: Fulkerson et al. (2026), estimated on the 2025 edition's 2015–2024 sample. */
 export const GAP = { total: 9.9, investor: 8.7, stocks: { total: 13.3, investor: 12.8 }, funds: '23,000', timing: 0.1 } as const
 /** Simion & Sulka (2023), Table 7 column 7: standardised coefficients on (inverse hyperbolic sine) financial wealth. */
 export const WEALTH = { n: 3743, planning: 0.222, selfControl: 0.106, numeracy: 0.101, planners: 54 } as const
@@ -103,14 +103,14 @@ export const MM_QUESTIONS: readonly ChapterQuestion[] = [
     ],
     answer: 'lower',
     finding: `Worse: about ${GAP.investor}% a year, 1.2 points less than the funds themselves.`,
-    takeaway: `A fund's published return assumes you invested once at the start and never touched it. Real investors add and withdraw money along the way, so their result depends on when the money went in. That gap is not proof of bad decisions: a 2026 re-analysis estimated that poor timing cost only about ${GAP.timing} points a year.`,
+    takeaway: `A fund's published return assumes you invested once at the start and never touched it. Real investors add and withdraw money along the way, so their result depends on when the money went in. That gap is not proof of bad decisions: a 2026 re-analysis of Morningstar's previous edition (2015–2024) estimated that poor timing cost only about ${GAP.timing} points a year.`,
     evidence: {
       citation: 'Morningstar (2026), Mind the Gap 2026',
       url: 'https://www.morningstar.com/business/insights/research/mind-the-gap',
       more: [{ citation: 'Fulkerson, Jordan, Riley & Yan (2026), Financial Analysts Journal', url: 'https://doi.org/10.1080/0015198X.2026.2657253' }],
       sample: `Nearly ${GAP.funds} US open-end mutual funds and ETFs, 10 years to 31 December 2025.`,
       method: "Compares each fund's time-weighted total return with its dollar-weighted return, which reflects when money flowed in and out, then adds them up across funds.",
-      limitation: `For US stock funds alone the gap was smaller: ${GAP.stocks.investor}% against ${GAP.stocks.total}%. Morningstar says the gap can reflect return chasing but also ordinary saving and withdrawals. Fulkerson and colleagues argue that bad timing explains only about ${GAP.timing} points a year of it.`,
+      limitation: `For US stock funds alone the gap was smaller: ${GAP.stocks.investor}% against ${GAP.stocks.total}%. Morningstar says the gap can reflect return chasing but also ordinary saving and withdrawals. Re-analysing Morningstar's previous edition (10 years to 2024), Fulkerson and colleagues estimate that bad timing cost only about ${GAP.timing} points a year.`,
     },
   },
   {
